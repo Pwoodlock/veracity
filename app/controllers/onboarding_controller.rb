@@ -93,8 +93,9 @@ class OnboardingController < ApplicationController
     minion_keys_param = params[:minion_keys]
 
     # Handle both array and hash formats from form submission
+    # Use permit! because Rails requires explicit permission before .to_h on nested params
     minion_keys = if minion_keys_param.is_a?(ActionController::Parameters)
-                    minion_keys_param.values.map(&:to_h)
+                    minion_keys_param.permit!.to_h.values
                   elsif minion_keys_param.is_a?(Array)
                     minion_keys_param
                   else
