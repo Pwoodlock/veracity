@@ -7,14 +7,14 @@ Complete installation guide for Veracity Server Manager - a comprehensive infras
 For a fully automated installation on a fresh Ubuntu 22.04/24.04, Debian 11/12, or Rocky Linux 9 server:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Pwoodlock/veracity-/main/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/Pwoodlock/veracity/main/install.sh | sudo bash
 ```
 
 **Or clone and run locally:**
 
 ```bash
-git clone https://github.com/Pwoodlock/veracity-.git
-cd veracity-
+git clone https://github.com/Pwoodlock/veracity.git
+cd veracity
 sudo ./install.sh
 ```
 
@@ -496,9 +496,9 @@ userdel -r deploy
 
 ## Support & Documentation
 
-- **Documentation**: https://github.com/Pwoodlock/veracity-/wiki
-- **Issues**: https://github.com/Pwoodlock/veracity-/issues
-- **Discussions**: https://github.com/Pwoodlock/veracity-/discussions
+- **Documentation**: https://github.com/Pwoodlock/veracity/wiki
+- **Issues**: https://github.com/Pwoodlock/veracity/issues
+- **Discussions**: https://github.com/Pwoodlock/veracity/discussions
 - **Email**: support@veracity.io (if configured)
 
 ## License

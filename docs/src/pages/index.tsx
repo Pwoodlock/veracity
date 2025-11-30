@@ -12,7 +12,7 @@ function HomepageHeader() {
     <header className={styles.heroBanner}>
       <div className="container">
         <img
-          src="/veracity-/img/hero.svg"
+          src="/veracity/img/hero.svg"
           alt="Veracity - Unified API Platform"
           className={styles.heroImage}
         />
@@ -24,7 +24,7 @@ function HomepageHeader() {
           </Link>
           <Link
             className="button button--outline button--secondary button--lg"
-            to="https://github.com/Pwoodlock/veracity-"
+            to="https://github.com/Pwoodlock/veracity"
             style={{marginLeft: '1rem'}}>
             View on GitHub
           </Link>

@@ -25,7 +25,7 @@ if [[ -z "${DEPLOY_USER:-}" ]]; then
   readonly DEPLOY_USER="deploy"
 fi
 readonly DEPLOY_HOME="/home/${DEPLOY_USER}"
-readonly REPO_URL="${REPO_URL:-https://github.com/Pwoodlock/veracity-.git}"
+readonly REPO_URL="${REPO_URL:-https://github.com/Pwoodlock/veracity.git}"
 readonly REPO_BRANCH="${REPO_BRANCH:-main}"
 
 # Ruby configuration (must match ruby.sh)

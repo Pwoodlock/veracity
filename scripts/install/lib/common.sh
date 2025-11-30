@@ -647,8 +647,8 @@ NEXT STEPS:
 
 SUPPORT:
 --------
-Documentation: https://github.com/Pwoodlock/veracity-
-Issues: https://github.com/Pwoodlock/veracity-/issues
+Documentation: https://github.com/Pwoodlock/veracity
+Issues: https://github.com/Pwoodlock/veracity/issues
 
 ================================================================================
 EOF

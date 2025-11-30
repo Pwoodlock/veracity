@@ -603,8 +603,8 @@ main() {
     echo "  3. Install minions: curl -sSL ${INSTALL_URL}/install/minion.sh | sudo bash"
     echo "  4. Configure optional integrations via Settings"
     echo ""
-    info "Documentation: https://github.com/Pwoodlock/veracity-"
-    info "Support: https://github.com/Pwoodlock/veracity-/issues"
+    info "Documentation: https://github.com/Pwoodlock/veracity"
+    info "Support: https://github.com/Pwoodlock/veracity/issues"
     echo ""
   else
     echo ""
