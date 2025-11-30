@@ -124,8 +124,8 @@ window.ApexChartsTheme = {
     const lightThemes = ['light', 'cupcake', 'bumblebee', 'emerald', 'corporate',
                          'retro', 'cyberpunk', 'valentine', 'garden', 'lofi',
                          'pastel', 'fantasy', 'wireframe', 'cmyk', 'autumn',
-                         'acid', 'lemonade', 'winter'];
-    const currentTheme = localStorage.getItem('daisyui-theme') || 'night';
+                         'acid', 'lemonade', 'winter', 'nord', 'aqua'];
+    const currentTheme = localStorage.getItem('daisyui-theme') || 'nord';
     return lightThemes.includes(currentTheme);
   },
 

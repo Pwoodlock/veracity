@@ -4,8 +4,8 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Get current theme from localStorage or default to 'night'
-  const currentTheme = localStorage.getItem('daisyui-theme') || 'night';
+  // Get current theme from localStorage or default to 'nord'
+  const currentTheme = localStorage.getItem('daisyui-theme') || 'nord';
 
   // Set initial active state on theme options
   updateActiveThemeIndicator(currentTheme);
@@ -95,6 +95,6 @@ window.VeracityTheme = {
   },
 
   getCurrentTheme: function() {
-    return localStorage.getItem('daisyui-theme') || 'night';
+    return localStorage.getItem('daisyui-theme') || 'nord';
   }
 };
