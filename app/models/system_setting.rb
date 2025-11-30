@@ -83,7 +83,7 @@ class SystemSetting < ApplicationRecord
   end
 
   def self.glassmorphism_enabled?
-    get('glassmorphism_enabled') == 'true'
+    get('glassmorphism_enabled', false) == true
   end
 
   private
