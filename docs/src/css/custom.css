@@ -1,0 +1,113 @@
+/**
+ * Veracity Documentation - Custom Theme
+ * Modern, clean color scheme with excellent readability in both light and dark modes
+ */
+
+/* Light mode - Clean, professional blue theme */
+:root {
+  /* Primary brand color - Modern blue */
+  --ifm-color-primary: #0066cc;
+  --ifm-color-primary-dark: #005bb8;
+  --ifm-color-primary-darker: #0056ad;
+  --ifm-color-primary-darkest: #00478f;
+  --ifm-color-primary-light: #0071e0;
+  --ifm-color-primary-lighter: #0077eb;
+  --ifm-color-primary-lightest: #1a85ff;
+
+  /* Typography */
+  --ifm-code-font-size: 90%;
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --ifm-font-family-monospace: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+
+  /* Background colors for light mode */
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #f9fafb;
+
+  /* Code block highlighting */
+  --docusaurus-highlighted-code-line-bg: rgba(0, 102, 204, 0.1);
+
+  /* Better contrast for readability */
+  --ifm-color-emphasis-300: #6b7280;
+  --ifm-color-emphasis-600: #374151;
+  --ifm-color-emphasis-700: #1f2937;
+
+  /* Link colors */
+  --ifm-link-color: #0066cc;
+  --ifm-link-hover-color: #0052a3;
+}
+
+/* Dark mode - Comfortable on the eyes, high contrast */
+[data-theme='dark'] {
+  /* Primary brand color - Brighter blue for dark mode */
+  --ifm-color-primary: #3b82f6;
+  --ifm-color-primary-dark: #2563eb;
+  --ifm-color-primary-darker: #1d4ed8;
+  --ifm-color-primary-darkest: #1e40af;
+  --ifm-color-primary-light: #60a5fa;
+  --ifm-color-primary-lighter: #93c5fd;
+  --ifm-color-primary-lightest: #bfdbfe;
+
+  /* Background colors for dark mode - true dark, not gray */
+  --ifm-background-color: #0d1117;
+  --ifm-background-surface-color: #161b22;
+
+  /* Code block highlighting */
+  --docusaurus-highlighted-code-line-bg: rgba(59, 130, 246, 0.15);
+
+  /* Better contrast for dark mode */
+  --ifm-color-emphasis-300: #9ca3af;
+  --ifm-color-emphasis-600: #d1d5db;
+  --ifm-color-emphasis-700: #e5e7eb;
+
+  /* Improved text colors for dark mode */
+  --ifm-font-color-base: #e6edf3;
+  --ifm-heading-color: #f0f6fc;
+
+  /* Card and container backgrounds */
+  --ifm-card-background-color: #161b22;
+  --ifm-navbar-background-color: #0d1117;
+  --ifm-footer-background-color: #0d1117;
+
+  /* Link colors for dark mode */
+  --ifm-link-color: #58a6ff;
+  --ifm-link-hover-color: #79c0ff;
+
+  /* Borders */
+  --ifm-color-emphasis-200: #30363d;
+
+  /* Code blocks */
+  --ifm-code-background: #161b22;
+}
+
+/* Smooth transitions between themes */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Better code block styling */
+pre {
+  border-radius: 8px;
+}
+
+code {
+  border-radius: 4px;
+}
+
+/* Improve navbar appearance */
+.navbar {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .navbar {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+/* Better card shadows */
+.card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] .card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}

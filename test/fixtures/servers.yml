@@ -1,0 +1,69 @@
+# Test servers
+
+online_server:
+  hostname: web-server-01
+  minion_id: web-server-01.example.com
+  ip_address: 192.168.1.10
+  status: online
+  os_family: Debian
+  os_name: Ubuntu
+  os_version: "22.04"
+  cpu_cores: 4
+  memory_gb: 8.0
+  group: production
+  environment: production
+  last_seen: <%= Time.current %>
+  last_heartbeat: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+offline_server:
+  hostname: db-server-01
+  minion_id: db-server-01.example.com
+  ip_address: 192.168.1.11
+  status: offline
+  os_family: Debian
+  os_name: Ubuntu
+  os_version: "22.04"
+  cpu_cores: 8
+  memory_gb: 16.0
+  group: production
+  environment: production
+  last_seen: <%= 2.hours.ago %>
+  last_heartbeat: <%= 2.hours.ago %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+staging_server:
+  hostname: staging-01
+  minion_id: staging-01.example.com
+  ip_address: 192.168.1.20
+  status: online
+  os_family: RedHat
+  os_name: AlmaLinux
+  os_version: "9"
+  cpu_cores: 2
+  memory_gb: 4.0
+  group: staging
+  environment: staging
+  last_seen: <%= Time.current %>
+  last_heartbeat: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+ungrouped_server:
+  hostname: misc-server
+  minion_id: misc-server.example.com
+  ip_address: 192.168.1.30
+  status: online
+  os_family: Debian
+  os_name: Debian
+  os_version: "12"
+  cpu_cores: 2
+  memory_gb: 2.0
+  group:
+  environment: development
+  last_seen: <%= Time.current %>
+  last_heartbeat: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

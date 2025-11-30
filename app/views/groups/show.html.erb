@@ -1,0 +1,274 @@
+<% content_for :head do %>
+  <title><%= @group.name %> - Groups - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex justify-between items-start">
+        <div class="flex items-center gap-4">
+          <div class="w-1 h-16 rounded" style="background-color: <%= @group.color %>"></div>
+          <div>
+            <h2 class="text-3xl font-bold text-base-content"><%= @group.name %></h2>
+            <% if @group.description.present? %>
+              <p class="text-base-content/80 mt-1"><%= @group.description %></p>
+            <% end %>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to edit_group_path(@group), class: "btn btn-ghost" do %>
+            Edit Group
+          <% end %>
+          <%= link_to groups_path, class: "btn btn-ghost" do %>
+            Back to Groups
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <!-- Total Servers -->
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-base-content/80 mb-1">Total Servers</p>
+            <p class="text-3xl font-bold text-base-content"><%= @stats[:total] %></p>
+          </div>
+          <svg class="w-12 h-12 text-base-content/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Online -->
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-base-content/80 mb-1">Online</p>
+            <p class="text-3xl font-bold text-success"><%= @stats[:online] %></p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-success flex items-center justify-center">
+            <svg class="w-6 h-6 text-success-content" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Offline -->
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-base-content/80 mb-1">Offline</p>
+            <p class="text-3xl font-bold text-error"><%= @stats[:offline] %></p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-error flex items-center justify-center">
+            <svg class="w-6 h-6 text-error-content" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unreachable -->
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-base-content/80 mb-1">Unreachable</p>
+            <p class="text-3xl font-bold text-warning"><%= @stats[:unreachable] + @stats[:maintenance] %></p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-warning flex items-center justify-center">
+            <svg class="w-6 h-6 text-warning-content" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage Servers Section -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg overflow-hidden mb-8">
+      <details class="group">
+        <summary class="px-6 py-4 border-b border-base-content/10 cursor-pointer list-none flex items-center justify-between hover:bg-base-300 transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-base-content/60 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+            <h3 class="text-xl font-bold text-base-content">Manage Servers</h3>
+            <span class="badge badge-ghost"><%= @available_servers.count %> available</span>
+          </div>
+          <span class="text-sm text-base-content/60">Click to expand</span>
+        </summary>
+
+        <div class="p-6">
+          <%= form_with url: manage_servers_group_path(@group), method: :post, local: true, class: "space-y-6" do %>
+            <% if @available_servers.any? %>
+              <!-- Add Servers -->
+              <div>
+                <h4 class="text-lg font-semibold text-base-content mb-3">Add Servers to Group</h4>
+                <p class="text-sm text-base-content/60 mb-4">Select servers to add to this group. Servers already in other groups will be moved here.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 bg-base-100 rounded-lg">
+                  <% @available_servers.each do |server| %>
+                    <label class="flex items-center gap-3 p-3 bg-base-200 rounded-lg cursor-pointer hover:bg-base-300 transition">
+                      <input type="checkbox" name="add_server_ids[]" value="<%= server.id %>" class="checkbox checkbox-primary checkbox-sm">
+                      <div class="flex-1 min-w-0">
+                        <div class="font-medium text-base-content truncate"><%= server.hostname %></div>
+                        <div class="text-xs text-base-content/60 flex items-center gap-2">
+                          <span class="<%= server.online? ? 'text-success' : 'text-error' %>">●</span>
+                          <%= server.ip_address %>
+                          <% if server.group %>
+                            <span class="badge badge-xs" style="background-color: <%= server.group.color %>20; color: <%= server.group.color %>"><%= server.group.name %></span>
+                          <% else %>
+                            <span class="badge badge-xs badge-ghost">Ungrouped</span>
+                          <% end %>
+                        </div>
+                      </div>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% else %>
+              <div class="text-center py-6 text-base-content/60">
+                <p>All servers are already in this group.</p>
+              </div>
+            <% end %>
+
+            <% if @servers.any? %>
+              <!-- Remove Servers -->
+              <div class="border-t border-base-content/10 pt-6">
+                <h4 class="text-lg font-semibold text-base-content mb-3">Remove Servers from Group</h4>
+                <p class="text-sm text-base-content/60 mb-4">Select servers to remove from this group. They will become ungrouped.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 bg-base-100 rounded-lg">
+                  <% @servers.each do |server| %>
+                    <label class="flex items-center gap-3 p-3 bg-base-200 rounded-lg cursor-pointer hover:bg-base-300 transition">
+                      <input type="checkbox" name="remove_server_ids[]" value="<%= server.id %>" class="checkbox checkbox-error checkbox-sm">
+                      <div class="flex-1 min-w-0">
+                        <div class="font-medium text-base-content truncate"><%= server.hostname %></div>
+                        <div class="text-xs text-base-content/60 flex items-center gap-2">
+                          <span class="<%= server.online? ? 'text-success' : 'text-error' %>">●</span>
+                          <%= server.ip_address %>
+                        </div>
+                      </div>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-base-content/10">
+              <button type="submit" class="btn btn-primary">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Apply Changes
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </details>
+    </div>
+
+    <!-- Servers Table -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-base-content/10">
+        <h3 class="text-xl font-bold text-base-content">Servers in this Group</h3>
+      </div>
+
+      <% if @servers.any? %>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-base-100">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Server</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Operating System</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Environment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-base-200 divide-y divide-base-content/10">
+              <% @servers.each do |server| %>
+                <tr class="hover:bg-base-200">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div class="font-medium text-base-content"><%= server.hostname %></div>
+                      <div class="text-sm text-base-content/60"><%= server.ip_address %></div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <% status_classes = {
+                      'online' => 'bg-success text-success-content',
+                      'offline' => 'bg-error text-error-content',
+                      'maintenance' => 'bg-warning text-warning-content',
+                      'unreachable' => 'bg-base-100 text-base-content'
+                    } %>
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= status_classes[server.status] || 'bg-base-100 text-base-content' %>">
+                      <%= server.status&.titleize || 'Unknown' %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/80">
+                    <%= server.os_name %> <%= server.os_version %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/80">
+                    <%= server.environment&.titleize || 'N/A' %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <%= link_to "View", server_path(server), class: "text-primary hover:text-primary/80" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-12">
+          <svg class="w-16 h-16 mx-auto text-base-content/60 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+          </svg>
+          <h3 class="text-lg font-medium text-base-content mb-2">No servers in this group</h3>
+          <p class="text-base-content/80">Assign servers to this group from the <%= link_to "servers page", servers_path, class: "text-primary hover:text-primary/80" %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Recent Commands -->
+    <% if @recent_commands.any? %>
+      <div class="mt-8 bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+        <div class="px-6 py-4 border-b border-base-content/10">
+          <h3 class="text-xl font-bold text-base-content">Recent Commands</h3>
+        </div>
+        <div class="divide-y divide-base-content/10">
+          <% @recent_commands.each do |command| %>
+            <div class="px-6 py-4 hover:bg-base-200">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-sm text-base-content"><%= command.command %></span>
+                    <% status_classes = {
+                      'completed' => 'bg-success text-success-content',
+                      'running' => 'bg-primary text-primary-content',
+                      'failed' => 'bg-error text-error-content',
+                      'timeout' => 'bg-warning text-warning-content'
+                    } %>
+                    <span class="px-2 py-1 text-xs font-semibold rounded <%= status_classes[command.status] || 'bg-base-100 text-base-content' %>">
+                      <%= command.status %>
+                    </span>
+                  </div>
+                  <div class="text-sm text-base-content/60 mt-1">
+                    <%= command.server.hostname %> • <%= time_ago_in_words(command.started_at) %> ago
+                  </div>
+                </div>
+                <%= link_to "View", command_path(command), class: "ml-4 text-primary hover:text-primary/80 text-sm font-medium" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,141 @@
+<% content_for :head do %>
+  <title>Appearance Settings - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-base-content">Appearance Settings</h1>
+      <p class="mt-2 text-sm text-base-content/60">Customize the look and feel of Veracity</p>
+    </div>
+
+    <!-- Flash Messages -->
+    <% if flash[:notice] %>
+      <div class="alert alert-success mb-6">
+        <%= flash[:notice] %>
+      </div>
+    <% end %>
+
+    <% if flash[:alert] %>
+      <div class="alert alert-error mb-6">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <!-- Company Name -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Company Name</h2>
+
+      <%= form_with url: settings_update_company_name_appearance_path, method: :post, class: "space-y-4" do |f| %>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-2">
+            Company or Project Name
+          </label>
+          <div class="flex gap-4">
+            <%= text_field_tag :company_name, @company_name,
+                placeholder: "Veracity",
+                class: "input input-bordered flex-1" %>
+            <%= f.submit "Update", class: "btn btn-primary cursor-pointer" %>
+          </div>
+          <p class="mt-2 text-sm text-base-content/60">
+            This name will appear in the navigation bar and on the login screen
+          </p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Tagline -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Tagline</h2>
+
+      <%= form_with url: settings_update_tagline_appearance_path, method: :post, class: "space-y-4" do |f| %>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-2">
+            Login Page Tagline
+          </label>
+          <div class="flex gap-4">
+            <%= text_field_tag :tagline, @tagline,
+                placeholder: "Universal server management with SaltStack",
+                class: "input input-bordered flex-1" %>
+            <%= f.submit "Update", class: "btn btn-primary cursor-pointer" %>
+          </div>
+          <p class="mt-2 text-sm text-base-content/60">
+            This tagline will appear below your logo on the login and 2FA screens
+          </p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Theme Selector -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Theme Selection</h2>
+      <p class="text-sm text-base-content/60 mb-4">
+        Choose a visual theme for the application interface
+      </p>
+
+      <!-- Dark Themes -->
+      <div class="mb-6">
+        <h3 class="text-sm font-semibold text-base-content/80 mb-3">Dark Themes</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="night">Night</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="dark">Dark</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="dracula">Dracula</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="business">Business</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="coffee">Coffee</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="dim">Dim</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="sunset">Sunset</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="synthwave">Synthwave</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="halloween">Halloween</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="forest">Forest</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="black">Black</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="luxury">Luxury</button>
+        </div>
+      </div>
+
+      <!-- Light Themes -->
+      <div>
+        <h3 class="text-sm font-semibold text-base-content/80 mb-3">Light Themes</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="light">Light</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="cupcake">Cupcake</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="emerald">Emerald</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="corporate">Corporate</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="retro">Retro</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="cyberpunk">Cyberpunk</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="valentine">Valentine</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="garden">Garden</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="lofi">Lo-Fi</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="pastel">Pastel</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="fantasy">Fantasy</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="wireframe">Wireframe</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="cmyk">CMYK</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="autumn">Autumn</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="acid">Acid</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="lemonade">Lemonade</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="winter">Winter</button>
+          <button class="theme-option btn btn-sm btn-ghost justify-start normal-case" data-theme="nord">Nord</button>
+        </div>
+      </div>
+
+      <div class="alert alert-info mt-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3 flex-1">
+            <p class="text-sm">
+              Theme changes are saved in your browser and apply immediately. The selected theme is personal to your account.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+<% end %>

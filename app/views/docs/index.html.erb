@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= @title %> - Veracity Documentation</title>
+
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <!-- Tailwind CSS from CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Syntax highlighting for code blocks -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <style>
+    /* Custom styles for markdown content */
+    .markdown-content {
+      @apply text-base-content leading-relaxed;
+    }
+
+    .markdown-content h1 {
+      @apply text-4xl font-bold mt-8 mb-4 pb-2 border-b-2 border-base-content/10;
+    }
+
+    .markdown-content h2 {
+      @apply text-3xl font-bold mt-6 mb-3 pb-1 border-b border-base-content/10;
+    }
+
+    .markdown-content h3 {
+      @apply text-2xl font-semibold mt-5 mb-2;
+    }
+
+    .markdown-content h4 {
+      @apply text-xl font-semibold mt-4 mb-2;
+    }
+
+    .markdown-content p {
+      @apply my-3;
+    }
+
+    .markdown-content ul, .markdown-content ol {
+      @apply my-3 ml-6;
+    }
+
+    .markdown-content ul {
+      @apply list-disc;
+    }
+
+    .markdown-content ol {
+      @apply list-decimal;
+    }
+
+    .markdown-content li {
+      @apply my-1;
+    }
+
+    .markdown-content a {
+      @apply text-primary hover:text-primary/80 underline;
+    }
+
+    .markdown-content code {
+      @apply bg-base-100 px-1 py-0.5 rounded text-sm font-mono text-error;
+    }
+
+    .markdown-content pre {
+      @apply bg-base-300 text-base-content p-4 rounded-lg overflow-x-auto my-4;
+    }
+
+    .markdown-content pre code {
+      @apply bg-transparent text-base-content p-0;
+    }
+
+    .markdown-content blockquote {
+      @apply border-l-4 border-primary pl-4 py-2 my-4 bg-base-200 border border-primary italic;
+    }
+
+    .markdown-content table {
+      @apply w-full my-4 border-collapse;
+    }
+
+    .markdown-content th {
+      @apply bg-base-200 border border-base-content/10 px-4 py-2 text-left font-semibold;
+    }
+
+    .markdown-content td {
+      @apply border border-base-content/10 px-4 py-2;
+    }
+
+    .markdown-content tr:nth-child(even) {
+      @apply bg-base-300;
+    }
+
+    .markdown-content hr {
+      @apply my-8 border-t-2 border-base-content/10;
+    }
+
+    .markdown-content img {
+      @apply max-w-full h-auto my-4 rounded shadow;
+    }
+
+    /* Checkbox styling for task lists */
+    .markdown-content input[type="checkbox"] {
+      @apply mr-2;
+    }
+
+    /* Badge styling for emoji indicators */
+    .markdown-content sup {
+      @apply text-xs;
+    }
+  </style>
+</head>
+<body class="bg-base-300">
+  <!-- Top Navigation Bar -->
+  <nav class="bg-primary text-white shadow-lg">
+    <div class="container mx-auto px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <%= link_to root_path, class: "text-white hover:text-white/80 flex items-center" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Dashboard
+          <% end %>
+
+          <%= link_to docs_path, class: "text-white hover:text-white/80 font-semibold" do %>
+            📚 Documentation
+          <% end %>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <span class="text-sm">
+            Logged in as <strong><%= current_user.email %></strong>
+          </span>
+          <%= link_to "Logout", destroy_user_session_path, method: :delete, data: { "turbo-method": :delete }, class: "text-white hover:text-white/80 text-sm" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-8">
+    <div class="bg-base-200 rounded-lg shadow-lg p-8 max-w-6xl mx-auto">
+      <!-- Flash Messages -->
+      <% if flash[:alert] %>
+        <div class="alert alert-error mb-4" role="alert">
+          <strong class="font-bold">Alert:</strong>
+          <span class="block sm:inline"><%= flash[:alert] %></span>
+        </div>
+      <% end %>
+
+      <% if flash[:notice] %>
+        <div class="alert alert-success mb-4" role="alert">
+          <strong class="font-bold">Success:</strong>
+          <span class="block sm:inline"><%= flash[:notice] %></span>
+        </div>
+      <% end %>
+
+      <!-- Documentation Content -->
+      <div class="markdown-content">
+        <%= raw @html_content %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-base-300 text-white py-6 mt-12">
+    <div class="container mx-auto px-4 text-center">
+      <p class="text-sm">
+        Veracity Documentation &middot; SALT-Powered Infrastructure Management &middot;
+        <%= link_to "Table of Contents", docs_path, class: "text-primary hover:text-primary/80" %> &middot;
+        Last Updated: <%= Time.current.strftime('%Y-%m-%d') %>
+      </p>
+      <p class="text-xs text-base-content/60 mt-2">
+        Production Server: <a href="<%= root_url %>" class="text-primary hover:text-primary/80"><%= request.host %></a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Initialize syntax highlighting -->
+  <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    });
+  </script>
+</body>
+</html>

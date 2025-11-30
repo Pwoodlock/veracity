@@ -1,0 +1,156 @@
+<% content_for :head do %>
+  <title>Users - Gotify Admin</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= render 'admin/gotify/tabs', active: 'users' %>
+
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-base-content">Users</h1>
+      <button onclick="document.getElementById('create-modal').classList.remove('hidden')"
+              class="btn btn-success">
+        <svg class="inline h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Create User
+      </button>
+    </div>
+
+    <% if flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:success] %></p>
+      </div>
+    <% end %>
+    <% if flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:error] %></p>
+      </div>
+    <% end %>
+
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg overflow-hidden">
+      <% if @users.any? %>
+        <table class="min-w-full divide-y divide-base-content/10">
+          <thead class="bg-base-100">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Username</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Role</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Created</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-base-content/80 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-base-content/10">
+            <% @users.each do |user| %>
+              <tr class="hover:bg-base-200">
+                <td class="px-6 py-4">
+                  <div class="flex items-center">
+                    <div class="h-10 w-10 rounded-full bg-base-200 flex items-center justify-center">
+                      <svg class="h-6 w-6 text-base-content/60" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <span class="ml-3 text-sm font-medium text-base-content"><%= user['name'] %></span>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <% if user['admin'] %>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-purple-900 text-purple-300">Admin</span>
+                  <% else %>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-base-200 text-base-content/80">User</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 text-sm text-base-content/60">
+                  <%= Time.parse(user['created'] || Time.now.to_s).strftime('%B %d, %Y') rescue 'Unknown' %>
+                </td>
+                <td class="px-6 py-4 text-right text-sm space-x-2">
+                  <button onclick="editUser(<%= user['id'] %>, '<%= user['name'] %>', <%= user['admin'] %>)"
+                          class="text-primary hover:text-primary-focus">Edit</button>
+                  <% unless user['name'] == 'admin' %>
+                    <%= button_to "Delete", admin_gotify_delete_user_path(id: user['id']), method: :delete,
+                        data: { confirm: "Delete user '#{user['name']}'?" },
+                        class: "text-error hover:text-error" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="px-6 py-12 text-center">
+          <h3 class="text-sm font-medium text-base-content">No users found</h3>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Create User Modal -->
+  <div id="create-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-xl font-bold text-base-content mb-4">Create User</h2>
+      <%= form_with url: admin_gotify_create_user_path, method: :post, class: "space-y-4" do |f| %>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Username</label>
+          <input type="text" name="name" required class="input input-bordered w-full placeholder-base-content/40">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Password</label>
+          <input type="password" name="password" required class="input input-bordered w-full placeholder-base-content/40">
+        </div>
+        <div class="flex items-center">
+          <input type="checkbox" name="admin" value="1" id="admin-checkbox" class="h-4 w-4 text-primary">
+          <label for="admin-checkbox" class="ml-2 text-sm text-base-content/80">Administrator privileges</label>
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button" onclick="document.getElementById('create-modal').classList.add('hidden')"
+                  class="px-4 py-2 border border-base-content/20 rounded-lg text-base-content/80 hover:bg-base-200">Cancel</button>
+          <button type="submit" class="btn btn-success">Create</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-xl font-bold text-base-content mb-4">Edit User</h2>
+      <%= form_with url: admin_gotify_update_user_path, method: :put, class: "space-y-4" do |f| %>
+        <input type="hidden" name="id" id="edit-user-id">
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Username</label>
+          <input type="text" name="name" id="edit-user-name" required class="input input-bordered w-full placeholder-base-content/40">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">New Password (leave blank to keep current)</label>
+          <input type="password" name="password" id="edit-user-password" class="input input-bordered w-full placeholder-base-content/40">
+        </div>
+        <div class="flex items-center">
+          <input type="checkbox" name="admin" value="1" id="edit-admin-checkbox" class="h-4 w-4 text-primary">
+          <label for="edit-admin-checkbox" class="ml-2 text-sm text-base-content/80">Administrator privileges</label>
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button" onclick="document.getElementById('edit-modal').classList.add('hidden')"
+                  class="px-4 py-2 border border-base-content/20 rounded-lg text-base-content/80 hover:bg-base-200">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus">Update</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <script>
+    function editUser(id, name, isAdmin) {
+      document.getElementById('edit-user-id').value = id;
+      document.getElementById('edit-user-name').value = name;
+      document.getElementById('edit-user-password').value = '';
+      document.getElementById('edit-admin-checkbox').checked = isAdmin;
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('create-modal').classList.add('hidden');
+        document.getElementById('edit-modal').classList.add('hidden');
+      }
+    });
+  </script>
+<% end %>

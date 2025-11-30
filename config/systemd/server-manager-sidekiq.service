@@ -1,0 +1,48 @@
+[Unit]
+Description=Server Manager - Sidekiq Background Worker
+After=network.target redis.service postgresql.service salt-api.service server-manager.service
+Requires=redis.service postgresql.service
+
+[Service]
+Type=notify
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/veracity/app
+
+# Environment
+Environment=RAILS_ENV=production
+Environment=RACK_ENV=production
+EnvironmentFile=/opt/veracity/app/.env.production
+
+# Sidekiq configuration
+ExecStart=/home/deploy/.rbenv/shims/bundle exec sidekiq -C config/sidekiq.yml
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Process management
+# Sidekiq handles SIGTERM gracefully
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=90
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=server-manager-sidekiq
+
+# Security
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/veracity/app/tmp
+ReadWritePaths=/opt/veracity/app/log
+
+[Install]
+WantedBy=multi-user.target

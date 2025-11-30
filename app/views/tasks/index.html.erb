@@ -1,0 +1,187 @@
+<% content_for :head do %>
+  <title>Tasks - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Action buttons and stats -->
+  <div class="mb-8">
+    <div class="flex justify-end gap-2 mb-4">
+      <%= link_to task_templates_path, class: "btn btn-ghost" do %>
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+        </svg>
+        Templates
+      <% end %>
+      <%= link_to new_task_path, class: "btn btn-primary" do %>
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        New Task
+      <% end %>
+    </div>
+
+    <!-- Stats cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="stat bg-base-200 rounded-lg border border-base-content/10">
+        <div class="stat-title">Total Tasks</div>
+        <div class="stat-value text-primary"><%= @stats[:total] %></div>
+      </div>
+      <div class="stat bg-base-200 rounded-lg border border-base-content/10">
+        <div class="stat-title">Enabled</div>
+        <div class="stat-value text-success"><%= @stats[:enabled] %></div>
+      </div>
+      <div class="stat bg-base-200 rounded-lg border border-base-content/10">
+        <div class="stat-title">Scheduled</div>
+        <div class="stat-value text-info"><%= @stats[:scheduled] %></div>
+      </div>
+      <div class="stat bg-base-200 rounded-lg border border-base-content/10">
+        <div class="stat-title">Running</div>
+        <div class="stat-value text-warning"><%= @stats[:running] %></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks table -->
+  <div class="bg-base-200 rounded-lg border border-base-content/10 overflow-hidden">
+    <% if @tasks.any? %>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Target</th>
+              <th>Schedule</th>
+              <th>Status</th>
+              <th>Last Run</th>
+              <th>Success Rate</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @tasks.each do |task| %>
+              <tr class="hover">
+                <td>
+                  <div>
+                    <div class="font-bold"><%= link_to task.name, task, class: "link link-primary" %></div>
+                    <% if task.description.present? %>
+                      <div class="text-sm text-base-content/60"><%= truncate(task.description, length: 50) %></div>
+                    <% end %>
+                  </div>
+                </td>
+                <td>
+                  <div class="badge badge-outline">
+                    <%= task.target_name %>
+                  </div>
+                </td>
+                <td>
+                  <% if task.cron_schedule.present? %>
+                    <div>
+                      <code class="text-xs bg-base-300 px-2 py-1 rounded"><%= task.cron_schedule %></code>
+                      <% if task.next_run_at %>
+                        <div class="text-xs text-base-content/60 mt-1">
+                          Next: <%= task.next_run_at.strftime("%b %d, %H:%M") %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="text-base-content/40">Manual only</span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if task.enabled? %>
+                    <div class="badge badge-success gap-2">
+                      <div class="badge badge-xs badge-success"></div>
+                      Enabled
+                    </div>
+                  <% else %>
+                    <div class="badge badge-ghost gap-2">
+                      <div class="badge badge-xs badge-ghost"></div>
+                      Disabled
+                    </div>
+                  <% end %>
+                </td>
+                <td>
+                  <% last_run = task.last_run %>
+                  <% if last_run %>
+                    <div>
+                      <div class="badge badge-<%= last_run.completed? ? 'success' : last_run.failed? ? 'error' : 'warning' %> badge-sm">
+                        <%= last_run.status.capitalize %>
+                      </div>
+                      <div class="text-xs text-base-content/60 mt-1">
+                        <%= time_ago_in_words(last_run.created_at) %> ago
+                      </div>
+                    </div>
+                  <% else %>
+                    <span class="text-base-content/40">Never</span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if task.task_runs.any? %>
+                    <div class="radial-progress text-success" style="--value:<%= task.success_rate %>; --size:3rem;">
+                      <span class="text-xs"><%= task.success_rate %>%</span>
+                    </div>
+                  <% else %>
+                    <span class="text-base-content/40">N/A</span>
+                  <% end %>
+                </td>
+                <td>
+                  <div class="flex justify-end gap-1">
+                    <%= link_to task, class: "btn btn-ghost btn-sm" do %>
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    <% end %>
+                    <%= button_to execute_task_path(task), method: :post, class: "btn btn-primary btn-sm",
+                        disabled: task.running?,
+                        title: task.running? ? "Task is already running" : "Execute now" do %>
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    <% end %>
+                    <%= link_to edit_task_path(task), class: "btn btn-ghost btn-sm" do %>
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    <% end %>
+                    <%= button_to task, method: :delete, class: "btn btn-error btn-sm",
+                        form: { data: { turbo_confirm: "Delete '#{task.name}'? This will also delete #{task.task_runs.count} execution records." } } do %>
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if @tasks.respond_to?(:total_pages) %>
+        <div class="p-4 border-t border-base-content/10">
+          <%= paginate @tasks %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-base-content">No tasks</h3>
+        <p class="mt-1 text-sm text-base-content/60">Get started by creating a new task.</p>
+        <div class="mt-6">
+          <%= link_to new_task_path, class: "btn btn-primary" do %>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Task
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div><% end %>

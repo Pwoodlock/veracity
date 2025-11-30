@@ -1,0 +1,74 @@
+<% content_for :head do %>
+  <title>Onboard New Servers - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Flash Messages -->
+    <% if flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:success] %></p>
+      </div>
+    <% end %>
+    <% if flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:error] %></p>
+      </div>
+    <% end %>
+    <% if flash[:warning] %>
+      <div class="alert alert-warning mb-6">
+        <p><%= flash[:warning] %></p>
+      </div>
+    <% end %>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+      <!-- Pending Minion Keys -->
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+        <div class="px-6 py-4 border-b border-base-content/10 flex justify-between items-center">
+          <h2 class="text-lg font-semibold text-base-content">Pending Minion Keys</h2>
+          <%= button_to "Refresh", refresh_onboarding_path, method: :post, class: "btn btn-primary btn-sm" %>
+        </div>
+
+        <div id="pending-keys">
+          <%= render partial: "onboarding/pending_keys", locals: { pending_keys: @pending_keys } %>
+        </div>
+      </div>
+
+      <!-- Installation Instructions -->
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+        <div class="px-6 py-4 border-b border-base-content/10">
+          <h2 class="text-lg font-semibold text-base-content">Installation Instructions</h2>
+        </div>
+        <div class="px-6 py-4 space-y-4">
+          <div>
+            <h3 class="font-medium text-base-content mb-2">Step 1: Install Salt Minion</h3>
+            <p class="text-sm text-base-content/80 mb-2">Run this command on your new server:</p>
+            <div class="bg-base-300 text-success p-3 rounded font-mono text-sm overflow-x-auto">
+              curl -sSL <%= root_url %>install-minion.sh | sudo bash
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-medium text-base-content mb-2">Step 2: Accept the Key</h3>
+            <p class="text-sm text-base-content/80">
+              After installation, the minion key will appear in the "Pending Minion Keys" panel.
+              Copy the Minion ID and Fingerprint, then use the form below to accept it.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="font-medium text-base-content mb-2">Step 3: Server Auto-Registration</h3>
+            <p class="text-sm text-base-content/80">
+              Once the key is accepted, the server will automatically be discovered and added to your fleet!
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+<% end %>

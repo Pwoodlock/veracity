@@ -1,0 +1,95 @@
+<% content_for :head do %>
+  <title>Groups - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- New Group Button -->
+    <div class="flex justify-end mb-6">
+      <%= link_to new_group_path, class: "inline-flex items-center px-4 py-2 btn-primary text-white rounded-lg  transition" do %>
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        New Group
+      <% end %>
+    </div>
+
+    <!-- Ungrouped Servers Card (if any) -->
+    <% if @ungrouped_count > 0 %>
+      <div class="bg-base-200 border border-warning rounded-lg p-3 mb-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>
+              <p class="text-sm font-medium text-base-content"><%= @ungrouped_count %> Ungrouped Server<%= @ungrouped_count != 1 ? 's' : '' %></p>
+              <p class="text-xs text-base-content/60">Not assigned to any group</p>
+            </div>
+          </div>
+          <%= link_to servers_path(group_id: 'ungrouped'), class: "text-xs text-primary hover:text-primary/80 font-medium" do %>
+            View →
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Groups Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      <% @groups.each do |group| %>
+        <div class="bg-base-200 border border-base-content/10 rounded-lg hover:border-primary transition">
+          <!-- Color header -->
+          <div class="h-1 rounded-t-lg" style="background-color: <%= group.color %>"></div>
+
+          <div class="p-3">
+            <!-- Group name -->
+            <h3 class="text-sm font-semibold text-base-content mb-1 truncate"><%= group.name %></h3>
+            <% if group.description.present? %>
+              <p class="text-base-content/60 text-xs mb-2 line-clamp-1"><%= group.description %></p>
+            <% end %>
+
+            <!-- Stats - inline -->
+            <div class="flex items-center gap-3 mb-2 text-xs">
+              <div class="flex items-center gap-1">
+                <span class="text-base-content/60">Servers:</span>
+                <span class="font-semibold text-base-content"><%= group.servers_count %></span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-success"></span>
+                <span class="font-semibold text-success"><%= group.servers.where(status: 'online').count %></span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-1">
+              <%= link_to group_path(group), class: "flex-1 text-center px-2 py-1 btn-primary text-primary-content rounded  transition text-xs font-medium" do %>
+                View
+              <% end %>
+              <%= link_to edit_group_path(group), class: "px-2 py-1 bg-base-200 text-base-content rounded hover:bg-base-300 transition text-xs font-medium" do %>
+                Edit
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Empty state -->
+      <% if @groups.empty? %>
+        <div class="col-span-full text-center py-12">
+          <svg class="w-16 h-16 mx-auto text-base-content/60 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          <h3 class="text-lg font-medium text-base-content mb-2">No groups yet</h3>
+          <p class="text-base-content/80 mb-4">Create your first group to organize your servers</p>
+          <%= link_to new_group_path, class: "inline-flex items-center px-4 py-2 btn-primary text-white rounded-lg  transition" do %>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create First Group
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

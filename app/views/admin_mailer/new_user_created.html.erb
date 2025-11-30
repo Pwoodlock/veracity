@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #3b82f6; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background-color: #f9fafb; }
+    .user-details { background-color: white; padding: 15px; border-left: 4px solid #3b82f6; margin: 15px 0; }
+    .button { display: inline-block; padding: 12px 24px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 4px; margin: 15px 0; }
+    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>New User Created</h1>
+    </div>
+
+    <div class="content">
+      <p>Hello Admin,</p>
+
+      <p>A new user account has been created in Server Manager.</p>
+
+      <div class="user-details">
+        <h3>User Details:</h3>
+        <p><strong>Email:</strong> <%= @user.email %></p>
+        <p><strong>Role:</strong> <%= @user.role.titleize %></p>
+        <p><strong>Created By:</strong> <%= @created_by.email %></p>
+        <p><strong>Created At:</strong> <%= @user.created_at.strftime("%B %d, %Y at %I:%M %p %Z") %></p>
+        <% if @user.otp_required_for_login? %>
+          <p><strong>Two-Factor Auth:</strong> Enabled</p>
+        <% end %>
+      </div>
+
+      <p>
+        <a href="<%= @login_url %>" class="button">View Dashboard</a>
+      </p>
+
+      <p>
+        You can manage this user's permissions and settings from the Users section of the admin panel.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>
+        This is an automated message from Server Manager.<br>
+        Please do not reply to this email.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<% content_for :head do %>
+  <%# Load Turbo for real-time Turbo Stream updates %>
+  <script type="module" async>
+    import * as Turbo from 'https://cdn.skypack.dev/@hotwired/turbo@8.0.4'
+  </script>
+  <%= action_cable_meta_tag %>
+
+  <%# Charts %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartkick@5.0.1/dist/chartkick.min.js" defer></script>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+<!-- Toast Notification Container -->
+<div id="toast-container" class="toast toast-top toast-end"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Flash Messages -->
+    <% if flash[:notice] || flash[:success] %>
+      <div class="alert alert-success shadow-lg mb-6">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span><%= flash[:notice] || flash[:success] %></span>
+      </div>
+    <% end %>
+    <% if flash[:alert] || flash[:error] %>
+      <div class="alert alert-error shadow-lg mb-6">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span><%= flash[:alert] || flash[:error] %></span>
+      </div>
+    <% end %>
+
+    <!-- Turbo Stream subscription for real-time dashboard updates -->
+    <%= turbo_stream_from "dashboard" %>
+
+    <!-- Core Stats -->
+    <%= render 'dashboard/stats',
+       total_servers: @total_servers,
+       online_servers: @online_servers,
+       offline_servers: @offline_servers,
+       total_groups: @total_groups,
+       ungrouped_servers: @ungrouped_servers,
+       commands_today: @commands_today,
+       successful_commands: @successful_commands,
+       failed_commands: @failed_commands %>
+
+    <!-- Vulnerability Alerts -->
+    <%= render 'dashboard/vulnerability_alerts',
+       vulnerability_stats: @vulnerability_stats,
+       recent_vulnerability_alerts: @recent_vulnerability_alerts %>
+
+    <!-- Failed Commands Tracker -->
+    <%= render 'dashboard/failed_commands', failed_updates: @failed_updates %>
+
+    <!-- Health Status Widget -->
+    <% if @recent_health_checks.any? || @servers_with_health_issues > 0 %>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-base-content">
+            <% if @servers_with_health_issues > 0 %>
+              System Health Issues (<%= @servers_with_health_issues %> servers)
+            <% else %>
+              Recent Health Checks
+            <% end %>
+          </h2>
+          <%= link_to "View All Commands →", commands_path, class: "text-sm text-primary hover:text-primary/80" %>
+        </div>
+
+        <% if @recent_health_checks.any? %>
+          <div class="space-y-3">
+            <% @recent_health_checks.each do |health_cmd| %>
+              <% health_output = health_cmd.output %>
+              <%
+                # Extract health status from output (check for both emoji and non-emoji versions)
+                is_healthy = health_output.include?('HEALTHY')
+                has_warnings = health_output.include?('WARNING')
+                is_critical = health_output.include?('CRITICAL')
+
+                # Extract summary
+                summary_match = health_output.match(/SUMMARY:\n-+\n(.+?)\n=/m)
+                summary = summary_match ? summary_match[1].strip : 'Health check completed'
+
+                border_color = is_healthy ? 'border-success bg-success/20' :
+                               has_warnings ? 'border-warning bg-warning/20' :
+                               is_critical ? 'border-error bg-error/20' :
+                               'border-base-content/10 bg-base-300'
+              %>
+
+              <div class="border <%= border_color %> rounded-lg p-4">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <% if is_healthy %>
+                        <span class="text-xs bg-success text-success-content px-2 py-1 rounded font-medium">HEALTHY</span>
+                      <% elsif has_warnings %>
+                        <span class="text-xs bg-warning text-warning-content px-2 py-1 rounded font-medium">WARNING</span>
+                      <% elsif is_critical %>
+                        <span class="text-xs bg-error text-error-content px-2 py-1 rounded font-medium">CRITICAL</span>
+                      <% else %>
+                        <span class="text-xs bg-base-200 text-base-content/80 px-2 py-1 rounded font-medium">UNKNOWN</span>
+                      <% end %>
+
+                      <span class="text-sm font-medium text-base-content">
+                        <%= link_to health_cmd.server.hostname, server_path(health_cmd.server), class: "text-primary hover:text-primary/80" %>
+                      </span>
+                      <span class="text-xs text-base-content/60">
+                        <%= time_ago_in_words(health_cmd.started_at) %> ago
+                      </span>
+                    </div>
+
+                    <div class="text-sm text-base-content/80 mb-2">
+                      <%= summary %>
+                    </div>
+
+                    <details class="mt-2">
+                      <summary class="cursor-pointer text-sm text-primary hover:text-primary/80 font-medium">
+                        Show full health report
+                      </summary>
+                      <div class="mt-2 bg-base-300 text-success p-3 rounded text-xs font-mono overflow-x-auto max-h-96">
+                        <%= health_output %>
+                      </div>
+                    </details>
+                  </div>
+
+                  <div class="ml-4">
+                    <%= link_to "View →", command_path(health_cmd), class: "text-sm text-primary hover:text-primary/80" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-8 text-base-content/60">
+            <p>No recent health checks found</p>
+            <p class="text-sm mt-2 text-base-content/60">Health checks run automatically after server reboots during updates</p>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+  </div>
+
+  <!-- Dashboard Enhancement JavaScript -->
+  <script>
+    (function() {
+      'use strict';
+
+      // HTML escape function for XSS protection
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Toast Notification System
+      const Toast = {
+        show(message, type = 'info', duration = 5000) {
+          const container = document.getElementById('toast-container');
+          if (!container) return;
+
+          const toast = document.createElement('div');
+          toast.className = `toast ${type}`;
+          toast.setAttribute('role', 'alert');
+          toast.setAttribute('aria-live', 'polite');
+
+          const icon = {
+            success: '✓',
+            error: '✗',
+            info: 'ℹ',
+            warning: '⚠'
+          }[type] || 'ℹ';
+
+          // Create elements safely to prevent XSS
+          const iconSpan = document.createElement('span');
+          iconSpan.style.fontSize = '1.5rem';
+          iconSpan.textContent = icon;
+
+          const messageDiv = document.createElement('div');
+          messageDiv.style.flex = '1';
+          const messageText = document.createElement('div');
+          messageText.style.fontWeight = '500';
+          messageText.style.color = '#111827';
+          messageText.textContent = message; // Safe - uses textContent
+          messageDiv.appendChild(messageText);
+
+          const closeBtn = document.createElement('button');
+          closeBtn.textContent = '×';
+          closeBtn.style.color = '#6b7280';
+          closeBtn.style.fontWeight = 'bold';
+          closeBtn.style.fontSize = '1.25rem';
+          closeBtn.style.padding = '0 0.5rem';
+          closeBtn.setAttribute('aria-label', 'Close notification');
+          closeBtn.onclick = () => toast.remove();
+
+          toast.appendChild(iconSpan);
+          toast.appendChild(messageDiv);
+          toast.appendChild(closeBtn);
+          container.appendChild(toast);
+
+          // Auto-remove after duration
+          setTimeout(() => {
+            toast.classList.add('removing');
+            setTimeout(() => toast.remove(), 300);
+          }, duration);
+        }
+      };
+
+      // Widget Pulse Animation
+      function pulseWidget(targetId) {
+        const widget = document.getElementById(targetId);
+        if (!widget) return;
+
+        widget.classList.add('widget-update');
+        setTimeout(() => widget.classList.remove('widget-update'), 1500);
+      }
+
+      // Connection Status Tracker
+      // Listen for Turbo Stream events (with cleanup)
+      const streamListener = (event) => {
+        try {
+          const { target } = event.detail.newStream;
+
+          console.log('Turbo Stream update:', target);
+
+          // Trigger pulse animation based on which widget was updated
+          if (target === 'dashboard-stats') {
+            pulseWidget('dashboard-stats');
+            Toast.show('Dashboard stats updated', 'info', 3000);
+          } else if (target === 'failed-commands-widget') {
+            pulseWidget('failed-commands-widget');
+            Toast.show('Failed commands updated', 'warning', 4000);
+          } else if (target === 'server-status-chart-widget') {
+            pulseWidget('server-status-chart-widget');
+          }
+        } catch (error) {
+          console.error('Dashboard stream error:', error);
+        }
+      };
+
+      document.addEventListener('turbo:before-stream-render', streamListener);
+
+      // Cleanup event listeners to prevent memory leaks
+      document.addEventListener('turbo:before-cache', () => {
+        document.removeEventListener('turbo:before-stream-render', streamListener);
+      });
+
+      // Expose Toast globally for manual use
+      window.DashboardToast = Toast;
+
+      console.log('Dashboard enhancements loaded');
+    })();
+  </script>
+<% end %>

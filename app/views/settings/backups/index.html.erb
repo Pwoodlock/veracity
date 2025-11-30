@@ -1,0 +1,536 @@
+<% content_for :head do %>
+  <title>Backup Settings - Server Manager</title>
+<% end %>
+
+<!-- Top Navigation -->
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Settings Tabs -->
+    <div class="mb-6 border-b border-base-content/10">
+      <nav class="-mb-px flex space-x-8">
+        <%= link_to settings_backups_path, class: "border-b-2 border-primary py-4 px-1 text-sm font-medium text-primary" do %>
+          Borg Backup
+        <% end %>
+        <%= link_to settings_hetzner_api_keys_path, class: "border-b-2 border-transparent py-4 px-1 text-sm font-medium text-base-content/60 hover:text-base-content/80 hover:border-base-content/20" do %>
+          Hetzner API Keys
+        <% end %>
+        <%= link_to settings_maintenance_path, class: "border-b-2 border-transparent py-4 px-1 text-sm font-medium text-base-content/60 hover:text-base-content/80 hover:border-base-content/20" do %>
+          Maintenance
+        <% end %>
+      </nav>
+    </div>
+
+    <h1 class="text-2xl font-bold text-base-content mb-6">Borg Backup Configuration</h1>
+
+    <!-- Flash Messages -->
+    <% if flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:success] %></p>
+      </div>
+    <% end %>
+    <% if flash[:alert] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:alert] %></p>
+      </div>
+    <% end %>
+
+    <!-- Current Status Card -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-lg font-semibold text-base-content mb-4">Backup Status</h2>
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="border border-base-content/10 rounded-lg p-4">
+          <div class="text-sm text-base-content/60 mb-1">Status</div>
+          <div class="text-2xl font-bold <%= @backup_config.enabled? ? 'text-success' : 'text-base-content/60' %>">
+            <%= @backup_config.enabled? ? 'Enabled' : 'Disabled' %>
+          </div>
+        </div>
+        <div class="border border-base-content/10 rounded-lg p-4">
+          <div class="text-sm text-base-content/60 mb-1">Schedule</div>
+          <div class="text-sm font-semibold text-base-content">
+            <%= @backup_config.schedule_display %>
+          </div>
+          <div class="text-xs text-base-content/40 mt-1">
+            <%= @backup_config.enabled? ? 'Active' : 'Inactive' %>
+          </div>
+        </div>
+        <div class="border border-base-content/10 rounded-lg p-4">
+          <div class="text-sm text-base-content/60 mb-1">Last Backup</div>
+          <div class="text-sm font-semibold text-base-content">
+            <%= @backup_config.last_backup_at ? time_ago_in_words(@backup_config.last_backup_at) + ' ago' : 'Never' %>
+          </div>
+        </div>
+        <div class="border border-base-content/10 rounded-lg p-4">
+          <div class="text-sm text-base-content/60 mb-1">Last Status</div>
+          <div class="text-lg font-semibold <%= @backup_config.last_backup_status == 'completed' ? 'text-success' : 'text-base-content/60' %>">
+            <%= @backup_config.last_backup_status.titleize %>
+          </div>
+        </div>
+        <div class="border border-base-content/10 rounded-lg p-4">
+          <div class="text-sm text-base-content/60 mb-1">Failed (7 days)</div>
+          <div class="text-2xl font-bold <%= @failed_backups_count > 0 ? 'text-error' : 'text-base-content' %>">
+            <%= @failed_backups_count %>
+          </div>
+        </div>
+      </div>
+
+      <% if @backup_config.enabled? %>
+        <div class="mt-4">
+          <%= button_to "Run Backup Now", run_now_settings_backups_path, method: :post,
+              class: "px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors",
+              data: { confirm: "Start a backup now?" } %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Configuration Form -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-lg font-semibold text-base-content mb-4">Configuration</h2>
+
+      <%= form_with model: @backup_config, url: settings_backups_path, method: :post, local: true, class: "space-y-6" do |f| %>
+
+        <!-- Repository Type -->
+        <div>
+          <%= f.label :repository_type, "Repository Type", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.select :repository_type,
+              BackupConfiguration::REPOSITORY_TYPES.map { |k,v| [v, k] },
+              {},
+              class: "select select-bordered w-full" %>
+        </div>
+
+        <!-- Repository URL -->
+        <div>
+          <%= f.label :repository_url, "Repository URL", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.text_field :repository_url,
+              placeholder: "ssh://xxxxx@xxxxx.repo.borgbase.com/./repo",
+              class: "input input-bordered w-full",
+              required: true %>
+          <p class="mt-1 text-xs text-base-content/60">
+            For BorgBase.com: Get this from your repository page<br>
+            For SSH: user@host:/path/to/repo<br>
+            For Local: /mnt/backup/borg-repo
+          </p>
+        </div>
+
+        <!-- Passphrase -->
+        <div>
+          <%= f.label :passphrase, "Encryption Passphrase", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <div class="flex gap-2">
+            <%= f.password_field :passphrase,
+                id: "passphrase_field",
+                placeholder: "Enter a strong passphrase (16+ characters)",
+                class: "input input-bordered flex-1",
+                required: true %>
+            <button type="button" onclick="generatePassphrase()" class="btn btn-success whitespace-nowrap">
+              Generate
+            </button>
+            <button type="button" onclick="togglePassphraseVisibility()" class="btn btn-ghost whitespace-nowrap">
+              Show
+            </button>
+          </div>
+          <p class="mt-1 text-xs text-error">
+            IMPORTANT: Save this passphrase securely! Without it, backups cannot be restored.
+          </p>
+          <div id="passphrase_display" class="mt-2 hidden">
+            <div class="alert alert-warning">
+              <p class="text-xs font-semibold mb-1">Your Generated Passphrase (Copy & Save!):</p>
+              <code id="passphrase_text" class="block text-sm font-mono break-all select-all"></code>
+            </div>
+          </div>
+        </div>
+
+        <!-- SSH Key (Optional) -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <%= f.label :ssh_key, "SSH Private Key (Optional)", class: "block text-sm font-medium text-base-content/80" %>
+            <button type="button" onclick="generateSSHKey()" class="btn btn-success btn-sm">
+              Generate SSH Key Pair
+            </button>
+          </div>
+          <%= f.text_area :ssh_key,
+              id: "ssh_key_field",
+              placeholder: "-----BEGIN OPENSSH PRIVATE KEY-----\n...",
+              rows: 6,
+              class: "textarea textarea-bordered w-full font-mono text-xs" %>
+          <p class="mt-1 text-xs text-base-content/60">Only needed if using key-based authentication with BorgBase</p>
+
+          <!-- Public Key Display -->
+          <div id="public_key_display" class="mt-3 hidden">
+            <div class="p-4 bg-base-200 border border-primary rounded-lg">
+              <p class="text-sm font-semibold text-primary mb-2">Add this Public Key to BorgBase:</p>
+              <div class="bg-base-300 p-3 rounded border border-primary">
+                <code id="public_key_text" class="block text-xs font-mono text-primary/80 break-all select-all"></code>
+              </div>
+              <div class="mt-2 flex gap-2">
+                <button type="button" onclick="copyPublicKey()" class="btn btn-primary btn-sm">
+                  Copy Public Key
+                </button>
+                <a href="https://www.borgbase.com/account" target="_blank" class="btn btn-ghost btn-sm">
+                  Open BorgBase
+                </a>
+              </div>
+              <p class="text-xs text-base-content/80 mt-2">
+                1. Copy the public key above<br>
+                2. Go to BorgBase → Account → SSH Keys<br>
+                3. Click "Add SSH Key" and paste it there<br>
+                4. The private key below is already filled in the form
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule -->
+        <div>
+          <%= f.label :backup_schedule, "Automatic Backup Schedule", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.select :backup_schedule,
+              [
+                ['Daily at 2:00 AM', '0 2 * * *'],
+                ['Daily at 3:00 AM', '0 3 * * *'],
+                ['Weekly (Sunday 3 AM)', '0 3 * * 0'],
+                ['Monthly (1st at 4 AM)', '0 4 1 * *']
+              ],
+              {},
+              class: "select select-bordered w-full" %>
+          <p class="mt-1 text-xs text-base-content/60">
+            Backups will run automatically on this schedule when enabled. Changes take effect immediately.
+          </p>
+        </div>
+
+        <!-- Retention Policy -->
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <%= f.label :retention_daily, "Keep Daily", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+            <%= f.number_field :retention_daily,
+                min: 0,
+                class: "select select-bordered w-full" %>
+          </div>
+          <div>
+            <%= f.label :retention_weekly, "Keep Weekly", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+            <%= f.number_field :retention_weekly,
+                min: 0,
+                class: "select select-bordered w-full" %>
+          </div>
+          <div>
+            <%= f.label :retention_monthly, "Keep Monthly", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+            <%= f.number_field :retention_monthly,
+                min: 0,
+                class: "select select-bordered w-full" %>
+          </div>
+        </div>
+
+        <!-- Enable/Disable -->
+        <div class="flex items-center">
+          <%= f.check_box :enabled, class: "checkbox checkbox-primary" %>
+          <%= f.label :enabled, "Enable automatic backups", class: "ml-2 block text-sm text-base-content/80" %>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex space-x-4">
+          <%= f.submit "Save Configuration", class: "btn btn-primary" %>
+          <button type="button" onclick="testConnection()" class="btn btn-ghost">
+            Test Connection
+          </button>
+        </div>
+      <% end %>
+
+      <!-- Clear Configuration (Danger Zone) -->
+      <% if @backup_config.repository_url.present? || @backup_config.passphrase.present? || @backup_config.ssh_key.present? || @backup_histories.any? %>
+        <div class="mt-6 pt-6 border-t border-base-content/10">
+          <h3 class="text-sm font-semibold text-error mb-2">Danger Zone</h3>
+          <p class="text-xs text-base-content/60 mb-3">
+            Clear all backup configuration and history. This will remove the repository URL, passphrase, SSH key, and all backup logs.
+            <strong>This action cannot be undone.</strong>
+          </p>
+          <%= button_to "Clear All Configuration", clear_configuration_settings_backups_path,
+              method: :delete,
+              class: "btn btn-error btn-sm",
+              data: {
+                confirm: "WARNING\n\nThis will permanently delete:\n• Repository URL\n• Encryption passphrase\n• SSH private key\n• All backup history logs\n\nYou will need to reconfigure everything from scratch.\n\nAre you absolutely sure you want to continue?"
+              } %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Disaster Recovery Instructions -->
+    <div class="bg-base-200 border-2 border-warning rounded-lg p-6 mb-8">
+      <h2 class="text-lg font-semibold text-warning mb-4">Disaster Recovery - How to Restore</h2>
+      <div class="space-y-4 text-sm text-base-content/80">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-base-300 p-4 rounded border border-base-content/10">
+            <h3 class="font-semibold text-base-content mb-2">What You Need</h3>
+            <ul class="list-disc list-inside space-y-1 text-xs">
+              <li>Repository URL (above)</li>
+              <li>Encryption Passphrase</li>
+              <li>SSH Private Key (if used)</li>
+            </ul>
+          </div>
+          <div class="bg-base-300 p-4 rounded border border-base-content/10">
+            <h3 class="font-semibold text-base-content mb-2">What Gets Backed Up</h3>
+            <ul class="list-disc list-inside space-y-1 text-xs">
+              <li>PostgreSQL database</li>
+              <li>Master encryption key</li>
+              <li>Environment variables</li>
+              <li>Database schema</li>
+            </ul>
+          </div>
+          <div class="bg-base-300 p-4 rounded border border-base-content/10">
+            <h3 class="font-semibold text-base-content mb-2">Quick Restore</h3>
+            <pre class="text-xs bg-base-300 text-success p-2 rounded mt-2 overflow-x-auto">export BORG_REPO='...'
+export BORG_PASSPHRASE='...'
+borg list
+borg extract ::backup-name</pre>
+          </div>
+        </div>
+        <div class="bg-base-300 p-4 rounded border border-base-content/10">
+          <h3 class="font-semibold text-base-content mb-2">Full Documentation</h3>
+          <p class="text-xs mb-2">Complete disaster recovery guide with step-by-step instructions:</p>
+          <a href="https://github.com/yourorg/server-manager/blob/main/DISASTER_RECOVERY.md"
+             target="_blank"
+             class="btn btn-warning btn-sm">
+            Read DISASTER_RECOVERY.md
+          </a>
+          <p class="text-xs mt-2 text-warning">
+            <strong>IMPORTANT:</strong> Save your passphrase in a password manager NOW! Without it, backups are unrecoverable.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backup History -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-lg font-semibold text-base-content mb-4">Backup History</h2>
+
+      <% if @backup_histories.any? %>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-base-content/10">
+            <thead class="bg-base-100">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Backup Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Started</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Duration</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Files</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Original Size</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Final Size</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Saved</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Details</th>
+              </tr>
+            </thead>
+            <tbody class="bg-base-200 divide-y divide-base-content/10">
+              <% @backup_histories.each_with_index do |backup, index| %>
+                <tr class="<%= backup.status == 'failed' ? 'bg-error/20' : '' %>">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content font-mono">
+                    <%= backup.backup_name %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 text-xs rounded-full <%= backup.status_badge_class %>">
+                      <%= backup.status.titleize %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/60">
+                    <%= backup.started_at ? time_ago_in_words(backup.started_at) + ' ago' : 'N/A' %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/60">
+                    <%= backup.duration_formatted %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/60">
+                    <%= backup.files_count || 'N/A' %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/60">
+                    <%= backup.original_size_formatted %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/60">
+                    <%= backup.deduplicated_size_formatted %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold <%= backup.compression_ratio != 'N/A' ? 'text-success' : 'text-base-content/60' %>">
+                    <%= backup.compression_ratio %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <button onclick="toggleDetails(<%= index %>)" class="text-primary hover:text-primary-focus">
+                      <span id="toggle-icon-<%= index %>">▼</span> <span id="toggle-text-<%= index %>">Show</span>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Details Row (Hidden by default) -->
+                <tr id="details-<%= index %>" class="hidden bg-base-300">
+                  <td colspan="9" class="px-6 py-4">
+                    <div class="space-y-3">
+                      <!-- Restore Command -->
+                      <div class="bg-base-300 text-success p-3 rounded font-mono text-xs overflow-x-auto">
+                        <div class="text-base-content/60 mb-2"># Restore this backup:</div>
+                        export BORG_REPO='<%= @backup_config.repository_url %>'<br>
+                        export BORG_PASSPHRASE='your-passphrase-here'<br>
+                        <% if @backup_config.ssh_key.present? %>
+                        export BORG_RSH="ssh -i /path/to/key -o StrictHostKeyChecking=no"<br>
+                        <% end %>
+                        borg extract ::<%= backup.backup_name %>
+                      </div>
+
+                      <!-- Backup Stats -->
+                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="border border-base-content/10 rounded p-2">
+                          <div class="text-xs text-base-content/60">Started</div>
+                          <div class="text-sm font-semibold text-base-content">
+                            <%= backup.started_at ? backup.started_at.strftime('%Y-%m-%d %H:%M:%S') : 'N/A' %>
+                          </div>
+                        </div>
+                        <div class="border border-base-content/10 rounded p-2">
+                          <div class="text-xs text-base-content/60">Completed</div>
+                          <div class="text-sm font-semibold text-base-content">
+                            <%= backup.completed_at ? backup.completed_at.strftime('%Y-%m-%d %H:%M:%S') : 'N/A' %>
+                          </div>
+                        </div>
+                        <div class="border border-base-content/10 rounded p-2">
+                          <div class="text-xs text-base-content/60">Compressed Size</div>
+                          <div class="text-sm font-semibold text-base-content">
+                            <%= backup.compressed_size_formatted %>
+                          </div>
+                        </div>
+                        <div class="border border-base-content/10 rounded p-2">
+                          <div class="text-xs text-base-content/60">Dedup Savings</div>
+                          <div class="text-sm font-semibold text-success">
+                            <%= backup.deduplication_ratio %>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Error Message (if failed) -->
+                      <% if backup.status == 'failed' && backup.error_message.present? %>
+                        <div class="alert alert-error">
+                          <div class="text-xs font-semibold mb-1">Error:</div>
+                          <pre class="text-xs whitespace-pre-wrap"><%= backup.error_message %></pre>
+                        </div>
+                      <% end %>
+
+                      <!-- Full Output -->
+                      <% if backup.output.present? %>
+                        <details class="border border-base-content/10 rounded p-3">
+                          <summary class="text-xs font-semibold text-base-content/80 cursor-pointer">View Full Borg Output</summary>
+                          <pre class="text-xs text-base-content/60 mt-2 whitespace-pre-wrap overflow-x-auto"><%= backup.output %></pre>
+                        </details>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-8 text-base-content/60">
+          No backups yet. Configure and enable backups above.
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+
+  <script>
+    function toggleDetails(index) {
+      const detailsRow = document.getElementById('details-' + index);
+      const toggleIcon = document.getElementById('toggle-icon-' + index);
+      const toggleText = document.getElementById('toggle-text-' + index);
+
+      if (detailsRow.classList.contains('hidden')) {
+        detailsRow.classList.remove('hidden');
+        toggleIcon.textContent = '▲';
+        toggleText.textContent = 'Hide';
+      } else {
+        detailsRow.classList.add('hidden');
+        toggleIcon.textContent = '▼';
+        toggleText.textContent = 'Show';
+      }
+    }
+
+    function testConnection() {
+      if (confirm('Test connection to Borg repository?')) {
+        fetch('<%= test_connection_settings_backups_path %>', {
+          method: 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert(data.message);
+          } else {
+            alert(data.message);
+          }
+        })
+        .catch(error => {
+          alert('Error: ' + error);
+        });
+      }
+    }
+
+    function generatePassphrase() {
+      // Generate a secure 32-character base64 passphrase
+      const array = new Uint8Array(32);
+      window.crypto.getRandomValues(array);
+      const passphrase = btoa(String.fromCharCode.apply(null, array));
+
+      // Set in password field
+      document.getElementById('passphrase_field').value = passphrase;
+      document.getElementById('passphrase_field').type = 'text';
+
+      // Display the passphrase
+      document.getElementById('passphrase_text').textContent = passphrase;
+      document.getElementById('passphrase_display').classList.remove('hidden');
+
+      alert('Passphrase generated!\n\nIMPORTANT: Copy and save this passphrase securely!\nIt is shown in the yellow box below the field.');
+    }
+
+    function togglePassphraseVisibility() {
+      const field = document.getElementById('passphrase_field');
+      if (field.type === 'password') {
+        field.type = 'text';
+      } else {
+        field.type = 'password';
+      }
+    }
+
+    function generateSSHKey() {
+      if (!confirm('Generate a new SSH key pair?\n\nThis will create:\n- Private key (stored in Server Manager)\n- Public key (must be added to BorgBase)')) {
+        return;
+      }
+
+      fetch('<%= generate_ssh_key_settings_backups_path %>', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Set private key in textarea
+          document.getElementById('ssh_key_field').value = data.private_key;
+
+          // Display public key
+          document.getElementById('public_key_text').textContent = data.public_key;
+          document.getElementById('public_key_display').classList.remove('hidden');
+
+          alert('SSH Key Pair Generated!\n\n1. The private key is filled in below\n2. Copy the PUBLIC KEY from the blue box\n3. Add it to BorgBase → Account → SSH Keys');
+        } else {
+          alert('Failed to generate SSH key: ' + data.message);
+        }
+      })
+      .catch(error => {
+        alert('Error: ' + error);
+      });
+    }
+
+    function copyPublicKey() {
+      const publicKey = document.getElementById('public_key_text').textContent;
+      navigator.clipboard.writeText(publicKey).then(() => {
+        alert('Public key copied to clipboard!\n\nNow paste it in BorgBase → Account → SSH Keys');
+      }).catch(err => {
+        alert('Failed to copy. Please select and copy manually.');
+      });
+    }
+  </script>
+<% end %>

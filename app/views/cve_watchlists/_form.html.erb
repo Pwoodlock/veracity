@@ -1,0 +1,99 @@
+<%= form_with model: @cve_watchlist, class: "space-y-6" do |f| %>
+  <% if @cve_watchlist.errors.any? %>
+    <div class="alert alert-error">
+      <h3 class="font-medium">Please fix the following errors:</h3>
+      <ul class="list-disc list-inside mt-2">
+        <% @cve_watchlist.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <label class="block text-sm font-medium text-base-content/80 mb-2">Server</label>
+    <%= f.collection_select :server_id, @servers, :id, :hostname,
+        { include_blank: 'Global Watchlist (All Servers)', selected: @cve_watchlist.server_id },
+        class: "select select-bordered w-full" %>
+    <p class="mt-1 text-sm text-base-content/60">Leave blank to monitor this product globally across all servers</p>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-base-content/80 mb-2">Vendor *</label>
+    <%= f.text_field :vendor, required: true, placeholder: "e.g., microsoft, canonical, debian",
+        class: "input input-bordered w-full" %>
+    <p class="mt-1 text-sm text-base-content/60">The software vendor name (lowercase, use underscores for spaces)</p>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-base-content/80 mb-2">Product *</label>
+    <%= f.text_field :product, required: true, placeholder: "e.g., windows_server, ubuntu, debian_linux",
+        class: "input input-bordered w-full" %>
+    <p class="mt-1 text-sm text-base-content/60">The product name (lowercase, use underscores for spaces)</p>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-base-content/80 mb-2">Version</label>
+    <%= f.text_field :version, placeholder: "e.g., 2019, 22.04, 11 (optional)",
+        class: "input input-bordered w-full" %>
+    <p class="mt-1 text-sm text-base-content/60">Specific version to monitor (leave blank for all versions)</p>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-base-content/80 mb-2">Check Frequency</label>
+    <%= f.select :frequency, [['Hourly', 'hourly'], ['Daily', 'daily'], ['Weekly', 'weekly']],
+        {}, class: "w-full bg-base-200 border border-base-content/10 text-base-content rounded-lg px-4 py-2" %>
+    <p class="mt-1 text-sm text-base-content/60">How often to check for new vulnerabilities</p>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-base-content/80 mb-2">Description</label>
+    <%= f.text_area :description, rows: 3, placeholder: "Optional notes about this watchlist",
+        class: "input input-bordered w-full" %>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-base-content/80 mb-2">CPE String (Advanced)</label>
+    <%= f.text_field :cpe_string, placeholder: "cpe:2.3:a:vendor:product:version:*:*:*:*:*:*:* (optional)",
+        class: "input input-bordered w-full font-mono text-sm" %>
+    <p class="mt-1 text-sm text-base-content/60">Custom CPE 2.3 string (leave blank to auto-generate)</p>
+  </div>
+
+  <div class="border-t border-base-content/10 pt-6">
+    <h3 class="text-lg font-semibold text-base-content mb-4">Notification Settings</h3>
+
+    <div class="space-y-4">
+      <div>
+        <label class="flex items-center cursor-pointer">
+          <%= f.check_box :notification_enabled, class: "checkbox checkbox-primary" %>
+          <span class="ml-2 text-sm font-medium text-base-content">Enable Gotify notifications for this watchlist</span>
+        </label>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-base-content/80 mb-2">Notification Threshold</label>
+        <%= f.select :notification_threshold,
+            [['INFO and above', 'info'], ['LOW and above', 'low'], ['MEDIUM and above', 'medium'],
+             ['HIGH and above', 'high'], ['CRITICAL only', 'critical']],
+            { include_blank: 'Use global setting' },
+            class: "select select-bordered w-full" %>
+        <p class="mt-1 text-sm text-base-content/60">Only notify for vulnerabilities at or above this severity</p>
+      </div>
+
+      <div>
+        <label class="flex items-center cursor-pointer">
+          <%= f.check_box :active, class: "checkbox checkbox-primary" %>
+          <span class="ml-2 text-sm font-medium text-base-content">Active</span>
+        </label>
+        <p class="mt-1 text-sm text-base-content/60 ml-6">Inactive watchlists will not be checked for vulnerabilities</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3">
+    <%= link_to 'Cancel', @cve_watchlist.persisted? ? cve_watchlist_path(@cve_watchlist) : cve_watchlists_path,
+        class: "btn btn-ghost" %>
+    <%= f.submit @cve_watchlist.persisted? ? 'Update Watchlist' : 'Create Watchlist',
+        class: "btn btn-primary" %>
+  </div>
+<% end %>

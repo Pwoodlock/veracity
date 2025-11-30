@@ -1,0 +1,50 @@
+# Test commands
+
+completed_command:
+  server: online_server
+  command_type: shell
+  command: cmd.run
+  arguments: <%= { args: ['uptime'] }.to_json %>
+  status: completed
+  output: " 10:30:00 up 5 days, 3:45, 1 user, load average: 0.15, 0.10, 0.05"
+  exit_code: 0
+  started_at: <%= 1.hour.ago %>
+  completed_at: <%= 1.hour.ago + 2.seconds %>
+  duration_seconds: 2.0
+  created_at: <%= 1.hour.ago %>
+  updated_at: <%= 1.hour.ago %>
+
+failed_command:
+  server: online_server
+  command_type: shell
+  command: cmd.run
+  arguments: <%= { args: ['cat /nonexistent'] }.to_json %>
+  status: failed
+  output:
+  error_output: "cat: /nonexistent: No such file or directory"
+  exit_code: 1
+  started_at: <%= 30.minutes.ago %>
+  completed_at: <%= 30.minutes.ago + 1.second %>
+  duration_seconds: 1.0
+  created_at: <%= 30.minutes.ago %>
+  updated_at: <%= 30.minutes.ago %>
+
+running_command:
+  server: staging_server
+  command_type: system
+  command: state.apply
+  arguments: <%= { args: ['common'] }.to_json %>
+  status: running
+  started_at: <%= 5.minutes.ago %>
+  created_at: <%= 5.minutes.ago %>
+  updated_at: <%= 5.minutes.ago %>
+
+pending_command:
+  server: offline_server
+  command_type: shell
+  command: cmd.run
+  arguments: <%= { args: ['echo hello'] }.to_json %>
+  status: pending
+  started_at: <%= Time.current %>
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

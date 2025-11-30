@@ -1,0 +1,37 @@
+<div class="px-6 py-4">
+  <% if pending_keys.empty? %>
+    <div class="text-center py-8">
+      <p class="text-base-content/60">✅ No pending minion keys</p>
+      <p class="text-sm text-base-content/60 mt-2">All minions are either accepted or rejected</p>
+    </div>
+  <% else %>
+    <div class="space-y-3">
+      <% pending_keys.each do |key| %>
+        <div class="border border-base-content/10 rounded-lg p-4 hover:border-primary hover:bg-primary/10 cursor-pointer transition-colors"
+             data-minion-id="<%= key[:minion_id] %>"
+             data-fingerprint="<%= key[:fingerprint] %>"
+             title="Click to auto-fill form below">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="font-medium text-base-content"><%= key[:minion_id] %></div>
+              <div class="text-xs text-base-content/60 mt-1 font-mono break-all">
+                <%= key[:fingerprint] || '(fingerprint unavailable)' %>
+              </div>
+            </div>
+            <div class="ml-4 flex space-x-2">
+              <%= form_with url: accept_key_onboarding_path, method: :post, class: "inline", data: { turbo: false }, onsubmit: "return confirm('Accept this minion key?');" do |f| %>
+                <%= f.hidden_field :minion_id, value: key[:minion_id] %>
+                <%= f.hidden_field :fingerprint, value: key[:fingerprint] %>
+                <%= f.submit "Accept", class: "btn btn-success btn-xs" %>
+              <% end %>
+              <%= form_with url: reject_key_onboarding_path, method: :post, class: "inline", data: { turbo: false }, onsubmit: "return confirm('Reject this minion key? This action cannot be undone.');" do |f| %>
+                <%= f.hidden_field :minion_id, value: key[:minion_id] %>
+                <%= f.submit "Reject", class: "btn btn-error btn-xs" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

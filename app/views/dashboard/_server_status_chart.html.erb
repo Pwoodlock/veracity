@@ -1,0 +1,21 @@
+<!-- Server Status Chart -->
+<div id="server-status-chart-widget" class="bg-base-200 rounded-lg shadow p-6 mb-8">
+  <h2 class="text-lg font-semibold text-base-content mb-4">📊 Server Status Distribution</h2>
+  <div id="server-status-chart">
+    <%= pie_chart status_chart_data,
+        colors: {
+          "online" => "#10b981",      # Green for online
+          "offline" => "#ef4444",     # Red for offline
+          "unreachable" => "#f59e0b", # Yellow for unreachable
+          "maintenance" => "#6b7280"  # Gray for maintenance
+        },
+        legend: "bottom",
+        library: {
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        } %>
+  </div>
+</div>

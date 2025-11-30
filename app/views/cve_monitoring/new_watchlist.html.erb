@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New CVE Watchlist - Server Manager</title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-base-300">
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-base-content">Create CVE Watchlist</h1>
+      <p class="text-base-content/80 mt-1">Monitor a specific vendor/product for vulnerabilities</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-base-200 rounded-lg shadow p-6">
+      <%= form_with model: @watchlist, url: create_cve_watchlist_path, method: :post, local: true, class: "space-y-6" do |f| %>
+        <!-- Vendor -->
+        <div>
+          <%= f.label :vendor, "Vendor", class: "block text-sm font-medium text-base-content mb-2" %>
+          <%= f.text_field :vendor, required: true, placeholder: "e.g., proxmox, debian, docker",
+              class: "input input-bordered w-full" %>
+          <p class="mt-1 text-sm text-base-content/60">The software vendor or organization name</p>
+        </div>
+
+        <!-- Product -->
+        <div>
+          <%= f.label :product, "Product", class: "block text-sm font-medium text-base-content mb-2" %>
+          <%= f.text_field :product, required: true, placeholder: "e.g., proxmox_ve, debian_linux, docker",
+              class: "input input-bordered w-full" %>
+          <p class="mt-1 text-sm text-base-content/60">The specific product name</p>
+        </div>
+
+        <!-- Version (Optional) -->
+        <div>
+          <%= f.label :version, "Version (Optional)", class: "block text-sm font-medium text-base-content mb-2" %>
+          <%= f.text_field :version, placeholder: "e.g., 8.0, leave empty for all versions",
+              class: "input input-bordered w-full" %>
+          <p class="mt-1 text-sm text-base-content/60">Specific version to monitor, or leave blank for all versions</p>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <%= f.label :description, "Description", class: "block text-sm font-medium text-base-content mb-2" %>
+          <%= f.text_area :description, rows: 3, placeholder: "Brief description of what this watchlist monitors",
+              class: "textarea textarea-bordered w-full" %>
+        </div>
+
+        <!-- Server (Optional) -->
+        <div>
+          <%= f.label :server_id, "Server (Optional)", class: "block text-sm font-medium text-base-content mb-2" %>
+          <%= f.select :server_id,
+              options_for_select([['Global (all servers)', nil]] + @servers.map { |s| [s.hostname, s.id] }),
+              {},
+              class: "select select-bordered w-full" %>
+          <p class="mt-1 text-sm text-base-content/60">Leave as "Global" to monitor across all servers</p>
+        </div>
+
+        <!-- Frequency -->
+        <div>
+          <%= f.label :frequency, "Check Frequency", class: "block text-sm font-medium text-base-content mb-2" %>
+          <%= f.select :frequency,
+              options_for_select([['Hourly', 'hourly'], ['Daily', 'daily'], ['Weekly', 'weekly']], 'daily'),
+              {},
+              class: "select select-bordered w-full" %>
+        </div>
+
+        <!-- Active -->
+        <div class="flex items-center">
+          <%= f.check_box :active, checked: true,
+              class: "checkbox checkbox-primary" %>
+          <%= f.label :active, "Active (start monitoring immediately)", class: "ml-2 text-sm text-base-content" %>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 pt-4">
+          <%= f.submit "Create Watchlist",
+              class: "btn btn-primary" %>
+          <%= link_to "Cancel", cve_monitoring_watchlists_path,
+              class: "btn btn-ghost" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-6 bg-base-200 border border-primary rounded-lg p-6">
+      <h3 class="text-sm font-semibold text-primary mb-2">Tips for creating watchlists:</h3>
+      <ul class="text-sm text-primary/80 space-y-1 list-disc list-inside">
+        <li>Use lowercase for vendor and product names</li>
+        <li>Replace spaces with underscores (e.g., "proxmox_ve" not "Proxmox VE")</li>
+        <li>Leave version empty to monitor all versions</li>
+        <li>Start with "Hourly" frequency for critical infrastructure</li>
+        <li>Examples: proxmox/proxmox_ve, debian/debian_linux, docker/docker</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html><% end %>

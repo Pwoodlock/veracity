@@ -1,0 +1,120 @@
+<% content_for :head do %>
+  <title>Settings - Gotify Admin</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= render 'admin/gotify/tabs', active: 'settings' %>
+
+    <h1 class="text-2xl font-bold text-base-content mb-6">Gotify Connection Settings</h1>
+
+    <% if flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:success] %></p>
+      </div>
+    <% end %>
+    <% if flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:error] %></p>
+      </div>
+    <% end %>
+
+    <!-- Connection Status -->
+    <div class="bg-base-200 rounded-lg shadow p-6 mb-6">
+      <h2 class="text-lg font-semibold text-base-content mb-4">Connection Status</h2>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <% if @connection_test[:success] %>
+            <svg class="h-8 w-8 text-success mr-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div>
+              <p class="font-medium text-success">Connected</p>
+              <p class="text-sm text-success"><%= @connection_test[:message] %></p>
+              <% if @connection_test[:version] %>
+                <p class="text-xs text-success mt-1">Gotify v<%= @connection_test[:version] %></p>
+              <% end %>
+            </div>
+          <% else %>
+            <svg class="h-8 w-8 text-error mr-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <div>
+              <p class="font-medium text-error">Not Connected</p>
+              <p class="text-sm text-error"><%= @connection_test[:message] %></p>
+            </div>
+          <% end %>
+        </div>
+        <button onclick="testConnection()" id="test-button"
+                class="btn btn-primary">
+          Test Connection
+        </button>
+      </div>
+    </div>
+
+    <!-- Current Configuration (Read-only) -->
+    <div class="bg-base-200 rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold text-base-content mb-4">Current Configuration</h2>
+      <p class="text-sm text-base-content/60 mb-4">
+        Gotify settings are configured during installation via environment variables.
+      </p>
+
+      <div class="space-y-3">
+        <div class="flex justify-between py-2 border-b border-base-content/10">
+          <span class="text-base-content/60">Server URL</span>
+          <span class="font-mono text-sm"><%= @gotify_url[:value] %></span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-base-content/10">
+          <span class="text-base-content/60">Admin Username</span>
+          <span class="font-mono text-sm"><%= @gotify_username[:value] %></span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-base-content/10">
+          <span class="text-base-content/60">SSL Verification</span>
+          <span class="badge <%= @gotify_ssl_verify[:value] ? 'badge-success' : 'badge-warning' %>">
+            <%= @gotify_ssl_verify[:value] ? 'Enabled' : 'Disabled' %>
+          </span>
+        </div>
+        <div class="flex justify-between py-2">
+          <span class="text-base-content/60">Notifications</span>
+          <span class="badge <%= @gotify_enabled[:value] ? 'badge-success' : 'badge-ghost' %>">
+            <%= @gotify_enabled[:value] ? 'Enabled' : 'Disabled' %>
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    async function testConnection() {
+      const button = document.getElementById('test-button');
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Testing...';
+
+      try {
+        const response = await fetch('<%= admin_gotify_test_connection_path %>', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Success! ' + data.message);
+        } else {
+          alert('Connection failed: ' + data.message);
+        }
+      } catch (error) {
+        alert('Error testing connection: ' + error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+  </script>
+<% end %>

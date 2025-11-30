@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two-Factor Verification - <%= SystemSetting.company_name %></title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+
+  <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <!-- Header with Logo -->
+      <div class="text-center">
+        <div class="flex justify-center mb-6">
+          <div class="relative">
+            <img src="<%= SystemSetting.logo_url %>"
+                 alt="<%= SystemSetting.company_name %>"
+                 class="h-16 w-auto bg-base-200 rounded-2xl p-3 shadow-xl transform hover:scale-105 transition-transform">
+            <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-warning rounded-full flex items-center justify-center shadow-lg">
+              <svg class="w-5 h-5 text-base-content" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <h2 class="text-3xl font-extrabold text-white">
+          Two-Factor Verification
+        </h2>
+        <p class="mt-2 text-sm text-base-content/60">
+          <%= SystemSetting.tagline %>
+        </p>
+      </div>
+
+      <!-- Verification Card -->
+      <div class="bg-base-200 rounded-2xl shadow-2xl p-8">
+        <%= form_with url: users_verify_otp_path, method: :post, local: true, class: "space-y-6" do %>
+          <div>
+            <%= label_tag :otp_code, "Verification Code", class: "block text-sm font-medium text-base-content mb-2 text-center" %>
+            <%= text_field_tag :otp_code, nil,
+                placeholder: "000000",
+                autocomplete: "off",
+                maxlength: 8,
+                required: true,
+                autofocus: true,
+                class: "input input-bordered w-full text-center text-3xl font-mono tracking-widest py-4" %>
+            <p class="mt-3 text-xs text-base-content/60 text-center">
+              Enter the 6-digit code from your authenticator app<br>
+              or use one of your backup codes
+            </p>
+          </div>
+
+          <div>
+            <%= submit_tag "Verify", class: "btn btn-primary btn-block text-lg" %>
+          </div>
+        <% end %>
+
+        <!-- Help -->
+        <div class="mt-6 pt-6 border-t border-base-content/10">
+          <details class="text-sm">
+            <summary class="cursor-pointer text-base-content font-medium">Lost access to your authenticator app?</summary>
+            <div class="mt-3 text-base-content/80 space-y-2">
+              <p>You can use one of your backup codes instead.</p>
+              <p>If you've lost both your authenticator app and backup codes, please contact an administrator for help.</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- Back to Sign In -->
+        <div class="mt-4 text-center">
+          <%= link_to "← Back to Sign In", new_user_session_path, class: "text-sm text-primary hover:text-primary" %>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center">
+        <p class="text-xs text-base-content/60">
+          🔒 Your account is protected with two-factor authentication
+        </p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

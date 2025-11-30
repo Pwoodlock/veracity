@@ -1,0 +1,136 @@
+<% content_for :head do %>
+  <title>Users - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <% if flash[:notice] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:notice] %></p>
+      </div>
+    <% end %>
+
+    <% if flash[:alert] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:alert] %></p>
+      </div>
+    <% end %>
+
+    <!-- Add User Button -->
+    <div class="flex justify-end mb-6">
+      <%= link_to new_user_path, class: "inline-flex items-center px-4 py-2 btn-primary text-white rounded-lg  transition" do %>
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add User
+      <% end %>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-6 bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+      <%= form_with url: users_path, method: :get, class: "flex gap-4 items-end" do |f| %>
+        <div class="flex-1">
+          <%= f.label :search, "Search", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.text_field :search, value: params[:search], placeholder: "Email or name", class: "input input-bordered w-full" %>
+        </div>
+        <div>
+          <%= f.label :role, "Role", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.select :role, options_for_select([['All Roles', '']] + User::ROLES.map { |r| [r.titleize, r] }, params[:role]), {}, class: "select select-bordered" %>
+        </div>
+        <%= f.submit "Filter", class: "btn btn-primary cursor-pointer" %>
+        <%= link_to "Clear", users_path, class: "btn btn-ghost" %>
+      <% end %>
+    </div>
+
+    <!-- User Stats -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+        <div class="text-sm text-base-content/60">Total Users</div>
+        <div class="text-2xl font-bold text-base-content"><%= User.count %></div>
+      </div>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+        <div class="text-sm text-base-content/60">Administrators</div>
+        <div class="text-2xl font-bold text-secondary"><%= User.where(role: 'admin').count %></div>
+      </div>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+        <div class="text-sm text-base-content/60">Operators</div>
+        <div class="text-2xl font-bold text-primary"><%= User.where(role: 'operator').count %></div>
+      </div>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+        <div class="text-sm text-base-content/60">Viewers</div>
+        <div class="text-2xl font-bold text-base-content/80"><%= User.where(role: 'viewer').count %></div>
+      </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg overflow-hidden">
+      <table class="min-w-full divide-y divide-base-content/10">
+        <thead class="bg-base-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">User</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Role</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">2FA Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Last Sign In</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-base-200 divide-y divide-base-content/10">
+          <% @users.each do |user| %>
+            <tr class="hover:bg-base-200">
+              <td class="px-6 py-4">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
+                    <span class="text-white font-medium text-sm"><%= user.email[0].upcase %></span>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-base-content">
+                      <%= user.name || user.email %>
+                      <% if user == current_user %>
+                        <span class="ml-2 text-xs text-primary">(You)</span>
+                      <% end %>
+                    </div>
+                    <div class="text-sm text-base-content/60"><%= user.email %></div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="role-badge role-<%= user.role %>">
+                  <%= user.role.titleize %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if user.otp_required_for_login %>
+                  <span class="badge badge-success badge-xs">
+                    Enabled
+                  </span>
+                <% else %>
+                  <span class="badge badge-ghost badge-xs">
+                    Disabled
+                  </span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/80">
+                <%= user.last_sign_in_at ? time_ago_in_words(user.last_sign_in_at) + " ago" : "Never" %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                <%= link_to "Edit", edit_user_path(user), class: "text-primary hover:text-primary/80" %>
+                <% unless user == current_user %>
+                  <%= button_to "Delete", user_path(user), method: :delete, data: { turbo_confirm: "Are you sure you want to delete #{user.email}?\n\nThis action cannot be undone and will permanently remove the user account." }, class: "text-error hover:text-error inline" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+      <% if @users.empty? %>
+        <div class="text-center py-12">
+          <p class="text-base-content/60">No users found</p>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+<% end %>

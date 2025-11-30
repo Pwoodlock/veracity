@@ -1,0 +1,77 @@
+<%= form_with model: user, class: "space-y-6" do |f| %>
+  <% if user.errors.any? %>
+    <div class="alert alert-error">
+      <h3 class="font-medium mb-2"><%= pluralize(user.errors.count, "error") %> prohibited this user from being saved:</h3>
+      <ul class="list-disc list-inside text-sm">
+        <% user.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Email -->
+  <div>
+    <%= f.label :email, "Email Address", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+    <%= f.email_field :email, required: true, autofocus: true, autocomplete: "email",
+        placeholder: "user@example.com",
+        class: "input input-bordered w-full" %>
+    <p class="mt-1 text-sm text-base-content/60">User will receive a password reset email after creation</p>
+  </div>
+
+  <!-- Name -->
+  <div>
+    <%= f.label :name, "Full Name", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+    <%= f.text_field :name, placeholder: "John Doe",
+        class: "input input-bordered w-full" %>
+    <p class="mt-1 text-sm text-base-content/60">Optional - displayed in the interface</p>
+  </div>
+
+  <!-- Role -->
+  <div>
+    <%= f.label :role, class: "block text-sm font-medium text-base-content/80 mb-2" %>
+    <%= f.select :role,
+        options_for_select(
+          User::ROLES.map { |r| [r.titleize, r] },
+          user.role
+        ),
+        {},
+        class: "select select-bordered w-full" %>
+    <div class="mt-2 space-y-1 text-sm text-base-content/80">
+      <p><strong>Admin:</strong> Full access - can manage users, servers, groups, and execute commands</p>
+      <p><strong>Operator:</strong> Can manage servers, groups, and execute commands (cannot manage users)</p>
+      <p><strong>Viewer:</strong> Read-only access - can view servers and command history</p>
+    </div>
+  </div>
+
+  <!-- Password (Edit only) -->
+  <% if user.persisted? %>
+    <div class="alert alert-warning">
+      <p class="text-sm mb-3">
+        Leave password fields blank to keep the current password
+      </p>
+
+      <div class="space-y-4">
+        <div>
+          <%= f.label :password, "New Password", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.password_field :password, autocomplete: "new-password",
+              placeholder: "Leave blank to keep current password",
+              class: "input input-bordered w-full" %>
+        </div>
+
+        <div>
+          <%= f.label :password_confirmation, "Confirm New Password", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.password_field :password_confirmation, autocomplete: "new-password",
+              placeholder: "Leave blank to keep current password",
+              class: "input input-bordered w-full" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-3 pt-4 border-t border-base-content/10">
+    <%= link_to "Cancel", users_path, class: "btn btn-ghost" %>
+    <%= f.submit user.persisted? ? "Update User" : "Create User", class: "btn btn-primary" %>
+  </div>
+<% end %>

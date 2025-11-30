@@ -1,0 +1,117 @@
+<% content_for :head do %>
+  <title>Backup Codes - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<!-- Navigation -->
+  <nav class="bg-base-200 shadow-sm border-b border-base-content/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center space-x-8">
+          <h1 class="text-xl font-bold text-base-content">Backup Codes</h1>
+          <%= link_to "Dashboard", dashboard_path, class: "text-primary hover:text-primary-focus" %>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-sm text-base-content/80"><%= current_user.email %></span>
+          <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "px-4 py-2 bg-base-200 text-white rounded-lg hover:bg-base-200" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Success Message -->
+    <div class="alert alert-success mb-6">
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+      </svg>
+      <span class="font-medium">Two-factor authentication enabled successfully!</span>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-3xl font-bold text-base-content">Save Your Backup Codes</h2>
+      <p class="text-base-content/80 mt-1">Store these codes in a safe place - you'll need them if you lose access to your authenticator app</p>
+    </div>
+
+    <!-- Warning -->
+    <div class="alert alert-warning mb-6">
+      <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+      </svg>
+      <div class="text-sm">
+        <strong>Important:</strong> These codes will only be shown once. Save them now in a secure location like a password manager.
+        Each code can only be used once.
+      </div>
+    </div>
+
+    <!-- Backup Codes -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h3 class="text-lg font-medium text-base-content mb-4">Your Backup Codes</h3>
+
+      <div id="backup-codes" class="grid grid-cols-2 gap-3 mb-4">
+        <% @backup_codes.each do |code| %>
+          <div class="bg-base-300 px-4 py-3 rounded-lg border border-base-content/10">
+            <code class="text-lg font-mono text-center block text-base-content"><%= code %></code>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="copyToClipboard()" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition">
+          Copy All Codes
+        </button>
+        <button onclick="printCodes()" class="flex-1 px-4 py-2 border border-base-content/20 text-base-content/80 rounded-lg hover:bg-base-200 transition">
+          Print Codes
+        </button>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h3 class="text-lg font-medium text-base-content mb-3">How to use backup codes:</h3>
+      <ul class="list-disc list-inside space-y-2 text-sm text-base-content/80">
+        <li>Each code can only be used once</li>
+        <li>Use a backup code if you lose access to your authenticator app</li>
+        <li>Enter a backup code in place of the 6-digit verification code when signing in</li>
+        <li>Contact an administrator if you run out of backup codes</li>
+      </ul>
+    </div>
+
+    <!-- Continue Button -->
+    <div class="text-center">
+      <%= link_to "Continue to Dashboard", dashboard_path, class: "btn btn-success" %>
+    </div>
+
+  </div>
+
+  <script>
+    function copyToClipboard() {
+      const codes = <%= raw @backup_codes.to_json %>;
+      const text = codes.join('\n');
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Backup codes copied to clipboard!');
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+      });
+    }
+
+    function printCodes() {
+      window.print();
+    }
+
+    // Print-specific styling
+    const style = document.createElement('style');
+    style.textContent = `
+      @media print {
+        nav, button, .alert { display: none !important; }
+        body { background: white !important; }
+        .bg-base-300 { background: white !important; }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+<% end %>

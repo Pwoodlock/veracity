@@ -1,0 +1,103 @@
+<% content_for :head do %>
+  <title>Task Templates - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Breadcrumbs -->
+  <div class="text-sm breadcrumbs mb-6">
+    <ul>
+      <li><%= link_to "Tasks", tasks_path %></li>
+      <li>Templates</li>
+    </ul>
+  </div>
+
+  <!-- Category tabs -->
+  <div class="tabs tabs-boxed mb-6">
+    <a class="tab tab-active" data-category="all">All Templates</a>
+    <% @categories.each do |category| %>
+      <a class="tab" data-category="<%= category %>"><%= category.capitalize %></a>
+    <% end %>
+  </div>
+
+  <!-- Templates grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% @templates_by_category.each do |category, templates| %>
+      <% templates.each do |template| %>
+        <div class="card bg-base-200 border border-base-content/10 template-card" data-category="<%= template.category %>">
+          <div class="card-body">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="card-title text-lg"><%= template.name %></h3>
+              <div class="badge badge-outline"><%= template.category.capitalize %></div>
+            </div>
+
+            <p class="text-sm text-base-content/60 mb-4">
+              <%= template.description %>
+            </p>
+
+            <div class="bg-base-300 rounded p-3 mb-4">
+              <div class="text-xs text-base-content/60 mb-1">Command Template:</div>
+              <code class="text-xs break-all"><%= template.command_template %></code>
+            </div>
+
+            <% if template.required_parameters.any? %>
+              <div class="mb-4">
+                <div class="text-xs text-base-content/60 mb-1">Required Parameters:</div>
+                <div class="flex flex-wrap gap-1">
+                  <% template.required_parameters.each do |param| %>
+                    <span class="badge badge-sm badge-primary"><%= param %></span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <div class="card-actions justify-end">
+              <%= link_to use_task_template_path(template), class: "btn btn-primary btn-sm" do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Use Template
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @templates_by_category.empty? %>
+    <div class="text-center py-12">
+      <svg class="mx-auto h-12 w-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-base-content">No templates available</h3>
+      <p class="mt-1 text-sm text-base-content/60">Task templates will appear here once they are created.</p>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab');
+    const cards = document.querySelectorAll('.template-card');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Update active tab
+        tabs.forEach(t => t.classList.remove('tab-active'));
+        this.classList.add('tab-active');
+
+        // Filter cards
+        const category = this.getAttribute('data-category');
+        cards.forEach(card => {
+          if (category === 'all' || card.getAttribute('data-category') === category) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script><% end %>

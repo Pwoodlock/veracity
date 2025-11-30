@@ -1,0 +1,93 @@
+<% content_for :head do %>
+  <title>Sign In - Veracity</title>
+<% end %>
+
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <!-- Header with Logo -->
+      <div class="text-center">
+        <div class="flex justify-center mb-6">
+          <div class="bg-base-200 rounded-2xl p-6 shadow-xl transform hover:scale-105 transition-transform">
+            <img src="<%= SystemSetting.logo_url %>" alt="<%= SystemSetting.company_name %>" class="h-24 w-auto">
+          </div>
+        </div>
+        <h2 class="text-4xl font-extrabold text-white" style="font-family: 'Inter', sans-serif;">
+          <%= SystemSetting.company_name %>
+        </h2>
+        <p class="mt-3 text-base text-base-content/80">
+          <%= SystemSetting.tagline %>
+        </p>
+      </div>
+
+      <!-- Login Card -->
+      <div class="bg-base-200 rounded-2xl shadow-2xl p-8">
+        <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-6" }) do |f| %>
+          <div>
+            <%= f.label :email, class: "block text-sm font-medium text-base-content mb-1" %>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-base-content/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                </svg>
+              </div>
+              <%= f.email_field :email,
+                  autofocus: true,
+                  autocomplete: "email",
+                  placeholder: "admin@devsec.ie",
+                  required: true,
+                  class: "input input-bordered w-full pl-10" %>
+            </div>
+          </div>
+
+          <div>
+            <%= f.label :password, class: "block text-sm font-medium text-base-content mb-1" %>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-base-content/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+              </div>
+              <%= f.password_field :password,
+                  autocomplete: "current-password",
+                  placeholder: "••••••••",
+                  required: true,
+                  class: "input input-bordered w-full pl-10" %>
+            </div>
+          </div>
+
+          <% if devise_mapping.rememberable? %>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <%= f.check_box :remember_me, class: "checkbox checkbox-primary" %>
+                <%= f.label :remember_me, class: "ml-2 block text-sm text-base-content" %>
+              </div>
+              <% if devise_mapping.recoverable? && controller_name != 'passwords' %>
+                <%= link_to "Forgot password?", new_password_path(resource_name), class: "text-sm text-primary hover:text-primary/80" %>
+              <% end %>
+            </div>
+          <% end %>
+
+          <div>
+            <%= f.submit "Sign in", class: "btn btn-primary w-full" %>
+          </div>
+        <% end %>
+
+        <!-- Additional Links -->
+        <div class="mt-6 text-center">
+          <% if devise_mapping.registerable? && controller_name != 'registrations' %>
+            <p class="text-sm text-base-content/80">
+              Don't have an account?
+              <%= link_to "Sign up", new_registration_path(resource_name), class: "font-medium text-primary hover:text-primary/80" %>
+            </p>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center">
+        <p class="text-xs text-base-content/60">
+          <%= SystemSetting.company_name %>
+        </p>
+      </div>
+    </div>
+  </div>

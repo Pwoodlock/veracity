@@ -1,0 +1,177 @@
+<% content_for :head do %>
+  <title>Maintenance & Cleanup - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-base-content">Maintenance & Cleanup</h1>
+      <p class="mt-2 text-sm text-base-content/60">Manage and cleanup old commands and task executions</p>
+    </div>
+
+    <!-- Flash Messages -->
+    <% if flash[:notice] || flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <%= flash[:notice] || flash[:success] %>
+      </div>
+    <% end %>
+    <% if flash[:alert] || flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <%= flash[:alert] || flash[:error] %>
+      </div>
+    <% end %>
+
+    <!-- Statistics Summary -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Database Statistics</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="border border-base-content/10 rounded-lg p-4">
+          <div class="text-sm text-base-content/60">Total Commands</div>
+          <div class="text-2xl font-bold text-base-content"><%= number_with_delimiter(@total_commands) %></div>
+        </div>
+        <div class="border border-base-content/10 rounded-lg p-4">
+          <div class="text-sm text-base-content/60">Total Task Runs</div>
+          <div class="text-2xl font-bold text-base-content"><%= number_with_delimiter(@total_task_runs) %></div>
+        </div>
+        <div class="border border-error/30 rounded-lg p-4">
+          <div class="text-sm text-base-content/60">Failed Task Runs (7d)</div>
+          <div class="text-2xl font-bold text-error"><%= number_with_delimiter(@failed_task_runs_count) %></div>
+        </div>
+        <div class="border border-warning/30 rounded-lg p-4">
+          <div class="text-sm text-base-content/60">Old Task Runs (30d+)</div>
+          <div class="text-2xl font-bold text-warning"><%= number_with_delimiter(@old_task_runs_count) %></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cleanup Actions -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Cleanup Actions</h2>
+
+      <div class="space-y-6">
+
+        <!-- Clear Failed Commands (Last 7 Days) -->
+        <div class="border border-error bg-base-200 rounded-lg p-6">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h3 class="text-base font-semibold text-base-content mb-2">Clear Failed Commands (Last 7 Days)</h3>
+              <p class="text-sm text-base-content/80 mb-3">
+                Delete all failed and timeout commands from the last 7 days. This clears the "Failed Commands" widget on the dashboard.
+              </p>
+              <div class="flex items-center space-x-4 text-sm">
+                <span class="badge badge-error">
+                  <%= @failed_commands_count %> failed command<%= @failed_commands_count == 1 ? '' : 's' %>
+                </span>
+                <span class="text-base-content/60">Will be deleted</span>
+              </div>
+            </div>
+            <div class="ml-6">
+              <%= button_to "Clear Failed Commands",
+                  settings_clear_failed_commands_maintenance_path,
+                  method: :delete,
+                  class: "btn btn-error #{@failed_commands_count.zero? ? 'btn-disabled' : ''}",
+                  disabled: @failed_commands_count.zero?,
+                  data: { confirm: "Are you sure? This will permanently delete #{@failed_commands_count} failed commands from the last 7 days." } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clear Old Commands (30+ Days) -->
+        <div class="border border-warning bg-base-200 rounded-lg p-6">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h3 class="text-base font-semibold text-base-content mb-2">Clear Old Commands (30+ Days)</h3>
+              <p class="text-sm text-base-content/80 mb-3">
+                Delete all command records older than 30 days. This includes successful, failed, and timeout commands.
+              </p>
+              <div class="flex items-center space-x-4 text-sm">
+                <span class="badge badge-warning">
+                  <%= @old_commands_count %> old command<%= @old_commands_count == 1 ? '' : 's' %>
+                </span>
+                <span class="text-base-content/60">Will be deleted</span>
+              </div>
+            </div>
+            <div class="ml-6">
+              <%= button_to "Clear Old Commands",
+                  settings_clear_old_commands_maintenance_path,
+                  method: :delete,
+                  class: "btn btn-warning #{@old_commands_count.zero? ? 'btn-disabled' : ''}",
+                  disabled: @old_commands_count.zero?,
+                  data: { confirm: "Are you sure? This will permanently delete #{@old_commands_count} commands older than 30 days. This cannot be undone!" } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider">Task Runs</div>
+
+        <!-- Clear Failed Task Runs (Last 7 Days) -->
+        <div class="border border-error bg-base-200 rounded-lg p-6">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h3 class="text-base font-semibold text-base-content mb-2">Clear Failed Task Runs (Last 7 Days)</h3>
+              <p class="text-sm text-base-content/80 mb-3">
+                Delete all failed task executions from the last 7 days. This clears failed tasks from your task history.
+              </p>
+              <div class="flex items-center space-x-4 text-sm">
+                <span class="badge badge-error">
+                  <%= @failed_task_runs_count %> failed task run<%= @failed_task_runs_count == 1 ? '' : 's' %>
+                </span>
+                <span class="text-base-content/60">Will be deleted</span>
+              </div>
+            </div>
+            <div class="ml-6">
+              <%= button_to "Clear Failed Task Runs",
+                  settings_clear_failed_task_runs_maintenance_path,
+                  method: :delete,
+                  class: "btn btn-error #{@failed_task_runs_count.zero? ? 'btn-disabled' : ''}",
+                  disabled: @failed_task_runs_count.zero?,
+                  data: { confirm: "Are you sure? This will permanently delete #{@failed_task_runs_count} failed task runs from the last 7 days." } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clear Old Task Runs (30+ Days) -->
+        <div class="border border-warning bg-base-200 rounded-lg p-6">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h3 class="text-base font-semibold text-base-content mb-2">Clear Old Task Runs (30+ Days)</h3>
+              <p class="text-sm text-base-content/80 mb-3">
+                Delete all task run records older than 30 days. This includes successful, failed, and cancelled task runs.
+              </p>
+              <div class="flex items-center space-x-4 text-sm">
+                <span class="badge badge-warning">
+                  <%= @old_task_runs_count %> old task run<%= @old_task_runs_count == 1 ? '' : 's' %>
+                </span>
+                <span class="text-base-content/60">Will be deleted</span>
+              </div>
+            </div>
+            <div class="ml-6">
+              <%= button_to "Clear Old Task Runs",
+                  settings_clear_old_task_runs_maintenance_path,
+                  method: :delete,
+                  class: "btn btn-warning #{@old_task_runs_count.zero? ? 'btn-disabled' : ''}",
+                  disabled: @old_task_runs_count.zero?,
+                  data: { confirm: "Are you sure? This will permanently delete #{@old_task_runs_count} task runs older than 30 days. This cannot be undone!" } %>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Information Panel -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Important Information</h2>
+      <ul class="text-sm text-base-content/60 space-y-2 list-disc list-inside">
+        <li><strong class="text-base-content">Failed Commands:</strong> Safe to clear regularly. These are visible in the dashboard "Failed Commands" widget.</li>
+        <li><strong class="text-base-content">Old Commands:</strong> Clears historical audit logs. Keep for compliance if needed.</li>
+        <li><strong class="text-base-content">Task Runs:</strong> Clearing old task runs removes execution history but does not affect task definitions.</li>
+        <li><strong class="text-base-content">Backup recommendation:</strong> Consider database backups before bulk deletions.</li>
+      </ul>
+    </div>
+
+  </div>
+<% end %>

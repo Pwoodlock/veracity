@@ -1,0 +1,332 @@
+<% content_for :title, "Salt CLI - Admin" %>
+
+<% content_for :head do %>
+  <!-- xterm.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.min.js"></script>
+  <!-- ActionCable - use UMD bundle instead of ES modules -->
+  <script src="https://cdn.jsdelivr.net/npm/@rails/actioncable@7.1.3/app/assets/javascripts/actioncable.js"></script>
+
+  <style>
+    #terminal-container {
+      height: calc(100vh - 200px);
+      min-height: 400px;
+    }
+    .xterm {
+      padding: 10px;
+    }
+    .terminal-header {
+      background: linear-gradient(135deg, hsl(var(--n)) 0%, hsl(var(--nf)) 100%);
+    }
+  </style>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+  <div class="p-4 lg:p-6">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-base-content flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Salt Master CLI
+        </h1>
+        <p class="text-base-content/60 mt-1">Execute Salt commands directly from the dashboard</p>
+      </div>
+      <div class="flex gap-2 mt-4 lg:mt-0">
+        <%= link_to admin_salt_cli_history_path, class: "btn btn-sm btn-ghost gap-2" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          History
+        <% end %>
+        <button onclick="clearTerminal()" class="btn btn-sm btn-ghost gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- Terminal Card -->
+    <div class="card bg-base-100 shadow-xl overflow-hidden">
+      <!-- Terminal Header -->
+      <div class="terminal-header px-4 py-2 flex items-center gap-2">
+        <div class="flex gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-error"></div>
+          <div class="w-3 h-3 rounded-full bg-warning"></div>
+          <div class="w-3 h-3 rounded-full bg-success"></div>
+        </div>
+        <span class="text-neutral-content text-sm font-mono ml-2">salt-master@veracity</span>
+        <div class="ml-auto flex items-center gap-2">
+          <span id="connection-status" class="badge badge-sm badge-ghost">
+            <span class="loading loading-ring loading-xs mr-1"></span>
+            Connecting...
+          </span>
+        </div>
+      </div>
+
+      <!-- Terminal Container -->
+      <div id="terminal-container" class="bg-[#1a1b26]"></div>
+    </div>
+
+    <!-- Quick Commands -->
+    <div class="mt-6">
+      <h3 class="text-sm font-semibold text-base-content/70 mb-3">Quick Commands</h3>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="runCommand('salt-key -L')" class="btn btn-xs btn-outline">salt-key -L</button>
+        <button onclick="runCommand('salt \\'*\\' test.ping')" class="btn btn-xs btn-outline">salt '*' test.ping</button>
+        <button onclick="runCommand('salt \\'*\\' grains.get os')" class="btn btn-xs btn-outline">salt '*' grains.get os</button>
+        <button onclick="runCommand('salt \\'*\\' cmd.run \\'uptime\\'')" class="btn btn-xs btn-outline">salt '*' cmd.run 'uptime'</button>
+        <button onclick="runCommand('salt \\'*\\' disk.usage')" class="btn btn-xs btn-outline">salt '*' disk.usage</button>
+        <button onclick="runCommand('salt \\'*\\' status.meminfo')" class="btn btn-xs btn-outline">salt '*' status.meminfo</button>
+        <button onclick="runCommand('salt-run manage.status')" class="btn btn-xs btn-outline">salt-run manage.status</button>
+        <button onclick="runCommand('salt-run manage.up')" class="btn btn-xs btn-outline">salt-run manage.up</button>
+      </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="collapse collapse-arrow bg-base-100 mt-6">
+      <input type="checkbox" />
+      <div class="collapse-title text-sm font-medium">
+        Available Commands & Help
+      </div>
+      <div class="collapse-content">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+          <div>
+            <h4 class="font-semibold text-primary mb-2">salt</h4>
+            <p class="text-base-content/70">Execute commands on minions</p>
+            <code class="text-xs">salt '*' test.ping</code>
+          </div>
+          <div>
+            <h4 class="font-semibold text-primary mb-2">salt-key</h4>
+            <p class="text-base-content/70">Manage minion keys</p>
+            <code class="text-xs">salt-key -L</code>
+          </div>
+          <div>
+            <h4 class="font-semibold text-primary mb-2">salt-run</h4>
+            <p class="text-base-content/70">Execute runner modules</p>
+            <code class="text-xs">salt-run manage.status</code>
+          </div>
+          <div>
+            <h4 class="font-semibold text-primary mb-2">salt-call</h4>
+            <p class="text-base-content/70">Execute locally on master</p>
+            <code class="text-xs">salt-call --local grains.items</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  // Initialize terminal
+  const term = new Terminal({
+    cursorBlink: true,
+    fontSize: 14,
+    fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
+    theme: {
+      background: '#1a1b26',
+      foreground: '#a9b1d6',
+      cursor: '#c0caf5',
+      cursorAccent: '#1a1b26',
+      selection: 'rgba(255, 255, 255, 0.3)',
+      black: '#32344a',
+      red: '#f7768e',
+      green: '#9ece6a',
+      yellow: '#e0af68',
+      blue: '#7aa2f7',
+      magenta: '#ad8ee6',
+      cyan: '#449dab',
+      white: '#787c99',
+      brightBlack: '#444b6a',
+      brightRed: '#ff7a93',
+      brightGreen: '#b9f27c',
+      brightYellow: '#ff9e64',
+      brightBlue: '#7da6ff',
+      brightMagenta: '#bb9af7',
+      brightCyan: '#0db9d7',
+      brightWhite: '#acb0d0'
+    },
+    allowProposedApi: true
+  });
+
+  const fitAddon = new FitAddon.FitAddon();
+  const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+
+  term.loadAddon(fitAddon);
+  term.loadAddon(webLinksAddon);
+  term.open(document.getElementById('terminal-container'));
+  fitAddon.fit();
+
+  // Handle window resize
+  window.addEventListener('resize', () => fitAddon.fit());
+
+  // Command state
+  let currentCommand = '';
+  let commandHistory = [];
+  let historyIndex = -1;
+  let currentCommandId = null;
+
+  // ActionCable connection - using global ActionCable from UMD bundle
+  const cable = ActionCable.createConsumer();
+  const channel = cable.subscriptions.create("SaltCliChannel", {
+    connected() {
+      updateConnectionStatus('connected');
+      writePrompt();
+    },
+
+    disconnected() {
+      updateConnectionStatus('disconnected');
+      term.writeln('\r\n\x1b[31m[Disconnected from server]\x1b[0m\r\n');
+    },
+
+    received(data) {
+      handleMessage(data);
+    }
+  });
+
+  function updateConnectionStatus(status) {
+    const el = document.getElementById('connection-status');
+    if (status === 'connected') {
+      el.innerHTML = '<span class="w-2 h-2 rounded-full bg-success mr-1"></span> Connected';
+      el.className = 'badge badge-sm badge-success badge-outline';
+    } else if (status === 'disconnected') {
+      el.innerHTML = '<span class="w-2 h-2 rounded-full bg-error mr-1"></span> Disconnected';
+      el.className = 'badge badge-sm badge-error badge-outline';
+    }
+  }
+
+  function handleMessage(data) {
+    switch (data.type) {
+      case 'command_received':
+        currentCommandId = data.command_id;
+        break;
+
+      case 'command_started':
+        // Command is running
+        break;
+
+      case 'output':
+        // Write output to terminal
+        if (data.data) {
+          // Convert \n to \r\n for proper terminal display
+          const output = data.data.replace(/\n/g, '\r\n');
+          term.write(output);
+        }
+        break;
+
+      case 'command_completed':
+        term.writeln('');
+        if (data.exit_status === 0) {
+          term.writeln(`\x1b[32m[Command completed successfully in ${data.duration?.toFixed(2) || '?'}s]\x1b[0m`);
+        } else {
+          term.writeln(`\x1b[33m[Command exited with status ${data.exit_status}]\x1b[0m`);
+        }
+        writePrompt();
+        currentCommandId = null;
+        break;
+
+      case 'command_failed':
+        term.writeln(`\r\n\x1b[31m[Error: ${data.error}]\x1b[0m`);
+        writePrompt();
+        currentCommandId = null;
+        break;
+    }
+  }
+
+  function writePrompt() {
+    term.write('\r\n\x1b[36msalt-master\x1b[0m:\x1b[34m~\x1b[0m$ ');
+  }
+
+  function executeCommand(cmd) {
+    if (!cmd.trim()) {
+      writePrompt();
+      return;
+    }
+
+    // Add to history
+    commandHistory.push(cmd);
+    historyIndex = commandHistory.length;
+
+    // Send via ActionCable
+    channel.perform('execute', { command: cmd });
+  }
+
+  // Handle keyboard input
+  term.onKey(({ key, domEvent }) => {
+    const ev = domEvent;
+    const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
+
+    if (ev.keyCode === 13) { // Enter
+      const cmd = currentCommand;
+      currentCommand = '';
+      term.writeln('');
+      executeCommand(cmd);
+    } else if (ev.keyCode === 8) { // Backspace
+      if (currentCommand.length > 0) {
+        currentCommand = currentCommand.slice(0, -1);
+        term.write('\b \b');
+      }
+    } else if (ev.keyCode === 38) { // Up arrow - history
+      if (historyIndex > 0) {
+        historyIndex--;
+        clearCurrentLine();
+        currentCommand = commandHistory[historyIndex] || '';
+        term.write(currentCommand);
+      }
+    } else if (ev.keyCode === 40) { // Down arrow - history
+      if (historyIndex < commandHistory.length - 1) {
+        historyIndex++;
+        clearCurrentLine();
+        currentCommand = commandHistory[historyIndex] || '';
+        term.write(currentCommand);
+      } else {
+        historyIndex = commandHistory.length;
+        clearCurrentLine();
+        currentCommand = '';
+      }
+    } else if (ev.ctrlKey && ev.keyCode === 67) { // Ctrl+C
+      term.writeln('^C');
+      currentCommand = '';
+      writePrompt();
+    } else if (ev.ctrlKey && ev.keyCode === 76) { // Ctrl+L - clear
+      clearTerminal();
+    } else if (printable) {
+      currentCommand += key;
+      term.write(key);
+    }
+  });
+
+  function clearCurrentLine() {
+    term.write('\r\x1b[K');
+    term.write('\x1b[36msalt-master\x1b[0m:\x1b[34m~\x1b[0m$ ');
+  }
+
+  // Global functions for buttons
+  window.clearTerminal = function() {
+    term.clear();
+    writePrompt();
+  };
+
+  window.runCommand = function(cmd) {
+    currentCommand = cmd;
+    term.write(cmd);
+    term.writeln('');
+    executeCommand(cmd);
+    currentCommand = '';
+  };
+
+  // Welcome message
+  term.writeln('\x1b[1;36m╔════════════════════════════════════════════════════════════╗\x1b[0m');
+  term.writeln('\x1b[1;36m║\x1b[0m     \x1b[1;33mVeracity Salt Master CLI\x1b[0m                              \x1b[1;36m║\x1b[0m');
+  term.writeln('\x1b[1;36m║\x1b[0m     Full access to salt, salt-key, salt-run, salt-call    \x1b[1;36m║\x1b[0m');
+  term.writeln('\x1b[1;36m╚════════════════════════════════════════════════════════════╝\x1b[0m');
+  term.writeln('');
+  term.writeln('\x1b[90mType a command or use the quick commands below.\x1b[0m');
+  term.writeln('\x1b[90mPress Ctrl+L to clear, Up/Down for history.\x1b[0m');
+</script>

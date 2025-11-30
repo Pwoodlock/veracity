@@ -1,0 +1,79 @@
+<%= form_with(model: group, class: "space-y-6") do |form| %>
+  <% if group.errors.any? %>
+    <div class="alert alert-error">
+      <h3 class="font-medium mb-2"><%= pluralize(group.errors.count, "error") %> prohibited this group from being saved:</h3>
+      <ul class="list-disc list-inside text-sm">
+        <% group.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Group Name -->
+  <div>
+    <%= form.label :name, "Group Name", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+    <%= form.text_field :name,
+        class: "input input-bordered w-full",
+        placeholder: "e.g., DevSec, Client XYZ, Production Servers",
+        autofocus: true,
+        required: true %>
+    <p class="mt-1 text-sm text-base-content/60">A descriptive name for this group</p>
+  </div>
+
+  <!-- Slug (optional, auto-generated) -->
+  <div>
+    <%= form.label :slug, "Slug (URL-friendly identifier)", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+    <%= form.text_field :slug,
+        class: "input input-bordered w-full",
+        placeholder: "e.g., devsec, client-xyz (auto-generated if empty)",
+        pattern: "[a-z0-9\\-]+" %>
+    <p class="mt-1 text-sm text-base-content/60">Leave empty to auto-generate from name. Only lowercase letters, numbers, and hyphens.</p>
+  </div>
+
+  <!-- Description -->
+  <div>
+    <%= form.label :description, class: "block text-sm font-medium text-base-content/80 mb-2" %>
+    <%= form.text_area :description,
+        rows: 3,
+        class: "textarea textarea-bordered w-full",
+        placeholder: "Optional: Describe this group's purpose..." %>
+  </div>
+
+  <!-- Color -->
+  <div>
+    <%= form.label :color, "Color Theme", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+    <div class="flex items-center gap-4">
+      <%= form.color_field :color,
+          class: "w-20 h-10 rounded border border-base-content/10 cursor-pointer" %>
+      <div class="flex-1">
+        <p class="text-sm text-base-content/80">Choose a color to identify this group visually</p>
+        <div class="flex gap-2 mt-2">
+          <% colors = [
+            { name: 'Blue', hex: '#3B82F6' },
+            { name: 'Green', hex: '#10B981' },
+            { name: 'Purple', hex: '#8B5CF6' },
+            { name: 'Red', hex: '#EF4444' },
+            { name: 'Yellow', hex: '#F59E0B' },
+            { name: 'Pink', hex: '#EC4899' },
+            { name: 'Gray', hex: '#6B7280' }
+          ] %>
+          <% colors.each do |color| %>
+            <button type="button"
+                    onclick="document.getElementById('<%= form.field_id(:color) %>').value = '<%= color[:hex] %>'"
+                    class="w-8 h-8 rounded border-2 border-base-content/10 hover:border-base-content/20 transition"
+                    style="background-color: <%= color[:hex] %>"
+                    title="<%= color[:name] %>">
+            </button>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-3 pt-4 border-t border-base-content/10">
+    <%= link_to "Cancel", groups_path, class: "btn btn-ghost" %>
+    <%= form.submit class: "btn btn-primary" %>
+  </div>
+<% end %>

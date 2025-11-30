@@ -1,0 +1,45 @@
+# Sidekiq-Cron Schedule Configuration
+# https://github.com/sidekiq-cron/sidekiq-cron
+
+# Sync minions every 5 minutes (optimized to use batch operations)
+sync_minions:
+  cron: "*/5 * * * *"  # Every 5 minutes
+  class: "SyncMinionsJob"
+  queue: default
+  description: "Discover and sync all accepted Salt minions (status, grains, etc.)"
+  active_job: true
+
+# Collect metrics from online servers every 5 minutes
+collect_metrics:
+  cron: "*/5 * * * *"  # Every 5 minutes
+  class: "CollectMetricsJob"
+  queue: default
+  description: "Collect system metrics from all online servers"
+  active_job: true
+
+# Check for scheduled tasks that need to run
+task_scheduler:
+  cron: "* * * * *"  # Every minute
+  class: "TaskSchedulerJob"
+  queue: default
+  description: "Check for and execute scheduled tasks"
+  active_job: true
+
+# Scan CVE watchlists for new vulnerabilities
+# Schedule is configurable via Settings > Vulnerability Lookup
+# Default: Daily at 2 AM (can be changed in vulnerability_lookup_scan_schedule system setting)
+cve_scan:
+  cron: "0 2 * * *"  # Daily at 2 AM (default, configurable via settings)
+  class: "CveScanJob"
+  queue: default
+  description: "Scan all active CVE watchlists for new vulnerabilities"
+  active_job: true
+
+# Note: The extended cron format (with seconds) is supported by sidekiq-cron
+# Format: second minute hour day month weekday
+# Examples:
+#   "*/30 * * * * *"  - Every 30 seconds
+#   "0 * * * * *"     - Every minute at :00
+#   "0 */5 * * * *"   - Every 5 minutes
+#   "0 0 * * * *"     - Every hour
+#   "0 0 0 * * *"     - Every day at midnight

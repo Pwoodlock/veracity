@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="nord">
+  <head>
+    <title><%= content_for(:title) || "Veracity - Server Infrastructure Management" %></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <!-- Favicon - Only show if custom logo is uploaded -->
+    <% if SystemSetting.logo_url.present? %>
+      <link rel="icon" href="<%= SystemSetting.logo_url %>" type="image/png">
+      <link rel="apple-touch-icon" href="<%= SystemSetting.logo_url %>">
+    <% end %>
+
+    <!-- Inter Font (Modern Professional Typography) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS + DaisyUI via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+              mono: ['JetBrains Mono', 'SF Mono', 'Consolas', 'Monaco', 'monospace']
+            },
+            colors: {
+              'brand-green': '#57D9A3'
+            }
+          }
+        },
+        daisyui: {
+          themes: ["nord", "lofi", "dark", "light", "cupcake", "bumblebee", "emerald", "corporate", "synthwave", "retro", "cyberpunk", "valentine", "halloween", "garden", "forest", "aqua", "pastel", "fantasy", "wireframe", "black", "luxury", "dracula", "cmyk", "autumn", "business", "acid", "lemonade", "night", "coffee", "winter", "dim", "sunset"],
+          base: true,
+          styled: true,
+          utils: true,
+          prefix: "",
+          logs: false,
+          themeRoot: ":root"
+        }
+      }
+    </script>
+
+    <!-- Theme System: Initialize theme from localStorage before page loads to prevent flash -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('daisyui-theme') || 'nord';
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag "application" %>
+
+    <!-- Theme Switcher JavaScript -->
+    <script src="/javascripts/theme-switcher.js"></script>
+
+    <!-- ApexCharts Theme Integration -->
+    <script src="/javascripts/apex-charts-theme.js"></script>
+
+    <!-- Hotwire Turbo for real-time updates -->
+    <script type="module">
+      import * as Turbo from 'https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.4/dist/turbo.es2017-esm.min.js'
+      import { createConsumer } from 'https://cdn.jsdelivr.net/npm/@rails/actioncable@7.1.3/src/index.js'
+
+      // Connect ActionCable to Turbo Streams
+      Turbo.connectStreamSource(createConsumer())
+    </script>
+
+    <!-- Smooth theme transition CSS -->
+    <style>
+      .theme-transition {
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      .theme-transition * {
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      }
+      .theme-option.active {
+        background-color: hsl(var(--p) / 0.2);
+        font-weight: 600;
+      }
+      .theme-option.active::before {
+        content: '✓ ';
+        margin-right: 0.5rem;
+      }
+    </style>
+  </head>
+
+  <body class="bg-base-300 text-base-content min-h-screen">
+    <%= yield %>
+  </body>
+</html>

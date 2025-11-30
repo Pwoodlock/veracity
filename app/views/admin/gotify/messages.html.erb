@@ -1,0 +1,153 @@
+<% content_for :head do %>
+  <title>Messages - Gotify Admin</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= render 'admin/gotify/tabs', active: 'messages' %>
+
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-base-content">Messages</h1>
+      <button onclick="document.getElementById('send-modal').classList.remove('hidden')"
+              class="btn btn-warning">
+        Send Test Message
+      </button>
+    </div>
+
+    <% if flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:success] %></p>
+      </div>
+    <% end %>
+    <% if flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:error] %></p>
+      </div>
+    <% end %>
+
+    <!-- Filters -->
+    <div class="bg-base-200 rounded-lg shadow p-4 mb-6">
+      <%= form_with url: admin_gotify_messages_path, method: :get, class: "flex items-center space-x-4" do %>
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-base-content mb-1">Filter by Application</label>
+          <select name="app_id" onchange="this.form.submit()"
+                  class="w-full px-3 py-2 border border-base-content/10 rounded-lg">
+            <option value="">All Applications</option>
+            <% @applications.each do |app| %>
+              <option value="<%= app['id'] %>" <%= 'selected' if @app_filter.to_s == app['id'].to_s %>>
+                <%= app['name'] %>
+              </option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content mb-1">Limit</label>
+          <select name="limit" onchange="this.form.submit()" class="px-3 py-2 border rounded-lg">
+            <option value="25" <%= 'selected' if @limit == 25 %>>25</option>
+            <option value="50" <%= 'selected' if @limit == 50 %>>50</option>
+            <option value="100" <%= 'selected' if @limit == 100 %>>100</option>
+            <option value="200" <%= 'selected' if @limit == 200 %>>200</option>
+          </select>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Messages List -->
+    <div class="bg-base-200 rounded-lg shadow">
+      <% if @messages.any? %>
+        <div class="divide-y divide-base-content/10">
+          <% @messages.each do |message| %>
+            <% app = @applications.find { |a| a['id'] == message['appid'] } %>
+            <div class="p-6 hover:bg-base-300">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-2 mb-2">
+                    <span class="text-xs font-medium px-2 py-1 rounded-full <%= case message['priority']
+                      when 0..3 then 'bg-base-100 text-base-content'
+                      when 4..6 then 'bg-info/20 text-info'
+                      when 7..8 then 'bg-warning/20 text-warning'
+                      else 'bg-error/20 text-error'
+                    end %>">
+                      Priority <%= message['priority'] %>
+                    </span>
+                    <span class="text-xs text-base-content/40"><%= app&.dig('name') || "App ##{message['appid']}" %></span>
+                    <span class="text-xs text-base-content/60">
+                      <%= Time.parse(message['date']).strftime('%b %d, %Y %I:%M %p') rescue message['date'] %>
+                    </span>
+                  </div>
+                  <% if message['title'].present? %>
+                    <h3 class="text-sm font-semibold text-base-content mb-1"><%= message['title'] %></h3>
+                  <% end %>
+                  <p class="text-sm text-base-content whitespace-pre-wrap"><%= message['message'] %></p>
+                </div>
+                <div class="ml-4">
+                  <%= button_to "Delete", admin_gotify_delete_message_path(id: message['id']), method: :delete,
+                      data: { confirm: 'Delete this message?' },
+                      class: "text-error hover:text-error text-sm" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="px-6 py-12 text-center">
+          <svg class="mx-auto h-12 w-12 text-base-content/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-base-content">No messages</h3>
+          <p class="mt-1 text-sm text-base-content/40">
+            <% if @app_filter.present? %>
+              No messages found for this application.
+            <% else %>
+              Send a test message to get started.
+            <% end %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Send Message Modal -->
+  <div id="send-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-base-200 rounded-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-xl font-bold mb-4">Send Test Message</h2>
+      <%= form_with url: admin_gotify_send_message_path, method: :post, class: "space-y-4" do %>
+        <div>
+          <label class="block text-sm font-medium text-base-content mb-1">Application</label>
+          <select name="app_id" required class="w-full px-3 py-2 border rounded-lg">
+            <option value="">Select an application</option>
+            <% @applications.each do |app| %>
+              <option value="<%= app['id'] %>"><%= app['name'] %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content mb-1">Title</label>
+          <input type="text" name="title" class="w-full px-3 py-2 border rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content mb-1">Message</label>
+          <textarea name="message" required rows="4" class="w-full px-3 py-2 border rounded-lg"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content mb-1">Priority (0-10)</label>
+          <input type="number" name="priority" value="5" min="0" max="10" class="w-full px-3 py-2 border rounded-lg">
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button" onclick="document.getElementById('send-modal').classList.add('hidden')"
+                  class="px-4 py-2 border rounded-lg text-base-content hover:bg-base-300">Cancel</button>
+          <button type="submit" class="btn btn-warning">Send</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('send-modal').classList.add('hidden');
+      }
+    });
+  </script>
+<% end %>

@@ -1,0 +1,310 @@
+<% content_for :head do %>
+  <title><%= @cve_watchlist.display_name %> - <%= SystemSetting.company_name %></title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-base-content"><%= @cve_watchlist.display_name %></h1>
+          <p class="mt-2 text-sm text-base-content/60">CVE Watchlist Details</p>
+        </div>
+        <div class="flex space-x-3">
+          <%= link_to cve_watchlists_path, class: "px-4 py-2 bg-base-200 text-white rounded-lg hover:bg-base-200" do %>
+            <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to List
+          <% end %>
+          <%= link_to edit_cve_watchlist_path(@cve_watchlist), class: "btn btn-primary" do %>
+            <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit
+          <% end %>
+          <%= button_to test_cve_watchlist_path(@cve_watchlist), method: :post, class: "btn btn-success" do %>
+            <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Run Check Now
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flash Messages -->
+    <% if flash[:notice] %>
+      <div class="alert alert-success mb-6">
+        <%= flash[:notice] %>
+      </div>
+    <% end %>
+
+    <% if flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <%= flash[:error] %>
+      </div>
+    <% end %>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Left Column: Watchlist Details -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Basic Information -->
+        <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-semibold text-base-content mb-4">Watchlist Information</h2>
+
+          <dl class="space-y-4">
+            <div>
+              <dt class="text-sm font-medium text-base-content/60">Vendor</dt>
+              <dd class="mt-1 text-sm text-base-content"><%= @cve_watchlist.vendor %></dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-base-content/60">Product</dt>
+              <dd class="mt-1 text-sm text-base-content"><%= @cve_watchlist.product %></dd>
+            </div>
+
+            <% if @cve_watchlist.version.present? %>
+              <div>
+                <dt class="text-sm font-medium text-base-content/60">Version</dt>
+                <dd class="mt-1 text-sm text-base-content"><%= @cve_watchlist.version %></dd>
+              </div>
+            <% end %>
+
+            <div>
+              <dt class="text-sm font-medium text-base-content/60">Server</dt>
+              <dd class="mt-1 text-sm text-base-content">
+                <% if @cve_watchlist.server %>
+                  <%= link_to @cve_watchlist.server.hostname, server_path(@cve_watchlist.server), class: "text-primary hover:text-primary-focus" %>
+                <% else %>
+                  <span class="badge badge-secondary badge-sm">Global Watchlist</span>
+                <% end %>
+              </dd>
+            </div>
+
+            <% if @cve_watchlist.cpe_string.present? %>
+              <div>
+                <dt class="text-sm font-medium text-base-content/60">CPE String</dt>
+                <dd class="mt-1 text-xs font-mono text-base-content bg-base-300 p-2 rounded"><%= @cve_watchlist.cpe_string %></dd>
+              </div>
+            <% end %>
+
+            <% if @cve_watchlist.description.present? %>
+              <div>
+                <dt class="text-sm font-medium text-base-content/60">Description</dt>
+                <dd class="mt-1 text-sm text-base-content"><%= @cve_watchlist.description %></dd>
+              </div>
+            <% end %>
+
+            <div>
+              <dt class="text-sm font-medium text-base-content/60">Status</dt>
+              <dd class="mt-1">
+                <% if @cve_watchlist.active %>
+                  <span class="badge badge-success badge-sm">Active</span>
+                <% else %>
+                  <span class="badge badge-ghost badge-sm">Inactive</span>
+                <% end %>
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-base-content/60">Check Frequency</dt>
+              <dd class="mt-1 text-sm text-base-content capitalize"><%= @cve_watchlist.frequency %></dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-semibold text-base-content mb-4">Notification Settings</h2>
+
+          <dl class="space-y-4">
+            <div>
+              <dt class="text-sm font-medium text-base-content/60">Notifications</dt>
+              <dd class="mt-1">
+                <% if @cve_watchlist.notification_enabled %>
+                  <span class="badge badge-success badge-sm">Enabled</span>
+                <% else %>
+                  <span class="badge badge-ghost badge-sm">Disabled</span>
+                <% end %>
+              </dd>
+            </div>
+
+            <% if @cve_watchlist.notification_threshold.present? %>
+              <div>
+                <dt class="text-sm font-medium text-base-content/60">Notification Threshold</dt>
+                <dd class="mt-1 text-sm text-base-content uppercase"><%= @cve_watchlist.notification_threshold %> and above</dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-semibold text-base-content mb-4">Recent Vulnerability Alerts</h2>
+
+          <% if @recent_alerts.any? %>
+            <div class="space-y-3">
+              <% @recent_alerts.each do |alert| %>
+                <div class="border-l-4 <%= alert.severity == 'CRITICAL' ? 'border-error' : alert.severity == 'HIGH' ? 'border-warning' : 'border-warning' %> pl-4 py-3 bg-base-300 rounded-r">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center space-x-2">
+                        <%= link_to alert.cve_id, vulnerability_alert_path(alert), class: "text-sm font-medium text-primary hover:text-primary-focus" %>
+                        <% case alert.severity %>
+                        <% when 'CRITICAL' %>
+                          <span class="badge badge-error badge-sm">CRITICAL</span>
+                        <% when 'HIGH' %>
+                          <span class="badge badge-warning badge-sm">HIGH</span>
+                        <% when 'MEDIUM' %>
+                          <span class="badge badge-warning badge-sm">MEDIUM</span>
+                        <% else %>
+                          <span class="badge badge-primary badge-sm"><%= alert.severity %></span>
+                        <% end %>
+                        <% if alert.is_exploited %>
+                          <span class="badge badge-secondary badge-sm">CISA KEV</span>
+                        <% end %>
+                      </div>
+                      <p class="text-xs text-base-content/60 mt-1">
+                        CVSS: <%= alert.cvss_score ? number_with_precision(alert.cvss_score, precision: 1) : 'N/A' %>
+                        <% if alert.epss_score %>
+                          | EPSS: <%= (alert.epss_score * 100).round(1) %>%
+                        <% end %>
+                      </p>
+                      <p class="text-xs text-base-content/60 mt-1">
+                        <%= alert.published_at ? time_ago_in_words(alert.published_at) + ' ago' : 'Unknown date' %>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-8">
+              <svg class="mx-auto h-12 w-12 text-base-content/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <p class="mt-2 text-sm text-base-content/60">No vulnerabilities detected</p>
+            </div>
+          <% end %>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Statistics & Actions -->
+      <div class="space-y-6">
+
+        <!-- Statistics -->
+        <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+          <h3 class="text-lg font-semibold text-base-content mb-4">Statistics</h3>
+
+          <div class="space-y-4">
+            <div>
+              <div class="text-sm text-base-content/60">Total Hits</div>
+              <div class="text-2xl font-bold text-base-content"><%= @cve_watchlist.hits_count || 0 %></div>
+            </div>
+
+            <div class="border-t border-base-content/10 pt-4">
+              <div class="text-sm text-base-content/60">Last Checked</div>
+              <div class="text-sm text-base-content">
+                <%= @cve_watchlist.last_checked_at ? time_ago_in_words(@cve_watchlist.last_checked_at) + ' ago' : 'Never' %>
+              </div>
+            </div>
+
+            <% if @cve_watchlist.last_execution_time.present? %>
+              <div class="border-t border-base-content/10 pt-4">
+                <div class="text-sm text-base-content/60">Last Execution</div>
+                <div class="text-sm text-base-content">
+                  <%= time_ago_in_words(@cve_watchlist.last_execution_time) %> ago
+                </div>
+              </div>
+            <% end %>
+
+            <% if @cve_watchlist.last_scan_duration.present? %>
+              <div class="border-t border-base-content/10 pt-4">
+                <div class="text-sm text-base-content/60">Last Scan Duration</div>
+                <div class="text-sm text-base-content">
+                  <%= (@cve_watchlist.last_scan_duration / 1000.0).round(2) %> seconds
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+          <h3 class="text-lg font-semibold text-base-content mb-4">Actions</h3>
+
+          <div class="space-y-2">
+            <%= button_to test_cve_watchlist_path(@cve_watchlist), method: :post,
+                class: "btn btn-success w-full" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Check for New
+            <% end %>
+
+            <%= button_to test_cve_watchlist_path(@cve_watchlist, force_full_scan: true), method: :post,
+                data: { confirm: 'This will re-import all known vulnerabilities for this product, potentially creating duplicate alerts. Continue?' },
+                class: "btn btn-warning w-full" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Force Full Scan
+            <% end %>
+
+            <%= link_to edit_cve_watchlist_path(@cve_watchlist),
+                class: "btn btn-primary w-full" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              Edit Watchlist
+            <% end %>
+
+            <%= link_to debug_cve_watchlist_path(@cve_watchlist),
+                class: "btn btn-secondary w-full" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+              Debug API
+            <% end %>
+
+            <%= button_to cve_watchlist_path(@cve_watchlist), method: :delete,
+                data: { confirm: 'Are you sure you want to delete this watchlist? All associated alerts will also be deleted.' },
+                class: "btn btn-error w-full" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Delete Watchlist
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="bg-base-200 border border-primary rounded-lg p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-primary/80">
+                <strong>About This Watchlist</strong><br>
+                This watchlist monitors <%= @cve_watchlist.vendor %>/<%= @cve_watchlist.product %> for new security vulnerabilities.
+                Checks run <%= @cve_watchlist.frequency %>.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+<% end %>

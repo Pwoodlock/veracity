@@ -1,0 +1,204 @@
+<!-- Modern DaisyUI Navigation Bar -->
+<div class="navbar bg-base-300 border-b border-base-content/10 shadow-lg min-h-20">
+  <div class="navbar-start">
+    <!-- Mobile Hamburger Menu -->
+    <div class="dropdown lg:hidden">
+      <label tabindex="0" class="btn btn-ghost btn-circle">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </label>
+      <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-50 p-2 shadow-lg bg-base-200 rounded-box w-64 border border-base-content/10">
+        <li><%= link_to "Dashboard", root_path, class: "#{'active' if current_page?(root_path)}" %></li>
+        <li><%= link_to "Servers", servers_path, class: "#{'active' if controller_name == 'servers'}" %></li>
+        <li><%= link_to "Groups", groups_path, class: "#{'active' if controller_name == 'groups'}" %></li>
+        <% if current_user.admin? || current_user.operator? %>
+          <li><%= link_to "Tasks", tasks_path, class: "#{'active' if controller_name.in?(%w[tasks task_runs])}" %></li>
+        <% end %>
+        <% if current_user.admin? %>
+          <li>
+            <details>
+              <summary>Admin</summary>
+              <ul>
+                <li><%= link_to "Users", users_path %></li>
+                <li class="menu-title">Notifications</li>
+                <li><%= link_to "Gotify", admin_gotify_path %></li>
+                <li class="menu-title">Security</li>
+                <li><%= link_to "Vulnerability Lookup", settings_vulnerability_lookup_path %></li>
+                <li><%= link_to "CVE Watchlists", cve_watchlists_path %></li>
+                <li><%= link_to "CVE Alerts", vulnerability_alerts_path %></li>
+                <li class="menu-title">Settings</li>
+                <li><%= link_to "Appearance", settings_appearance_path %></li>
+                <li><%= link_to "Backups", settings_backups_path %></li>
+                <li><%= link_to "Hetzner API", settings_hetzner_api_keys_path %></li>
+                <li><%= link_to "Proxmox API", settings_proxmox_api_keys_path %></li>
+                <li><%= link_to "Maintenance", settings_maintenance_path %></li>
+              </ul>
+            </details>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <!-- Logo -->
+    <%= link_to root_path, class: "btn btn-ghost normal-case text-xl hover:bg-base-content/5" do %>
+      <img src="<%= SystemSetting.logo_url %>" alt="<%= SystemSetting.company_name %>" class="h-8 w-auto">
+      <span class="text-primary font-bold tracking-wide ml-2"><%= SystemSetting.company_name %></span>
+    <% end %>
+  </div>
+
+  <!-- Desktop Navigation Center -->
+  <div class="navbar-center hidden lg:flex">
+    <ul class="menu menu-horizontal px-1 gap-1">
+      <li><%= link_to "Dashboard", root_path, class: "btn btn-ghost btn-sm #{'btn-active' if current_page?(root_path)}" %></li>
+      <li><%= link_to "Servers", servers_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name == 'servers'}" %></li>
+      <li><%= link_to "Groups", groups_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name == 'groups'}" %></li>
+      <% if current_user.admin? || current_user.operator? %>
+        <li><%= link_to "Tasks", tasks_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name.in?(%w[tasks task_runs])}" %></li>
+      <% end %>
+
+      <% if current_user.admin? %>
+        <!-- Admin Dropdown -->
+        <li>
+          <details class="dropdown dropdown-hover">
+            <summary class="btn btn-ghost btn-sm #{'btn-active' if controller_name.in?(%w[users settings])}">
+              Admin
+              <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <ul class="menu dropdown-content z-50 p-2 shadow-xl bg-base-200 rounded-box w-64 mt-2 border border-base-content/10">
+              <li><%= link_to users_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                Users
+              <% end %></li>
+              <li class="menu-title">Notifications</li>
+              <li><%= link_to admin_gotify_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+                Gotify
+              <% end %></li>
+              <li class="menu-title">Security</li>
+              <li><%= link_to settings_vulnerability_lookup_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                Vulnerability Lookup
+              <% end %></li>
+              <li><%= link_to cve_watchlists_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                CVE Watchlists
+              <% end %></li>
+              <li><%= link_to vulnerability_alerts_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                CVE Alerts
+              <% end %></li>
+              <li class="menu-title">Settings</li>
+              <li><%= link_to settings_appearance_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                </svg>
+                Appearance
+              <% end %></li>
+              <li><%= link_to settings_backups_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                </svg>
+                Backups
+              <% end %></li>
+              <li><%= link_to settings_hetzner_api_keys_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                </svg>
+                Hetzner API
+              <% end %></li>
+              <li><%= link_to settings_proxmox_api_keys_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                </svg>
+                Proxmox API
+              <% end %></li>
+              <li><%= link_to settings_maintenance_path do %>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Maintenance
+              <% end %></li>
+            </ul>
+          </details>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+
+  <!-- Right Side - User Menu -->
+  <div class="navbar-end gap-2">
+    <!-- Docs Link -->
+    <a href="https://pwoodlock.github.io/veracity-/" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-circle btn-sm" title="Documentation" aria-label="Open documentation in new tab">
+      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+      </svg>
+    </a>
+
+    <!-- Version Badge -->
+    <div class="tooltip tooltip-bottom" data-tip="Application Version: <%= Veracity.full_version %>">
+      <div class="badge badge-outline badge-primary gap-1 px-3 py-3 cursor-default">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+        </svg>
+        <span class="text-xs font-mono font-semibold">v<%= Veracity.display_version %></span>
+      </div>
+    </div>
+
+    <!-- GitHub Link -->
+    <a href="https://github.com/pwoodlock/veracity" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-circle btn-sm" title="GitHub Repository">
+      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+      </svg>
+    </a>
+
+
+    <!-- User Dropdown -->
+    <div class="dropdown dropdown-end">
+      <label tabindex="0" class="btn btn-ghost gap-2">
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-8">
+            <span class="text-sm font-medium"><%= current_user.email[0].upcase %></span>
+          </div>
+        </div>
+        <div class="hidden md:flex flex-col items-start text-xs">
+          <span class="font-medium"><%= current_user.email %></span>
+          <% if current_user.otp_required_for_login %>
+            <div class="badge badge-success badge-xs">2FA Active</div>
+          <% else %>
+            <div class="badge badge-warning badge-xs">No 2FA</div>
+          <% end %>
+        </div>
+      </label>
+      <ul tabindex="0" class="menu dropdown-content z-50 p-2 shadow-lg bg-base-200 rounded-box w-52 mt-3 border border-base-content/10">
+        <li><%= link_to two_factor_path do %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          Two-Factor Auth
+        <% end %></li>
+        <div class="divider my-0"></div>
+        <li><%= button_to destroy_user_session_path, method: :delete, class: "text-error" do %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Sign Out
+        <% end %></li>
+      </ul>
+    </div>
+  </div>
+</div>

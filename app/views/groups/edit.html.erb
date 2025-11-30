@@ -1,0 +1,24 @@
+<% content_for :head do %>
+  <title>Edit <%= @group.name %> - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+      <div>
+        <h2 class="text-3xl font-bold text-base-content">Edit Group</h2>
+        <p class="text-base-content/80 mt-1">Update group settings</p>
+      </div>
+      <%= button_to group_path(@group), method: :delete, data: { turbo_confirm: "Are you sure? This will unassign #{@group.servers_count} server(s) from this group." }, class: "btn btn-error" do %>
+        Delete Group
+      <% end %>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+      <%= render 'form', group: @group %>
+    </div>
+  </div>
+<% end %>

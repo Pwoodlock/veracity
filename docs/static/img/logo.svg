@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100">
+  <!-- Main text - using a teal/cyan that contrasts well on both light and dark -->
+  <text x="200" y="62"
+        font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-size="48"
+        font-weight="300"
+        fill="#4a9eaa"
+        text-anchor="middle"
+        letter-spacing="12">
+    VERACITY
+  </text>
+
+  <!-- Underline accent - coral/orange for contrast -->
+  <rect x="50" y="75" width="300" height="1.5" fill="#e07455" rx="0.75"/>
+</svg>

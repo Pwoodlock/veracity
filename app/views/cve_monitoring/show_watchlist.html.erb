@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= @watchlist.display_name %> - CVE Monitoring</title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-base-300">
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-base-content"><%= @watchlist.display_name %></h1>
+        <p class="text-base-content/80 mt-1"><%= @watchlist.description %></p>
+      </div>
+      <div class="flex gap-3">
+        <%= button_to "Scan Now", scan_cve_watchlist_path(@watchlist), method: :post,
+            class: "btn btn-success" %>
+        <%= link_to "← Back to Watchlists", cve_monitoring_watchlists_path,
+            class: "btn btn-ghost" %>
+      </div>
+    </div>
+
+    <!-- Watchlist Details Card -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-lg font-semibold text-base-content mb-4">Details</h2>
+      <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <dt class="text-sm font-medium text-base-content/80">Vendor</dt>
+          <dd class="mt-1 text-sm text-base-content"><%= @watchlist.vendor %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-base-content/80">Product</dt>
+          <dd class="mt-1 text-sm text-base-content"><%= @watchlist.product %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-base-content/80">Version</dt>
+          <dd class="mt-1 text-sm text-base-content"><%= @watchlist.version || 'All versions' %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-base-content/80">Frequency</dt>
+          <dd class="mt-1 text-sm text-base-content"><%= @watchlist.frequency.capitalize %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-base-content/80">Status</dt>
+          <dd class="mt-1">
+            <span class="badge <%= @watchlist.active? ? 'badge-success' : 'badge-ghost' %>">
+              <%= @watchlist.active? ? 'Active' : 'Inactive' %>
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-base-content/80">Last Checked</dt>
+          <dd class="mt-1 text-sm text-base-content">
+            <%= @watchlist.last_checked_at&.strftime('%B %d, %Y at %H:%M') || 'Never' %>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-base-content/80">Total Hits</dt>
+          <dd class="mt-1">
+            <span class="badge badge-primary">
+              <%= @watchlist.hits_count %>
+            </span>
+          </dd>
+        </div>
+        <% if @watchlist.server %>
+          <div>
+            <dt class="text-sm font-medium text-base-content/80">Server</dt>
+            <dd class="mt-1 text-sm">
+              <%= link_to @watchlist.server.hostname, server_path(@watchlist.server),
+                  class: "text-primary hover:text-primary/80" %>
+            </dd>
+          </div>
+        <% end %>
+      </dl>
+
+      <div class="mt-6 flex gap-3">
+        <%= link_to "Edit", edit_cve_watchlist_path(@watchlist),
+            class: "btn btn-primary" %>
+        <%= button_to "Delete", destroy_cve_watchlist_path(@watchlist), method: :delete,
+            data: { turbo_confirm: "Are you sure you want to delete this watchlist?" },
+            class: "btn btn-error" %>
+      </div>
+    </div>
+
+    <!-- Recent Alerts -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+      <div class="p-6 border-b border-base-content/10">
+        <h2 class="text-lg font-semibold text-base-content">Recent Vulnerability Alerts</h2>
+      </div>
+      <div class="p-6">
+        <% if @recent_alerts && @recent_alerts.any? %>
+          <div class="space-y-4">
+            <% @recent_alerts.each do |alert| %>
+              <div class="border-l-4 <%= alert.critical? ? 'border-error' : 'border-warning' %> pl-4">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <%= link_to alert.cve_id, cve_monitoring_alert_path(alert),
+                          class: "font-medium text-primary hover:text-primary/80" %>
+                      <span class="px-2 py-1 text-xs rounded-full <%= alert.severity_badge_class %>">
+                        <%= alert.severity %>
+                      </span>
+                      <% if alert.is_exploited %>
+                        <span class="badge badge-error badge-xs">EXPLOITED</span>
+                      <% end %>
+                    </div>
+                    <p class="text-sm text-base-content/80 mt-1">
+                      <%= alert.server&.hostname || 'Global' %> •
+                      <%= time_ago_in_words(alert.created_at) %> ago
+                    </p>
+                    <% if alert.description.present? %>
+                      <p class="text-sm text-base-content/60 mt-2"><%= truncate(alert.description, length: 200) %></p>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-base-content/60 text-center py-8">No vulnerability alerts found for this watchlist</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+<% end %>

@@ -1,0 +1,232 @@
+<% content_for :head do %>
+  <title>Applications - Gotify Admin</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Admin Navigation Tabs -->
+    <%= render 'admin/gotify/tabs', active: 'applications' %>
+
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-base-content">Applications</h1>
+      <button onclick="document.getElementById('create-modal').classList.remove('hidden')"
+              class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors">
+        <svg class="inline h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Create Application
+      </button>
+    </div>
+
+    <!-- Flash Messages -->
+    <% if flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:success] %></p>
+      </div>
+    <% end %>
+    <% if flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:error] %></p>
+      </div>
+    <% end %>
+
+    <!-- Applications List -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg overflow-hidden">
+      <% if @applications.any? %>
+        <table class="min-w-full divide-y divide-base-content/10">
+          <thead class="bg-base-100">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Application</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Token</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Priority</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Messages</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-base-content/80 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-base-200 divide-y divide-base-content/10">
+            <% @applications.each do |app| %>
+              <tr class="hover:bg-base-200">
+                <td class="px-6 py-4">
+                  <div>
+                    <p class="text-sm font-medium text-base-content"><%= app['name'] %></p>
+                    <% if app['description'].present? %>
+                      <p class="text-sm text-base-content/60"><%= app['description'] %></p>
+                    <% end %>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center space-x-2">
+                    <code class="text-xs bg-base-300 px-2 py-1 rounded token-field" data-token="<%= app['token'] %>">
+                      <span class="token-hidden text-base-content/60">••••••••••••••••</span>
+                      <span class="token-visible hidden text-base-content"><%= app['token'] %></span>
+                    </code>
+                    <button onclick="toggleToken(this)" class="text-base-content/60 hover:text-base-content/80" title="Show/Hide">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    </button>
+                    <button onclick="copyToken(this)" class="text-base-content/60 hover:text-base-content/80" title="Copy">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="text-sm text-base-content/80"><%= app['defaultPriority'] || 0 %></span>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="text-sm text-base-content/80"><%= @message_counts.dig(app['id'], :count) || 0 %></span>
+                </td>
+                <td class="px-6 py-4 text-right text-sm space-x-2">
+                  <button onclick="editApplication(<%= app['id'] %>, '<%= app['name'] %>', '<%= app['description'] %>', <%= app['defaultPriority'] %>)"
+                          class="text-primary hover:text-primary-focus">Edit</button>
+                  <%= button_to "Delete", admin_gotify_delete_application_path(id: app['id']), method: :delete,
+                      data: { confirm: "Delete application '#{app['name']}'? This cannot be undone." },
+                      class: "text-error hover:text-error" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="px-6 py-12 text-center">
+          <svg class="mx-auto h-12 w-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-base-content">No applications</h3>
+          <p class="mt-1 text-sm text-base-content/60">Get started by creating a new application.</p>
+          <button onclick="document.getElementById('create-modal').classList.remove('hidden')"
+                  class="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus">
+            Create Application
+          </button>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+
+  <!-- Create Application Modal -->
+  <div id="create-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-xl font-bold text-base-content mb-4">Create Application</h2>
+      <%= form_with url: admin_gotify_create_application_path, method: :post, class: "space-y-4" do |f| %>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Name</label>
+          <input type="text" name="name" required
+                 class="input input-bordered w-full placeholder-base-content/40 focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Description</label>
+          <textarea name="description" rows="3"
+                    class="textarea textarea-bordered w-full placeholder-base-content/40 focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Default Priority (0-10)</label>
+          <input type="number" name="default_priority" value="5" min="0" max="10"
+                 class="input input-bordered w-full placeholder-base-content/40 focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button" onclick="document.getElementById('create-modal').classList.add('hidden')"
+                  class="px-4 py-2 border border-base-content/20 rounded-lg text-base-content/80 hover:bg-base-200">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus">
+            Create
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Edit Application Modal -->
+  <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-xl font-bold text-base-content mb-4">Edit Application</h2>
+      <%= form_with url: admin_gotify_update_application_path, method: :put, class: "space-y-4" do |f| %>
+        <input type="hidden" name="id" id="edit-app-id">
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Name</label>
+          <input type="text" name="name" id="edit-app-name" required
+                 class="input input-bordered w-full placeholder-base-content/40 focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Description</label>
+          <textarea name="description" id="edit-app-description" rows="3"
+                    class="textarea textarea-bordered w-full placeholder-base-content/40 focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Default Priority (0-10)</label>
+          <input type="number" name="default_priority" id="edit-app-priority" min="0" max="10"
+                 class="input input-bordered w-full placeholder-base-content/40 focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button" onclick="document.getElementById('edit-modal').classList.add('hidden')"
+                  class="px-4 py-2 border border-base-content/20 rounded-lg text-base-content/80 hover:bg-base-200">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus">
+            Update
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <script>
+    function toggleToken(button) {
+      const tokenField = button.closest('.token-field');
+      const hidden = tokenField.querySelector('.token-hidden');
+      const visible = tokenField.querySelector('.token-visible');
+
+      if (hidden.classList.contains('hidden')) {
+        hidden.classList.remove('hidden');
+        visible.classList.add('hidden');
+      } else {
+        hidden.classList.add('hidden');
+        visible.classList.remove('hidden');
+      }
+    }
+
+    function copyToken(button) {
+      const tokenField = button.closest('td').querySelector('.token-field');
+      const token = tokenField.dataset.token;
+
+      navigator.clipboard.writeText(token).then(() => {
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<svg class="h-4 w-4 text-success" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
+        setTimeout(() => { button.innerHTML = originalHTML; }, 2000);
+      });
+    }
+
+    function editApplication(id, name, description, priority) {
+      document.getElementById('edit-app-id').value = id;
+      document.getElementById('edit-app-name').value = name;
+      document.getElementById('edit-app-description').value = description;
+      document.getElementById('edit-app-priority').value = priority;
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    // Close modals on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('create-modal').classList.add('hidden');
+        document.getElementById('edit-modal').classList.add('hidden');
+      }
+    });
+
+    // Close modals on background click
+    document.querySelectorAll('.fixed').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+<% end %>

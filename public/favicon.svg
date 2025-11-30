@@ -1,0 +1,33 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified hexagon outline -->
+  <path
+    d="M 16 4 L 26 10 L 26 22 L 16 28 L 6 22 L 6 10 Z"
+    stroke="#00C4CC"
+    stroke-width="1.5"
+    fill="none"
+    opacity="0.5"
+  />
+
+  <!-- V shape - bold and clear -->
+  <path
+    d="M 11 12 L 16 21 L 21 12"
+    stroke="#00C4CC"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+
+  <!-- Verification checkmark -->
+  <path
+    d="M 14 19 L 16 21 L 20 16"
+    stroke="#57D9A3"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+
+  <!-- Center active node -->
+  <circle cx="16" cy="21" r="2" fill="#57D9A3" opacity="0.6" />
+</svg>

@@ -1,0 +1,97 @@
+<div id="dashboard-stats" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+  <!-- Total Servers -->
+  <div class="card bg-base-200 border border-base-content/10 shadow-lg">
+    <div class="card-body">
+      <div class="flex items-center gap-4">
+        <div class="p-3 rounded-full bg-primary/20">
+          <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h2 class="card-title text-primary text-3xl font-bold"><%= total_servers %></h2>
+          <p class="text-base-content/60">Total Servers</p>
+          <div class="flex items-center gap-2 mt-1 text-sm">
+            <span class="text-success"><%= online_servers %> online</span>
+            <span class="text-base-content/40">|</span>
+            <span class="text-error"><%= offline_servers %> offline</span>
+          </div>
+          <% if total_groups > 0 %>
+            <div class="text-xs text-base-content/40 mt-1">
+              <%= total_groups %> groups | <%= ungrouped_servers %> ungrouped
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Commands (24h) -->
+  <div class="card bg-base-200 border border-base-content/10 shadow-lg">
+    <div class="card-body">
+      <div class="flex items-center gap-4">
+        <div class="p-3 rounded-full bg-secondary/20">
+          <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h2 class="card-title text-secondary text-3xl font-bold"><%= commands_today %></h2>
+          <p class="text-base-content/60">Commands (24h)</p>
+          <div class="text-sm text-success mt-1">
+            <%= successful_commands %> successful
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Failed Commands -->
+  <% failed_color = failed_commands > 0 ? 'error' : 'success' %>
+  <div class="card bg-base-200 border border-base-content/10 shadow-lg">
+    <div class="card-body">
+      <div class="flex items-center gap-4">
+        <div class="p-3 rounded-full bg-<%= failed_color %>/20">
+          <% if failed_commands > 0 %>
+            <svg class="w-8 h-8 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          <% else %>
+            <svg class="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          <% end %>
+        </div>
+        <div class="flex-1">
+          <h2 class="card-title text-<%= failed_color %> text-3xl font-bold"><%= failed_commands %></h2>
+          <p class="text-base-content/60">Failed Commands</p>
+          <div class="text-sm text-base-content/40 mt-1">
+            Last 24 hours
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Rate -->
+  <% success_rate = commands_today > 0 ? ((successful_commands.to_f / commands_today * 100).round(1)) : 100 %>
+  <% rate_color = success_rate >= 95 ? 'success' : success_rate >= 80 ? 'warning' : 'error' %>
+  <div class="card bg-base-200 border border-base-content/10 shadow-lg">
+    <div class="card-body">
+      <div class="flex items-center gap-4">
+        <div class="p-3 rounded-full bg-<%= rate_color %>/20">
+          <svg class="w-8 h-8 text-<%= rate_color %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h2 class="card-title text-<%= rate_color %> text-3xl font-bold"><%= success_rate %>%</h2>
+          <p class="text-base-content/60">Success Rate</p>
+          <div class="text-sm text-base-content/40 mt-1">
+            Last 24 hours
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

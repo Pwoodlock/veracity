@@ -1,0 +1,229 @@
+<% content_for :head do %>
+  <title>Onboard New Server - Server Management</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<!-- Header -->
+  <div class="bg-base-200 border-b border-base-content/10 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-base-content">Onboard New Server</h1>
+          <p class="text-sm text-base-content/80 mt-1">Install Salt minion on your servers for remote management</p>
+        </div>
+        <a href="/avo" class="btn btn-ghost">
+          ← Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Installation Command Card -->
+    <div class="bg-base-200 shadow-lg rounded-lg overflow-hidden mb-6">
+      <div class="bg-gradient-to-r from-primary to-primary-focus px-6 py-4">
+        <h2 class="text-xl font-semibold text-primary-content">Installation Command</h2>
+      </div>
+
+      <div class="p-6">
+        <p class="text-base-content mb-4">Run this command as <strong>root</strong> on the server you want to manage:</p>
+
+        <div class="relative">
+          <pre class="bg-base-300 text-success p-6 rounded-lg overflow-x-auto text-sm leading-relaxed">curl <%= @install_url %> | sudo bash</pre>
+
+          <button
+            onclick="copyToClipboard()"
+            id="copyButton"
+            class="btn btn-primary btn-sm absolute top-4 right-4"
+          >
+            Copy
+          </button>
+        </div>
+
+        <p class="text-sm text-base-content/40 mt-3">
+          <strong>Tip:</strong> You can paste this command directly into your server's terminal
+        </p>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Left Column -->
+      <div class="space-y-6">
+        <!-- Supported OS -->
+        <div class="bg-base-200 shadow rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-base-content mb-4 flex items-center">
+            <span class="text-2xl mr-2">💻</span>
+            Supported Operating Systems
+          </h3>
+          <ul class="space-y-2 text-base-content">
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              Ubuntu 22.04 LTS (Jammy)
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              Ubuntu 24.04 LTS (Noble)
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              Debian 11 (Bullseye)
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-success mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              Debian 12 (Bookworm)
+            </li>
+          </ul>
+        </div>
+
+        <!-- Network Requirements -->
+        <div class="bg-base-200 shadow rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-base-content mb-4">
+            Network Requirements
+          </h3>
+          <p class="text-sm text-base-content/80 mb-3">The server needs outbound access to:</p>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between bg-base-300 p-3 rounded">
+              <span class="font-medium text-base-content">Port 4505 (TCP)</span>
+              <span class="text-sm text-base-content/80">Salt Publisher</span>
+            </div>
+            <div class="flex items-center justify-between bg-base-300 p-3 rounded">
+              <span class="font-medium text-base-content">Port 4506 (TCP)</span>
+              <span class="text-sm text-base-content/80">Salt Request Server</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="space-y-6">
+        <!-- What This Does -->
+        <div class="bg-base-200 shadow rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-base-content mb-4 flex items-center">
+            <span class="text-2xl mr-2">⚙️</span>
+            What This Does
+          </h3>
+          <ol class="space-y-3 text-base-content">
+            <li class="flex items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-primary/20 text-primary rounded-full flex items-center justify-center text-sm font-medium mr-3">1</span>
+              <span>Detects the operating system</span>
+            </li>
+            <li class="flex items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-primary/20 text-primary rounded-full flex items-center justify-center text-sm font-medium mr-3">2</span>
+              <span>Installs Salt minion from official repository</span>
+            </li>
+            <li class="flex items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-primary/20 text-primary rounded-full flex items-center justify-center text-sm font-medium mr-3">3</span>
+              <span>Configures minion to connect to <%= @host %></span>
+            </li>
+            <li class="flex items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-primary/20 text-primary rounded-full flex items-center justify-center text-sm font-medium mr-3">4</span>
+              <span>Generates unique encryption keys</span>
+            </li>
+            <li class="flex items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-primary/20 text-primary rounded-full flex items-center justify-center text-sm font-medium mr-3">5</span>
+              <span>Displays fingerprint for verification</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- After Installation -->
+        <div class="alert alert-warning p-6">
+          <h3 class="text-lg font-semibold mb-3 flex items-center">
+            <span class="text-2xl mr-2">[!]</span>
+            After Installation
+          </h3>
+          <ol class="space-y-2 text-sm">
+            <li class="flex items-start">
+              <span class="font-bold mr-2">1.</span>
+              <span>The installation script will display a <strong>fingerprint</strong></span>
+            </li>
+            <li class="flex items-start">
+              <span class="font-bold mr-2">2.</span>
+              <span>Go to <a href="/avo/resources/servers" class="underline hover:opacity-80">Servers</a> → Actions → <strong>"Show Pending Keys"</strong></span>
+            </li>
+            <li class="flex items-start">
+              <span class="font-bold mr-2">3.</span>
+              <span>Verify the fingerprint matches!</span>
+            </li>
+            <li class="flex items-start">
+              <span class="font-bold mr-2">4.</span>
+              <span>Use <strong>"Accept Minion Key"</strong> action to approve the server</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Notice -->
+    <div class="bg-base-200 border border-primary border-l-4 p-6 rounded-lg mt-6">
+      <div class="flex items-start">
+        <span class="text-3xl mr-3">🔐</span>
+        <div>
+          <h3 class="text-lg font-semibold text-primary mb-2">Security: Fingerprint Verification Required</h3>
+          <p class="text-sm text-primary/80">
+            <strong>Always verify the fingerprint matches</strong> before accepting a minion key.
+            This prevents unauthorized servers from being accepted into your infrastructure.
+            The fingerprint verification is a critical security measure that ensures you're accepting the correct server.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="grid md:grid-cols-3 gap-4 mt-8">
+      <a href="/avo/resources/servers" class="block p-6 bg-base-200 shadow rounded-lg hover:shadow-md transition-shadow">
+        <h4 class="font-semibold text-base-content mb-2">View Servers</h4>
+        <p class="text-sm text-base-content/80">See all managed servers</p>
+      </a>
+
+      <button onclick="window.location.href='/avo/resources/servers?turbo_frame=actions_show&action_id=Avo::Actions::ShowPendingKeys'" class="block p-6 bg-base-200 shadow rounded-lg hover:shadow-md transition-shadow text-left">
+        <h4 class="font-semibold text-base-content mb-2">Pending Keys</h4>
+        <p class="text-sm text-base-content/80">View servers awaiting approval</p>
+      </button>
+
+      <button onclick="window.location.href='/avo/resources/servers?turbo_frame=actions_show&action_id=Avo::Actions::AcceptMinionKey'" class="block p-6 bg-base-200 shadow rounded-lg hover:shadow-md transition-shadow text-left">
+        <h4 class="font-semibold text-base-content mb-2">[OK] Accept Key</h4>
+        <p class="text-sm text-base-content/80">Accept a minion key</p>
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-8 text-center text-sm text-base-content/80">
+      <p>Need help? Check the <strong>MINION_INSTALLATION_GUIDE.md</strong> for detailed instructions.</p>
+      <p class="mt-2">Installation URL: <code class="bg-base-100 px-2 py-1 rounded"><%= @install_url %></code></p>
+    </div>
+  </div>
+
+  <script>
+    function copyToClipboard() {
+      const command = "curl <%= @install_url %> | sudo bash";
+      const button = document.getElementById('copyButton');
+
+      // Copy to clipboard
+      navigator.clipboard.writeText(command).then(() => {
+        // Change button appearance
+        button.textContent = '✓ Copied!';
+        button.classList.add('copied');
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+          button.textContent = 'Copy';
+          button.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard. Please copy manually.');
+      });
+    }
+  </script>
+<% end %>

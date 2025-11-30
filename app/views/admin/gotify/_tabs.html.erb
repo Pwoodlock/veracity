@@ -1,0 +1,22 @@
+<div class="mb-6 border-b border-base-content/10">
+  <nav class="-mb-px flex space-x-8">
+    <%= link_to admin_gotify_path, class: "border-b-2 #{active == 'index' ? 'border-primary text-primary' : 'border-transparent text-base-content/60 hover:text-base-content hover:border-base-content/10'} py-4 px-1 text-sm font-medium" do %>
+      Dashboard
+    <% end %>
+    <%= link_to admin_gotify_applications_path, class: "border-b-2 #{active == 'applications' ? 'border-primary text-primary' : 'border-transparent text-base-content/60 hover:text-base-content hover:border-base-content/10'} py-4 px-1 text-sm font-medium" do %>
+      Applications
+    <% end %>
+    <%= link_to admin_gotify_users_path, class: "border-b-2 #{active == 'users' ? 'border-primary text-primary' : 'border-transparent text-base-content/60 hover:text-base-content hover:border-base-content/10'} py-4 px-1 text-sm font-medium" do %>
+      Users
+    <% end %>
+    <%= link_to admin_gotify_messages_path, class: "border-b-2 #{active == 'messages' ? 'border-primary text-primary' : 'border-transparent text-base-content/60 hover:text-base-content hover:border-base-content/10'} py-4 px-1 text-sm font-medium" do %>
+      Messages
+    <% end %>
+    <%= link_to admin_gotify_clients_path, class: "border-b-2 #{active == 'clients' ? 'border-primary text-primary' : 'border-transparent text-base-content/60 hover:text-base-content hover:border-base-content/10'} py-4 px-1 text-sm font-medium" do %>
+      Clients
+    <% end %>
+    <%= link_to admin_gotify_settings_path, class: "border-b-2 #{active == 'settings' ? 'border-primary text-primary' : 'border-transparent text-base-content/60 hover:text-base-content hover:border-base-content/10'} py-4 px-1 text-sm font-medium" do %>
+      Settings
+    <% end %>
+  </nav>
+</div>

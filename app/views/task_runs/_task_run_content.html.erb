@@ -1,0 +1,133 @@
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+  <!-- Execution Details -->
+  <div class="lg:col-span-1">
+    <div class="bg-base-200 rounded-lg border border-base-content/10 p-6">
+      <h2 class="text-lg font-semibold text-base-content mb-4">Execution Details</h2>
+
+      <div class="space-y-4">
+        <div>
+          <div class="text-sm text-base-content/60 mb-1">Status</div>
+          <% if task_run.running? %>
+            <div class="badge badge-warning gap-2">
+              <span class="loading loading-spinner loading-xs"></span>
+              Running
+            </div>
+          <% elsif task_run.completed? %>
+            <div class="badge badge-success gap-2">
+              <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              Completed
+            </div>
+          <% elsif task_run.failed? %>
+            <div class="badge badge-error gap-2">
+              <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+              Failed
+            </div>
+          <% elsif task_run.cancelled? %>
+            <div class="badge badge-ghost">Cancelled</div>
+          <% else %>
+            <div class="badge badge-ghost"><%= task_run.status.capitalize %></div>
+          <% end %>
+        </div>
+
+        <div>
+          <div class="text-sm text-base-content/60 mb-1">Triggered By</div>
+          <div class="text-sm"><%= task_run.trigger_source %></div>
+        </div>
+
+        <div>
+          <div class="text-sm text-base-content/60 mb-1">Started At</div>
+          <div class="text-sm">
+            <%= task_run.started_at&.strftime("%b %d, %Y at %H:%M:%S") || "Not started" %>
+          </div>
+        </div>
+
+        <% if task_run.completed_at %>
+          <div>
+            <div class="text-sm text-base-content/60 mb-1">Completed At</div>
+            <div class="text-sm">
+              <%= task_run.completed_at.strftime("%b %d, %Y at %H:%M:%S") %>
+            </div>
+          </div>
+        <% end %>
+
+        <% if task_run.duration_human %>
+          <div>
+            <div class="text-sm text-base-content/60 mb-1">Duration</div>
+            <div class="text-sm font-medium"><%= task_run.duration_human %></div>
+          </div>
+        <% end %>
+
+        <% if task_run.exit_code %>
+          <div>
+            <div class="text-sm text-base-content/60 mb-1">Exit Code</div>
+            <div class="text-sm font-mono">
+              <span class="badge <%= task_run.exit_code == 0 ? 'badge-success' : 'badge-error' %>">
+                <%= task_run.exit_code %>
+              </span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Task Information -->
+    <div class="bg-base-200 rounded-lg border border-base-content/10 p-6 mt-4">
+      <h2 class="text-lg font-semibold text-base-content mb-4">Task Information</h2>
+
+      <div class="space-y-3">
+        <div>
+          <div class="text-sm text-base-content/60 mb-1">Command</div>
+          <code class="block bg-base-300 p-2 rounded text-xs break-all">
+            <%= task_run.task.command %>
+          </code>
+        </div>
+
+        <div>
+          <div class="text-sm text-base-content/60 mb-1">Target</div>
+          <div class="text-sm"><%= task_run.task.target_name %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="lg:col-span-3">
+    <div class="bg-base-200 rounded-lg border border-base-content/10">
+      <div class="p-6 border-b border-base-content/10">
+        <h2 class="text-lg font-semibold text-base-content">Execution Output</h2>
+      </div>
+
+      <div class="p-6">
+        <% if task_run.running? %>
+          <div class="flex flex-col items-center justify-center py-12">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="mt-4 text-base-content/60">Task is currently running...</p>
+            <p class="text-sm text-base-content/40 mt-2">Results will appear automatically when complete.</p>
+          </div>
+        <% elsif task_run.output.present? %>
+          <div class="mockup-code">
+            <pre data-prefix="$"><code><%= task_run.output %></code></pre>
+          </div>
+        <% else %>
+          <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-base-content">No output available</h3>
+            <p class="mt-1 text-sm text-base-content/60">
+              <% if task_run.pending? %>
+                Task is pending execution.
+              <% else %>
+                This task did not produce any output.
+              <% end %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

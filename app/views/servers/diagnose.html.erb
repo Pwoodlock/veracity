@@ -1,0 +1,135 @@
+<div class="p-4">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Server Diagnostics</h1>
+      <p class="text-base-content/60 mt-1"><%= @server.hostname %> (<%= @server.minion_id %>)</p>
+    </div>
+    <%= link_to "Back to Server", server_path(@server), class: "btn btn-ghost" %>
+  </div>
+
+  <!-- Overall Status Card -->
+  <div class="bg-base-300 rounded-lg p-6 mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-semibold text-white mb-2">Overall Health Status</h2>
+        <p class="text-sm text-base-content/60">Diagnostics run at <%= @diagnostic_results[:timestamp].strftime("%Y-%m-%d %H:%M:%S %Z") %></p>
+      </div>
+      <div class="text-right">
+        <% status = @diagnostic_results[:overall_status] %>
+        <% status_class = case status
+          when 'healthy' then 'badge-success'
+          when 'degraded' then 'badge-warning'
+          when 'fail' then 'badge-error'
+          when 'error' then 'badge-error'
+          else 'badge'
+        end %>
+        <span class="badge <%= status_class %> badge-lg">
+          <%= status.upcase %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendations Section -->
+  <% if @diagnostic_results[:recommendations].present? %>
+    <div class="alert alert-warning mb-6">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      </svg>
+      <div>
+        <h3 class="text-lg font-semibold mb-2">Recommendations</h3>
+        <ul class="space-y-2">
+          <% @diagnostic_results[:recommendations].each do |recommendation| %>
+            <li class="flex items-start">
+              <span class="mr-2">→</span>
+              <span><%= recommendation %></span>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Diagnostic Checks Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <% @diagnostic_results[:checks].each do |check_name, check_data| %>
+      <% next if check_data.nil? %>
+
+      <div class="bg-base-300 rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-white">
+            <%= check_name.to_s.titleize %>
+          </h3>
+          <% check_status = check_data[:status] %>
+          <% badge_class = case check_status
+            when 'pass' then 'badge-success'
+            when 'warn' then 'badge-warning'
+            when 'fail' then 'badge-error'
+            when 'error' then 'badge-error'
+            else 'badge'
+          end %>
+          <span class="badge <%= badge_class %> badge-sm">
+            <%= check_status.to_s.upcase %>
+          </span>
+        </div>
+
+        <!-- Message -->
+        <% if check_data[:message].present? %>
+          <p class="text-base-content/80 mb-3"><%= check_data[:message] %></p>
+        <% end %>
+
+        <!-- Additional Details -->
+        <div class="mt-4 space-y-2">
+          <% check_data.each do |key, value| %>
+            <% next if [:status, :message].include?(key) %>
+            <% next if value.nil? %>
+
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/60"><%= key.to_s.titleize %>:</span>
+              <span class="text-base-content font-mono">
+                <% if value.is_a?(Time) || value.is_a?(DateTime) %>
+                  <%= value.strftime("%Y-%m-%d %H:%M:%S") %>
+                <% elsif value.is_a?(TrueClass) || value.is_a?(FalseClass) %>
+                  <%= value ? 'Yes' : 'No' %>
+                <% else %>
+                  <%= value %>
+                <% end %>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Raw Data (Collapsible) -->
+  <div class="mt-6">
+    <details class="bg-base-300 rounded-lg">
+      <summary class="cursor-pointer p-4 text-white font-semibold hover:bg-base-200 rounded-lg">
+        Raw Diagnostic Data (JSON)
+      </summary>
+      <div class="p-4 bg-base-300 rounded-b-lg">
+        <pre class="text-xs text-base-content/80 overflow-x-auto"><%= JSON.pretty_generate(@diagnostic_results) %></pre>
+      </div>
+    </details>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="mt-6 flex gap-4">
+    <%= link_to "Run Diagnostics Again", diagnose_server_path(@server),
+        method: :get,
+        class: "btn btn-primary",
+        data: { turbo: false } %>
+
+    <% if @server.proxmox_server? %>
+      <%= button_to "Refresh Proxmox Status", manual_refresh_proxmox_server_path(@server),
+          method: :post,
+          class: "btn btn-secondary" %>
+    <% end %>
+
+    <%= button_to "Sync Server Data", sync_server_path(@server),
+        method: :post,
+        class: "btn btn-success" %>
+  </div>
+</div>

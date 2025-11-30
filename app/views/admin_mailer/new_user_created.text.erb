@@ -1,0 +1,22 @@
+NEW USER CREATED
+================================================================================
+
+Hello Admin,
+
+A new user account has been created in Server Manager.
+
+USER DETAILS:
+-------------
+Email: <%= @user.email %>
+Role: <%= @user.role.titleize %>
+Created By: <%= @created_by.email %>
+Created At: <%= @user.created_at.strftime("%B %d, %Y at %I:%M %p %Z") %>
+<% if @user.otp_required_for_login? %>Two-Factor Auth: Enabled<% end %>
+
+You can manage this user's permissions and settings from the Users section of the admin panel.
+
+View Dashboard: <%= @login_url %>
+
+================================================================================
+This is an automated message from Server Manager.
+Please do not reply to this email.

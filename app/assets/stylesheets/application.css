@@ -1,0 +1,54 @@
+/* Veracity Custom Styles - Minimal overrides for DaisyUI */
+
+/* DaisyUI Lo-Fi Theme Customization - Darker Green */
+[data-theme="lofi"] {
+  --su: 142 65% 35%;    /* Darker success color (was 142 76% 36%) */
+  --suc: 142 65% 35%;   /* Darker success content */
+}
+
+/* Font size fixes for consistent rendering */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-size: 1rem;
+}
+
+/* Custom animations */
+@keyframes pulse-border-dark {
+  0%, 100% {
+    border-color: hsl(var(--p));
+    box-shadow: 0 0 0 0 hsl(var(--p) / 0.6);
+  }
+  50% {
+    border-color: hsl(var(--p) / 0.8);
+    box-shadow: 0 0 0 8px hsl(var(--p) / 0);
+  }
+}
+
+@keyframes highlight-flash {
+  0% { background-color: transparent; }
+  50% { background-color: hsl(var(--p) / 0.1); }
+  100% { background-color: transparent; }
+}
+
+.widget-update {
+  animation: pulse-border-dark 1.5s ease-in-out;
+}
+
+.update-flash {
+  animation: highlight-flash 1s ease-in-out;
+}
+
+/* Server card hover effect */
+.server-card:hover {
+  transform: scale(1.02);
+}
+
+.compact-card-hover:hover {
+  transform: scale(1.01);
+}

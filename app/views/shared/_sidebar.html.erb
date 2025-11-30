@@ -1,0 +1,261 @@
+<!-- DaisyUI Drawer-based Sidebar Layout -->
+<div class="drawer lg:drawer-open">
+  <!-- Drawer toggle for mobile -->
+  <input id="sidebar-drawer" type="checkbox" class="drawer-toggle" />
+
+  <!-- Main content area -->
+  <div class="drawer-content flex flex-col">
+    <!-- Mobile header with hamburger -->
+    <div class="navbar bg-base-300 border-b border-base-content/10 lg:hidden">
+      <div class="flex-none">
+        <label for="sidebar-drawer" class="btn btn-ghost btn-circle drawer-button">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </label>
+      </div>
+      <div class="flex-1">
+        <%= link_to root_path, class: "btn btn-ghost normal-case text-xl" do %>
+          <img src="<%= SystemSetting.logo_url %>" alt="<%= SystemSetting.company_name %>" class="h-8 w-auto">
+          <span class="text-primary font-bold"><%= SystemSetting.company_name %></span>
+        <% end %>
+      </div>
+      <div class="flex-none">
+        <!-- Mobile user menu -->
+        <div class="dropdown dropdown-end">
+          <label tabindex="0" class="btn btn-ghost btn-circle avatar placeholder">
+            <div class="bg-primary text-primary-content rounded-full w-8">
+              <span class="text-sm font-medium"><%= current_user.email[0].upcase %></span>
+            </div>
+          </label>
+          <ul tabindex="0" class="menu dropdown-content z-50 p-2 shadow-lg bg-base-200 rounded-box w-52 mt-3 border border-base-content/10">
+            <li><%= link_to two_factor_path do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+              Two-Factor Auth
+            <% end %></li>
+            <div class="divider my-0"></div>
+            <li><%= button_to destroy_user_session_path, method: :delete, class: "text-error" do %>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+              Sign Out
+            <% end %></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page content -->
+    <main class="flex-1 bg-base-300 overflow-y-auto">
+      <%= yield %>
+    </main>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="drawer-side z-40">
+    <label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <aside class="bg-base-200 w-64 min-h-full flex flex-col border-r border-base-content/10">
+      <!-- Logo section -->
+      <div class="p-4 border-b border-base-content/10">
+        <%= link_to root_path, class: "flex items-center gap-2 hover:opacity-80 transition" do %>
+          <img src="<%= SystemSetting.logo_url %>" alt="<%= SystemSetting.company_name %>" class="h-8 w-auto">
+          <span class="text-primary font-bold text-lg"><%= SystemSetting.company_name %></span>
+        <% end %>
+      </div>
+
+      <!-- Navigation menu -->
+      <nav class="flex-1 overflow-y-auto p-4">
+        <ul class="menu menu-md gap-1">
+          <!-- Main Navigation -->
+          <li class="menu-title text-xs uppercase tracking-wider text-base-content/50 mt-2">Main</li>
+
+          <li>
+            <%= link_to root_path, class: "flex items-center gap-3 #{'active bg-primary/10 text-primary' if current_page?(root_path)}" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+              </svg>
+              Dashboard
+            <% end %>
+          </li>
+
+          <li>
+            <%= link_to servers_path, class: "flex items-center gap-3 #{'active bg-primary/10 text-primary' if controller_name == 'servers'}" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+              </svg>
+              Servers
+            <% end %>
+          </li>
+
+          <li>
+            <%= link_to groups_path, class: "flex items-center gap-3 #{'active bg-primary/10 text-primary' if controller_name == 'groups'}" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+              Groups
+            <% end %>
+          </li>
+
+          <% if current_user.admin? || current_user.operator? %>
+            <li>
+              <%= link_to tasks_path, class: "flex items-center gap-3 #{'active bg-primary/10 text-primary' if controller_name.in?(%w[tasks task_runs task_templates])}" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                Tasks
+              <% end %>
+            </li>
+          <% end %>
+
+          <!-- Security submenu -->
+          <li>
+            <details <%= 'open' if controller_name.in?(%w[cve_watchlists vulnerability_alerts]) || request.path.include?('vulnerability') %>>
+              <summary class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                Security
+              </summary>
+              <ul class="ml-4 mt-1">
+                <li><%= link_to "Vulnerability Lookup", settings_vulnerability_lookup_path, class: "#{'active bg-primary/10 text-primary' if request.path == settings_vulnerability_lookup_path}" %></li>
+                <li><%= link_to "CVE Watchlists", cve_watchlists_path, class: "#{'active bg-primary/10 text-primary' if controller_name == 'cve_watchlists'}" %></li>
+                <li><%= link_to "CVE Alerts", vulnerability_alerts_path, class: "#{'active bg-primary/10 text-primary' if request.path == vulnerability_alerts_path}" %></li>
+              </ul>
+            </details>
+          </li>
+
+          <!-- Salt submenu -->
+          <li>
+            <details <%= 'open' if request.path.include?('salt_cli') || request.path.include?('salt_states') %>>
+              <summary class="flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Salt
+              </summary>
+              <ul class="ml-4 mt-1">
+                <li><%= link_to "CLI", admin_salt_cli_path, class: "#{'active bg-primary/10 text-primary' if request.path.include?('salt_cli')}" %></li>
+                <li><%= link_to "Editor", admin_salt_states_path, class: "#{'active bg-primary/10 text-primary' if request.path.include?('salt_states')}" %></li>
+              </ul>
+            </details>
+          </li>
+
+          <% if current_user.admin? %>
+            <!-- Admin Section -->
+            <li class="menu-title text-xs uppercase tracking-wider text-base-content/50 mt-4">Administration</li>
+
+            <li>
+              <%= link_to users_path, class: "flex items-center gap-3 #{'active bg-primary/10 text-primary' if controller_name == 'users'}" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                Users
+              <% end %>
+            </li>
+
+            <!-- Integrations submenu -->
+            <li>
+              <details <%= 'open' if request.path.include?('proxmox') || request.path.include?('hetzner') || request.path.include?('netbird') || request.path.include?('admin/gotify') %>>
+                <summary class="flex items-center gap-3">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                  </svg>
+                  Integrations
+                </summary>
+                <ul class="ml-4 mt-1">
+                  <li><%= link_to "Proxmox API", settings_proxmox_api_keys_path, class: "#{'active bg-primary/10 text-primary' if request.path == settings_proxmox_api_keys_path}" %></li>
+                  <li><%= link_to "Hetzner API", settings_hetzner_api_keys_path, class: "#{'active bg-primary/10 text-primary' if request.path == settings_hetzner_api_keys_path}" %></li>
+                  <li><%= link_to "NetBird", settings_netbird_setup_keys_path, class: "#{'active bg-primary/10 text-primary' if request.path.include?('netbird')}" %></li>
+                  <li><%= link_to "Notifications", admin_gotify_path, class: "#{'active bg-primary/10 text-primary' if request.path.include?('admin/gotify')}" %></li>
+                </ul>
+              </details>
+            </li>
+
+            <!-- Settings submenu -->
+            <li>
+              <details <%= 'open' if request.path.include?('settings') && !request.path.include?('vulnerability') && !request.path.include?('proxmox') && !request.path.include?('hetzner') %>>
+                <summary class="flex items-center gap-3">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  Settings
+                </summary>
+                <ul class="ml-4 mt-1">
+                  <li><%= link_to "Appearance", settings_appearance_path, class: "#{'active bg-primary/10 text-primary' if request.path == settings_appearance_path}" %></li>
+                  <li><%= link_to "Backups", settings_backups_path, class: "#{'active bg-primary/10 text-primary' if request.path == settings_backups_path}" %></li>
+                  <li><%= link_to "Maintenance", settings_maintenance_path, class: "#{'active bg-primary/10 text-primary' if request.path == settings_maintenance_path}" %></li>
+                </ul>
+              </details>
+            </li>
+          <% end %>
+        </ul>
+      </nav>
+
+      <!-- Bottom section with user info and links -->
+      <div class="p-4 border-t border-base-content/10">
+        <!-- Quick links -->
+        <div class="flex items-center justify-center gap-2 mb-4">
+          <a href="https://pwoodlock.github.io/veracity-/" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm btn-circle" title="Documentation">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </a>
+          <a href="https://github.com/pwoodlock/veracity" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm btn-circle" title="GitHub">
+            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+          <div class="tooltip tooltip-top" data-tip="v<%= Veracity.display_version %>">
+            <div class="badge badge-outline badge-sm">
+              <span class="text-xs font-mono">v<%= Veracity.display_version %></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- User info and logout -->
+        <div class="hidden lg:block">
+          <div class="flex items-center gap-3 p-2 rounded-lg bg-base-300">
+            <div class="avatar placeholder">
+              <div class="bg-primary text-primary-content rounded-full w-8">
+                <span class="text-sm font-medium"><%= current_user.email[0].upcase %></span>
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate"><%= current_user.email %></p>
+              <% if current_user.otp_required_for_login %>
+                <span class="badge badge-success badge-xs">2FA</span>
+              <% else %>
+                <span class="badge badge-warning badge-xs">No 2FA</span>
+              <% end %>
+            </div>
+            <div class="dropdown dropdown-top dropdown-end">
+              <label tabindex="0" class="btn btn-ghost btn-xs btn-circle">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                </svg>
+              </label>
+              <ul tabindex="0" class="menu dropdown-content z-50 p-2 shadow-lg bg-base-100 rounded-box w-48 mb-2 border border-base-content/10">
+                <li><%= link_to two_factor_path do %>
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                  Two-Factor Auth
+                <% end %></li>
+                <div class="divider my-0"></div>
+                <li><%= button_to destroy_user_session_path, method: :delete, class: "text-error" do %>
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                  </svg>
+                  Sign Out
+                <% end %></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

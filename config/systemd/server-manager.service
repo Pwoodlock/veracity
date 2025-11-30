@@ -1,0 +1,48 @@
+[Unit]
+Description=Server Manager - Puma Rails Server
+After=network.target postgresql.service redis.service salt-master.service salt-api.service
+Requires=postgresql.service redis.service
+
+[Service]
+Type=notify
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/veracity/app
+
+# Environment
+Environment=RAILS_ENV=production
+Environment=RACK_ENV=production
+EnvironmentFile=/opt/veracity/app/.env.production
+
+# Puma configuration
+ExecStart=/home/deploy/.rbenv/shims/bundle exec puma -C config/puma.rb
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Process management
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=server-manager
+
+# Security
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/veracity/app/tmp
+ReadWritePaths=/opt/veracity/app/log
+ReadWritePaths=/opt/veracity/app/public/assets
+
+[Install]
+WantedBy=multi-user.target

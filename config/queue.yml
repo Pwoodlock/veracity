@@ -1,0 +1,35 @@
+# Queue Configuration
+# This project uses Sidekiq for background job processing
+# Configuration is in config/sidekiq.yml
+#
+# Solid Queue is included as a Rails 8 default but not used in this project
+# To use Solid Queue instead of Sidekiq, uncomment the configuration below:
+
+# default: &default
+#   dispatchers:
+#     - polling_interval: 1
+#       batch_size: 500
+#   workers:
+#     - queues: "*"
+#       threads: 3
+#       processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
+#       polling_interval: 0.1
+#
+# development:
+#   <<: *default
+#
+# test:
+#   <<: *default
+#
+# production:
+#   <<: *default
+
+# Using Sidekiq for all environments
+development:
+  adapter: sidekiq
+
+test:
+  adapter: test
+
+production:
+  adapter: sidekiq

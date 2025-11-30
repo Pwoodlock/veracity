@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1628"/>
+      <stop offset="50%" style="stop-color:#0d1f3c"/>
+      <stop offset="100%" style="stop-color:#0a1628"/>
+    </linearGradient>
+    
+    <!-- Subtle grid pattern -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a3a5c" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+    
+    <!-- Glow effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Soft glow for center -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="600" fill="url(#bgGradient)"/>
+  <rect width="1200" height="600" fill="url(#grid)"/>
+  
+  <!-- Central glow effect -->
+  <ellipse cx="600" cy="300" rx="300" ry="200" fill="#4a9eaa" opacity="0.03" filter="url(#softGlow)"/>
+  
+  <!-- Connection lines from integrations to center -->
+  <g stroke="#4a9eaa" stroke-width="1.5" opacity="0.4">
+    <!-- Left connections -->
+    <path d="M 200 150 Q 350 150 450 250" fill="none"/>
+    <path d="M 200 300 L 420 300" fill="none"/>
+    <path d="M 200 450 Q 350 450 450 350" fill="none"/>
+    
+    <!-- Right connections -->
+    <path d="M 1000 150 Q 850 150 750 250" fill="none"/>
+    <path d="M 1000 300 L 780 300" fill="none"/>
+    <path d="M 1000 450 Q 850 450 750 350" fill="none"/>
+  </g>
+  
+  <!-- Integration Cards - Left Side -->
+  
+  <!-- SaltStack -->
+  <g transform="translate(80, 110)">
+    <rect width="160" height="80" rx="8" fill="#121d2e" stroke="#4a9eaa" stroke-width="1"/>
+    <rect width="160" height="3" rx="1.5" fill="#4a9eaa" opacity="0.6"/>
+    <text x="80" y="35" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">SaltStack</text>
+    <text x="80" y="52" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10" fill="#a0b4c8" text-anchor="middle">Infrastructure Automation</text>
+    <text x="80" y="68" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="9" fill="#4a9eaa" text-anchor="middle">v3007.8</text>
+  </g>
+  
+  <!-- Proxmox -->
+  <g transform="translate(80, 260)">
+    <rect width="160" height="80" rx="8" fill="#121d2e" stroke="#e07455" stroke-width="1"/>
+    <rect width="160" height="3" rx="1.5" fill="#e07455" opacity="0.6"/>
+    <text x="80" y="35" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">Proxmox</text>
+    <text x="80" y="52" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10" fill="#a0b4c8" text-anchor="middle">Virtualization Platform</text>
+    <text x="80" y="68" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="9" fill="#e07455" text-anchor="middle">VMs &amp; Containers</text>
+  </g>
+  
+  <!-- Hetzner -->
+  <g transform="translate(80, 410)">
+    <rect width="160" height="80" rx="8" fill="#121d2e" stroke="#d44b4b" stroke-width="1"/>
+    <rect width="160" height="3" rx="1.5" fill="#d44b4b" opacity="0.6"/>
+    <text x="80" y="35" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">Hetzner</text>
+    <text x="80" y="52" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10" fill="#a0b4c8" text-anchor="middle">Cloud Infrastructure</text>
+    <text x="80" y="68" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="9" fill="#d44b4b" text-anchor="middle">Servers &amp; Networks</text>
+  </g>
+  
+  <!-- Integration Cards - Right Side -->
+  
+  <!-- NetBird -->
+  <g transform="translate(960, 110)">
+    <rect width="160" height="80" rx="8" fill="#121d2e" stroke="#6b8cce" stroke-width="1"/>
+    <rect width="160" height="3" rx="1.5" fill="#6b8cce" opacity="0.6"/>
+    <text x="80" y="35" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">NetBird</text>
+    <text x="80" y="52" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10" fill="#a0b4c8" text-anchor="middle">Agent Deployment</text>
+    <text x="80" y="68" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="9" fill="#6b8cce" text-anchor="middle">Zero-Trust Network</text>
+  </g>
+  
+  <!-- Gotify -->
+  <g transform="translate(960, 260)">
+    <rect width="160" height="80" rx="8" fill="#121d2e" stroke="#5cb85c" stroke-width="1"/>
+    <rect width="160" height="3" rx="1.5" fill="#5cb85c" opacity="0.6"/>
+    <text x="80" y="35" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">Gotify</text>
+    <text x="80" y="52" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10" fill="#a0b4c8" text-anchor="middle">Push Notifications</text>
+    <text x="80" y="68" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="9" fill="#5cb85c" text-anchor="middle">Real-time Alerts</text>
+  </g>
+  
+  <!-- Vulnerability Lookup -->
+  <g transform="translate(960, 410)">
+    <rect width="160" height="80" rx="8" fill="#121d2e" stroke="#9b59b6" stroke-width="1"/>
+    <rect width="160" height="3" rx="1.5" fill="#9b59b6" opacity="0.6"/>
+    <text x="80" y="35" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">Vuln Lookup</text>
+    <text x="80" y="52" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10" fill="#a0b4c8" text-anchor="middle">Security Scanning</text>
+    <text x="80" y="68" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="9" fill="#9b59b6" text-anchor="middle">CVE Database</text>
+  </g>
+  
+  <!-- Central Hub -->
+  <g>
+    <!-- Outer ring -->
+    <circle cx="600" cy="300" r="140" fill="none" stroke="#4a9eaa" stroke-width="1" opacity="0.3"/>
+    <circle cx="600" cy="300" r="120" fill="#0d1f3c" stroke="#4a9eaa" stroke-width="2"/>
+    
+    <!-- VERACITY Logo -->
+    <text x="600" y="270" 
+          font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" 
+          font-size="36" 
+          font-weight="300" 
+          fill="#4a9eaa" 
+          text-anchor="middle" 
+          letter-spacing="8">
+      VERACITY
+    </text>
+    
+    <!-- Logo underline -->
+    <rect x="500" y="282" width="200" height="2" fill="#e07455" rx="1"/>
+    
+    <!-- Tagline -->
+    <text x="600" y="315" 
+          font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" 
+          font-size="11" 
+          font-weight="400" 
+          fill="#a0b4c8" 
+          text-anchor="middle"
+          letter-spacing="3">
+      UNIFIED API PLATFORM
+    </text>
+    
+    <!-- Integration count -->
+    <text x="600" y="345" 
+          font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" 
+          font-size="10" 
+          font-weight="300" 
+          fill="#4a9eaa" 
+          text-anchor="middle">
+      6+ Integrations
+    </text>
+  </g>
+  
+  <!-- Animated pulse dots on connection lines -->
+  <g filter="url(#glow)">
+    <circle cx="350" cy="175" r="4" fill="#4a9eaa"/>
+    <circle cx="310" cy="300" r="4" fill="#4a9eaa"/>
+    <circle cx="350" cy="425" r="4" fill="#4a9eaa"/>
+    <circle cx="850" cy="175" r="4" fill="#4a9eaa"/>
+    <circle cx="890" cy="300" r="4" fill="#4a9eaa"/>
+    <circle cx="850" cy="425" r="4" fill="#4a9eaa"/>
+  </g>
+  
+  <!-- Bottom tagline -->
+  <text x="600" y="560" 
+        font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" 
+        font-size="14" 
+        font-weight="300" 
+        fill="#5a7a94" 
+        text-anchor="middle"
+        letter-spacing="1">
+    Infrastructure Automation • Configuration Management • Orchestration
+  </text>
+</svg>

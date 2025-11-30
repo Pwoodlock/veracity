@@ -1,0 +1,138 @@
+<% content_for :head do %>
+  <title>Servers - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Add Server Button -->
+    <div class="flex justify-end mb-6">
+      <%= link_to onboarding_path, class: "inline-flex items-center px-4 py-2 btn-primary text-white rounded-lg  transition" do %>
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Add Server
+      <% end %>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="mb-6 bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+      <%= form_with url: servers_path, method: :get, class: "flex gap-4 items-end" do |f| %>
+        <div class="flex-1">
+          <%= f.label :search, "Search", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.text_field :search, value: params[:search], placeholder: "Hostname, IP, or Minion ID", class: "input input-bordered w-full" %>
+        </div>
+        <div>
+          <%= f.label :group_id, "Group", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.select :group_id,
+                       options_for_select(
+                         [['All Groups', '']] +
+                         [['Ungrouped', 'ungrouped']] +
+                         @groups.map { |g| [g.name, g.id] },
+                         params[:group_id]
+                       ),
+                       {},
+                       class: "select select-bordered" %>
+        </div>
+        <div>
+          <%= f.label :status, "Status", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.select :status, options_for_select([['All', ''], ['Online', 'online'], ['Offline', 'offline'], ['Unreachable', 'unreachable'], ['Maintenance', 'maintenance']], params[:status]), {}, class: "select select-bordered" %>
+        </div>
+        <%= f.submit "Filter", class: "btn btn-primary" %>
+        <%= link_to "Clear", servers_path, class: "btn btn-ghost" %>
+      <% end %>
+    </div>
+
+    <!-- Server Stats -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+        <div class="text-sm text-base-content/60">Showing</div>
+        <div class="text-2xl font-bold text-base-content"><%= @pagy.count %></div>
+      </div>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+        <div class="text-sm text-base-content/60">Online</div>
+        <div class="text-2xl font-bold text-success"><%= @total_online %></div>
+      </div>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+        <div class="text-sm text-base-content/60">Offline</div>
+        <div class="text-2xl font-bold text-error"><%= @total_offline %></div>
+      </div>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+        <div class="text-sm text-base-content/60">Unreachable</div>
+        <div class="text-2xl font-bold text-base-content/60"><%= @total_unreachable %></div>
+      </div>
+    </div>
+
+    <!-- Server List -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg overflow-hidden">
+      <table class="min-w-full divide-y divide-base-content/10">
+        <thead class="bg-base-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Hostname</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Group</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">IP Address</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">OS</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase">Resources</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-base-content/80 uppercase min-w-[200px]">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-base-200 divide-y divide-base-content/10">
+          <% @servers.each do |server| %>
+            <tr class="hover:bg-base-200 transition">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <%= link_to server.hostname, server_path(server), class: "text-primary hover:text-primary/80 font-medium" %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if server.group %>
+                  <%= link_to group_path(server.group), class: "inline-flex items-center text-sm" do %>
+                    <span class="w-2 h-2 rounded-full mr-2" style="background-color: <%= server.group.color %>"></span>
+                    <span class="text-base-content"><%= server.group.name %></span>
+                  <% end %>
+                <% else %>
+                  <span class="text-base-content/40 text-sm">Ungrouped</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/80">
+                <%= server.ip_address %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 py-1 rounded text-xs font-medium <%= server.status == 'online' ? 'bg-success text-success-content' : server.status == 'offline' ? 'bg-error text-error-content' : server.status == 'maintenance' ? 'bg-warning text-warning-content' : 'bg-base-200 text-base-content/80' %>">
+                  <%= server.status.upcase %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/80">
+                <%= server.os_name %> <%= server.os_version %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/80">
+                <%= server.cpu_cores %> CPU / <%= server.memory_gb %>GB RAM
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                <div class="flex justify-end gap-4 items-center">
+                  <%= link_to "View", server_path(server), class: "text-primary hover:text-primary/80 font-medium" %>
+                  <%= link_to "Edit", edit_server_path(server), class: "text-success hover:text-success font-medium" %>
+                  <%= button_to "Delete", server_path(server), method: :delete, data: { confirm: "Delete #{server.hostname}?" }, class: "text-error hover:text-error font-medium", form_class: "inline-block" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+      <% if @servers.empty? %>
+        <div class="text-center py-12">
+          <p class="text-base-content/60">No servers found</p>
+          <p class="text-sm text-base-content/40 mt-2">Add new servers via <%= link_to "Onboarding", onboarding_path, class: "text-primary hover:text-primary/80" %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Pagination -->
+    <% if @pagy.pages > 1 %>
+      <div class="mt-6 flex justify-center">
+        <%== pagy_nav(@pagy) %>
+      </div>
+    <% end %>
+
+  </div>
+<% end %>

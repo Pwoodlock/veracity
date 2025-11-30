@@ -1,0 +1,385 @@
+<%= form_with(model: task, local: true) do |form| %>
+  <% if task.errors.any? %>
+    <div class="alert alert-error mb-6">
+      <svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <h3 class="font-bold">Please fix the following errors:</h3>
+        <ul class="list-disc list-inside text-sm">
+          <% task.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Basic Information -->
+    <div>
+      <h2 class="text-lg font-semibold text-base-content mb-4">Basic Information</h2>
+
+      <div class="space-y-4">
+        <div class="form-control">
+          <%= form.label :name, class: "label" do %>
+            <span class="label-text">Task Name <span class="text-error">*</span></span>
+          <% end %>
+          <%= form.text_field :name, class: "input input-bordered w-full", placeholder: "e.g., Daily System Update" %>
+        </div>
+
+        <div class="form-control">
+          <%= form.label :description, class: "label" do %>
+            <span class="label-text">Description</span>
+          <% end %>
+          <%= form.text_area :description, class: "textarea textarea-bordered w-full", rows: 3,
+              placeholder: "Optional description of what this task does" %>
+        </div>
+
+        <div class="form-control">
+          <%= form.label :command, class: "label" do %>
+            <span class="label-text">Salt Command <span class="text-error">*</span></span>
+            <span class="label-text-alt">
+              <button type="button" class="link link-primary text-xs" onclick="showCommandHelp()">
+                Command Help
+              </button>
+            </span>
+          <% end %>
+          <%= form.text_field :command, class: "input input-bordered font-mono w-full",
+              placeholder: "e.g., pkg.upgrade or cmd.run 'custom script'" %>
+          <label class="label">
+            <span class="label-text-alt text-base-content/60">
+              Use Salt module functions (e.g., pkg.upgrade) or cmd.run for shell commands
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target Configuration -->
+    <div>
+      <h2 class="text-lg font-semibold text-base-content mb-4">Target Configuration</h2>
+
+      <div class="space-y-4">
+        <div class="form-control">
+          <%= form.label :target_type, class: "label" do %>
+            <span class="label-text">Target Type <span class="text-error">*</span></span>
+          <% end %>
+          <%= form.select :target_type,
+              options_for_select([
+                ['Single Server', 'server'],
+                ['Server Group', 'group'],
+                ['All Servers', 'all'],
+                ['Pattern Match', 'pattern']
+              ], task.target_type),
+              { prompt: 'Select target type...' },
+              class: "select select-bordered w-full",
+              'data-target-selector': true %>
+        </div>
+
+        <div id="server_target" class="form-control" style="display: none;">
+          <%= form.label :target_id, class: "label" do %>
+            <span class="label-text">Select Server</span>
+          <% end %>
+          <%= form.select :target_id,
+              options_for_select(@servers&.map { |s| [s.hostname, s.id] } || [], task.target_id),
+              { prompt: 'Select a server...' },
+              class: "select select-bordered w-full" %>
+        </div>
+
+        <div id="group_target" class="form-control" style="display: none;">
+          <%= form.label :target_id, class: "label" do %>
+            <span class="label-text">Select Group</span>
+          <% end %>
+          <%= form.select :target_id,
+              options_for_select(@groups&.map { |g| ["#{g.name} (#{g.servers.count} servers)", g.id] } || [], task.target_id),
+              { prompt: 'Select a group...' },
+              class: "select select-bordered w-full" %>
+        </div>
+
+        <div id="pattern_target" class="form-control" style="display: none;">
+          <%= form.label :target_pattern, class: "label" do %>
+            <span class="label-text">Pattern</span>
+          <% end %>
+          <%= form.text_field :target_pattern, class: "input input-bordered font-mono w-full",
+              placeholder: "e.g., web-* or db-server-?" %>
+          <label class="label">
+            <span class="label-text-alt text-base-content/60">
+              Use * for wildcard, ? for single character
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider my-8"></div>
+
+  <!-- Scheduling -->
+  <div>
+    <h2 class="text-lg font-semibold text-base-content mb-4">Scheduling (Optional)</h2>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="space-y-4">
+        <div class="form-control">
+          <%= form.label :cron_schedule, class: "label" do %>
+            <span class="label-text">Cron Schedule</span>
+            <span class="label-text-alt">
+              <button type="button" class="link link-primary text-xs" onclick="showCronHelp()">
+                Cron Help
+              </button>
+            </span>
+          <% end %>
+          <%= form.text_field :cron_schedule, class: "input input-bordered font-mono w-full",
+              placeholder: "e.g., 0 2 * * * (daily at 2 AM)" %>
+          <label class="label">
+            <span class="label-text-alt text-base-content/60">
+              Leave empty for manual execution only
+            </span>
+          </label>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-sm text-base-content/60">Quick presets:</p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm btn-outline" onclick="setCronSchedule('* * * * *')">Every minute</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="setCronSchedule('0 * * * *')">Every hour</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="setCronSchedule('0 0 * * *')">Daily at midnight</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="setCronSchedule('0 2 * * *')">Daily at 2 AM</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="setCronSchedule('0 0 * * 0')">Weekly on Sunday</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="setCronSchedule('0 0 1 * *')">Monthly on 1st</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Enable Task</span>
+            <%= form.check_box :enabled, class: "toggle toggle-success", checked: task.enabled? %>
+          </label>
+          <label class="label">
+            <span class="label-text-alt text-base-content/60">
+              Disabled tasks will not run on schedule but can still be executed manually
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider my-8"></div>
+
+  <!-- Threshold Alerts Section -->
+  <div class="card bg-base-200">
+    <div class="card-body">
+      <h3 class="card-title text-lg flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        Threshold Alerts
+      </h3>
+      <p class="text-sm text-base-content/70 mb-4">
+        Send Gotify notifications when disk or memory usage exceeds specified thresholds
+      </p>
+
+      <div class="space-y-4">
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Enable Threshold Alerts</span>
+            <%= form.check_box :alert_on_threshold, class: "toggle toggle-warning", 'data-threshold-toggle': true %>
+          </label>
+        </div>
+
+        <div id="threshold_options" style="display: none;" class="space-y-4 pl-4 border-l-2 border-warning">
+          <div class="form-control">
+            <%= form.label :disk_usage_threshold, class: "label" do %>
+              <span class="label-text">Disk Usage Threshold (%)</span>
+            <% end %>
+            <%= form.number_field :disk_usage_threshold,
+                class: "input input-bordered w-full",
+                placeholder: "e.g., 80",
+                min: 0,
+                max: 100 %>
+            <label class="label">
+              <span class="label-text-alt text-base-content/60">
+                Alert when any disk partition exceeds this percentage (for disk.usage tasks)
+              </span>
+            </label>
+          </div>
+
+          <div class="form-control">
+            <%= form.label :memory_usage_threshold, class: "label" do %>
+              <span class="label-text">Memory Usage Threshold (%)</span>
+            <% end %>
+            <%= form.number_field :memory_usage_threshold,
+                class: "input input-bordered w-full",
+                placeholder: "e.g., 90",
+                min: 0,
+                max: 100 %>
+            <label class="label">
+              <span class="label-text-alt text-base-content/60">
+                Alert when memory usage exceeds this percentage (for status.meminfo tasks)
+              </span>
+            </label>
+          </div>
+
+          <div class="form-control">
+            <%= form.label :alert_priority, class: "label" do %>
+              <span class="label-text">Alert Priority</span>
+            <% end %>
+            <%= form.select :alert_priority,
+                options_for_select([
+                  ['Low (2)', 2],
+                  ['Normal (5)', 5],
+                  ['High (8)', 8],
+                  ['Critical (10)', 10]
+                ], task.alert_priority || 5),
+                {},
+                class: "select select-bordered w-full" %>
+            <label class="label">
+              <span class="label-text-alt text-base-content/60">
+                Gotify notification priority (higher = more urgent)
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider my-8"></div>
+
+  <!-- Form Actions -->
+  <div class="flex justify-between">
+    <%= link_to "Cancel", tasks_path, class: "btn btn-ghost" %>
+    <div class="flex gap-2">
+      <%= form.submit "Save Task", class: "btn btn-primary" %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  // Target type selector
+  document.addEventListener('DOMContentLoaded', function() {
+    const targetSelector = document.querySelector('[data-target-selector]');
+    if (targetSelector) {
+      function updateTargetFields() {
+        const targetType = targetSelector.value;
+
+        // Server target
+        const serverTarget = document.getElementById('server_target');
+        const serverSelect = serverTarget.querySelector('select');
+        if (targetType === 'server') {
+          serverTarget.style.display = 'block';
+          if (serverSelect) serverSelect.disabled = false;
+        } else {
+          serverTarget.style.display = 'none';
+          if (serverSelect) {
+            serverSelect.disabled = true;
+            serverSelect.value = '';
+          }
+        }
+
+        // Group target
+        const groupTarget = document.getElementById('group_target');
+        const groupSelect = groupTarget.querySelector('select');
+        if (targetType === 'group') {
+          groupTarget.style.display = 'block';
+          if (groupSelect) groupSelect.disabled = false;
+        } else {
+          groupTarget.style.display = 'none';
+          if (groupSelect) {
+            groupSelect.disabled = true;
+            groupSelect.value = '';
+          }
+        }
+
+        // Pattern target
+        const patternTarget = document.getElementById('pattern_target');
+        const patternInput = patternTarget.querySelector('input[type="text"]');
+        if (targetType === 'pattern') {
+          patternTarget.style.display = 'block';
+          if (patternInput) patternInput.disabled = false;
+        } else {
+          patternTarget.style.display = 'none';
+          if (patternInput) {
+            patternInput.disabled = true;
+            patternInput.value = '';
+          }
+        }
+      }
+
+      targetSelector.addEventListener('change', updateTargetFields);
+      updateTargetFields();
+    }
+  });
+
+  function setCronSchedule(schedule) {
+    document.getElementById('task_cron_schedule').value = schedule;
+  }
+
+  function showCronHelp() {
+    alert(`Cron Schedule Format: minute hour day month weekday
+
+Examples:
+* * * * * - Every minute
+0 * * * * - Every hour
+0 0 * * * - Daily at midnight
+0 2 * * * - Daily at 2 AM
+0 0 * * 0 - Weekly on Sunday
+0 0 1 * * - Monthly on 1st
+
+Format:
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of week (0 - 6) (Sunday = 0)
+│ │ │ │ │
+* * * * *`);
+  }
+
+  function showCommandHelp() {
+    alert(`Salt Command Examples:
+
+System Management:
+• pkg.upgrade - Update all packages
+• pkg.list_upgrades - List available updates
+• service.restart nginx - Restart a service
+• system.reboot - Reboot the system
+
+File Operations:
+• file.managed /etc/config.conf - Manage a file
+• file.remove /tmp/old.log - Remove a file
+
+Information Gathering:
+• disk.usage - Check disk usage
+• status.meminfo - Memory information
+• network.ping 8.8.8.8 - Test connectivity
+
+Shell Commands:
+• cmd.run 'df -h' - Run shell command
+• cmd.run 'apt-get update' - Update package lists`);
+  }
+
+  // Threshold alerts toggle
+  const thresholdToggle = document.querySelector('[data-threshold-toggle]');
+  const thresholdOptions = document.getElementById('threshold_options');
+
+  if (thresholdToggle && thresholdOptions) {
+    function updateThresholdVisibility() {
+      if (thresholdToggle.checked) {
+        thresholdOptions.style.display = 'block';
+      } else {
+        thresholdOptions.style.display = 'none';
+      }
+    }
+
+    // Set initial state
+    updateThresholdVisibility();
+
+    // Listen for changes
+    thresholdToggle.addEventListener('change', updateThresholdVisibility);
+  }
+</script>

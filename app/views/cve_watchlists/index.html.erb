@@ -1,0 +1,132 @@
+<% content_for :head do %>
+  <title>CVE Watchlists - <%= SystemSetting.company_name %></title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Add Watchlist Button -->
+    <div class="flex justify-end mb-6">
+      <%= link_to new_cve_watchlist_path, class: "btn btn-primary" do %>
+        <svg class="inline w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        Add Watchlist
+      <% end %>
+    </div>
+
+    <!-- Flash Messages -->
+    <% if flash[:notice] %>
+      <div class="alert alert-success mb-6">
+        <%= flash[:notice] %>
+      </div>
+    <% end %>
+
+    <% if flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <%= flash[:error] %>
+      </div>
+    <% end %>
+
+    <!-- Filters -->
+    <div class="mb-6 bg-base-200 border border-base-content/10 rounded-lg p-4">
+      <%= form_with url: cve_watchlists_path, method: :get, class: "flex gap-4 items-end" do |f| %>
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-base-content/80 mb-2">Server</label>
+          <select name="server_id" class="select select-bordered w-full">
+            <option value="">All Servers</option>
+            <% Server.order(:hostname).each do |server| %>
+              <option value="<%= server.id %>" <%= 'selected' if params[:server_id] == server.id.to_s %>><%= server.hostname %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-2">Status</label>
+          <select name="active" class="select select-bordered">
+            <option value="">All</option>
+            <option value="true" <%= 'selected' if params[:active] == 'true' %>>Active</option>
+            <option value="false" <%= 'selected' if params[:active] == 'false' %>>Inactive</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          Filter
+        </button>
+      <% end %>
+    </div>
+
+    <!-- Watchlists Table -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg overflow-hidden">
+      <% if @cve_watchlists.any? %>
+        <table class="min-w-full divide-y divide-base-content/10">
+          <thead class="bg-base-300">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Server</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Vendor / Product</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Version</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Last Checked</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Hits</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-base-content/10">
+            <% @cve_watchlists.each do |watchlist| %>
+              <tr class="hover:bg-base-200">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content">
+                  <%= watchlist.server&.hostname || 'Global' %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-base-content"><%= watchlist.vendor %></div>
+                  <div class="text-sm text-base-content/60"><%= watchlist.product %></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/80">
+                  <%= watchlist.version || 'Any' %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/80">
+                  <%= watchlist.last_checked_at ? time_ago_in_words(watchlist.last_checked_at) + ' ago' : 'Never' %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="badge <%= watchlist.hits_count > 0 ? 'badge-error' : 'badge-ghost' %> badge-sm">
+                    <%= watchlist.hits_count %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% if watchlist.active %>
+                    <span class="badge badge-success badge-sm">Active</span>
+                  <% else %>
+                    <span class="badge badge-ghost badge-sm">Inactive</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                  <%= link_to 'View', cve_watchlist_path(watchlist), class: "text-primary hover:text-primary-focus" %>
+                  <%= link_to 'Edit', edit_cve_watchlist_path(watchlist), class: "text-info hover:text-info-content" %>
+                  <%= button_to 'Test', test_cve_watchlist_path(watchlist), method: :post, class: "text-success hover:text-success" %>
+                  <%= button_to 'Delete', cve_watchlist_path(watchlist), method: :delete,
+                      data: { confirm: 'Are you sure?' }, class: "text-error hover:text-error" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="p-8 text-center">
+          <svg class="mx-auto h-12 w-12 text-base-content/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-base-content">No watchlists</h3>
+          <p class="mt-1 text-sm text-base-content/60">Get started by creating a new CVE watchlist.</p>
+          <div class="mt-6">
+            <%= link_to new_cve_watchlist_path, class: "btn btn-primary" do %>
+              <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              Add Watchlist
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+<% end %>

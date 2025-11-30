@@ -1,0 +1,238 @@
+<% content_for :head do %>
+  <title>Hetzner API Keys - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-base-content">Hetzner Cloud API Keys</h1>
+      <p class="mt-2 text-sm text-base-content/60">Manage your Hetzner Cloud API keys for Salt Cloud provisioning</p>
+    </div>
+
+    <!-- Flash Messages -->
+    <% if flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <%= flash[:success] %>
+      </div>
+    <% end %>
+    <% if flash[:alert] %>
+      <div class="alert alert-error mb-6">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <!-- Info Card -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">About Hetzner Cloud Integration</h2>
+      <p class="text-sm text-base-content/60 mb-4">
+        Store your Hetzner Cloud API keys here to enable Salt Cloud provisioning and management.
+        Salt Cloud can automatically create, configure, and manage servers on Hetzner Cloud.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-semibold text-base-content mb-2">What Salt Cloud Can Do</h3>
+          <ul class="text-sm text-base-content/60 space-y-1 list-disc list-inside">
+            <li>Provision new cloud servers automatically</li>
+            <li>Start, stop, reboot, and resize instances</li>
+            <li>List available images, locations, and server types</li>
+            <li>Manage SSH keys for server access</li>
+            <li>Deploy Salt minions automatically on creation</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-semibold text-base-content mb-2">Getting Started</h3>
+          <ol class="text-sm text-base-content/60 space-y-1 list-decimal list-inside">
+            <li>Log in to <a href="https://console.hetzner.cloud" target="_blank" class="link link-primary">Hetzner Cloud Console</a></li>
+            <li>Navigate to Security -> API Tokens</li>
+            <li>Generate a token with Read & Write permissions</li>
+            <li>Copy the token and add it below</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="mt-4 text-sm">
+        <a href="https://docs.saltproject.io/en/latest/ref/clouds/all/salt.cloud.clouds.hetzner.html" target="_blank" class="link link-primary">
+          Salt Cloud Hetzner Provider Documentation
+        </a>
+      </div>
+    </div>
+
+    <!-- Add New API Key Form -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Add New API Key</h2>
+
+      <%= form_with model: @hetzner_api_key, url: settings_hetzner_api_keys_path, class: "space-y-4" do |f| %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Name -->
+          <div>
+            <label class="block text-sm font-medium text-base-content/80 mb-2">Key Name</label>
+            <%= f.text_field :name,
+                placeholder: "Production API Key",
+                class: "input input-bordered w-full",
+                required: true %>
+            <p class="mt-1 text-xs text-base-content/40">Descriptive name to identify this key</p>
+          </div>
+
+          <!-- Project ID (Optional) -->
+          <div>
+            <label class="block text-sm font-medium text-base-content/80 mb-2">Project ID (Optional)</label>
+            <%= f.text_field :project_id,
+                placeholder: "12345678",
+                class: "input input-bordered w-full" %>
+            <p class="mt-1 text-xs text-base-content/40">Hetzner project ID (optional)</p>
+          </div>
+        </div>
+
+        <!-- API Token -->
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-2">API Token</label>
+          <%= f.password_field :api_token,
+              placeholder: "Enter your Hetzner Cloud API token",
+              class: "input input-bordered w-full",
+              required: true %>
+          <p class="mt-1 text-xs text-base-content/40">
+            This token will be encrypted and stored securely. Make sure it has Read & Write permissions.
+          </p>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-2">Notes (Optional)</label>
+          <%= f.text_area :notes,
+              placeholder: "Additional notes about this API key...",
+              rows: 2,
+              class: "textarea textarea-bordered w-full" %>
+        </div>
+
+        <!-- Enabled checkbox -->
+        <div class="flex items-center gap-2">
+          <%= f.check_box :enabled, checked: true, class: "checkbox checkbox-primary" %>
+          <label class="text-sm text-base-content/80">Enable this API key</label>
+        </div>
+
+        <%= f.submit "Add API Key", class: "btn btn-primary cursor-pointer" %>
+      <% end %>
+    </div>
+
+    <!-- Existing API Keys -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Existing API Keys</h2>
+
+      <% if @hetzner_api_keys.any? %>
+        <div class="space-y-4">
+          <% @hetzner_api_keys.each do |api_key| %>
+            <div class="border border-base-content/10 rounded-lg p-4 <%= api_key.enabled? ? 'bg-base-300' : 'bg-base-200' %>">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <h3 class="text-lg font-semibold text-base-content"><%= api_key.name %></h3>
+                    <span class="badge <%= api_key.enabled? ? 'badge-success' : 'badge-ghost' %>">
+                      <%= api_key.enabled? ? 'Enabled' : 'Disabled' %>
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-base-content/60 mb-3">
+                    <div>
+                      <span class="font-medium">Project ID:</span>
+                      <%= api_key.project_id.present? ? api_key.project_id : 'N/A' %>
+                    </div>
+                    <div>
+                      <span class="font-medium">Created:</span>
+                      <%= time_ago_in_words(api_key.created_at) %> ago
+                    </div>
+                    <div>
+                      <span class="font-medium">Last Used:</span>
+                      <%= api_key.last_used_at ? time_ago_in_words(api_key.last_used_at) + ' ago' : 'Never' %>
+                    </div>
+                    <div>
+                      <span class="font-medium">API Token:</span>
+                      <span class="font-mono">••••••••••••••••</span>
+                    </div>
+                  </div>
+
+                  <% if api_key.notes.present? %>
+                    <div class="text-sm text-base-content/60 italic mb-3">
+                      <span class="font-medium">Notes:</span> <%= api_key.notes %>
+                    </div>
+                  <% end %>
+
+                  <!-- Salt Cloud Provider Status -->
+                  <div class="text-xs text-base-content/40 mb-3">
+                    <span class="font-medium">Salt Cloud Integration:</span>
+                    <%= api_key.enabled? ? 'Active in /etc/salt/cloud.providers.d/hetzner.conf' : 'Not active in Salt Cloud' %>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="flex flex-wrap gap-2">
+                    <%= button_to "Test Connection", test_settings_hetzner_api_key_path(api_key),
+                        method: :post,
+                        class: "btn btn-primary btn-sm",
+                        onclick: "testApiKey(event, #{api_key.id}); return false;" %>
+
+                    <%= button_to api_key.enabled? ? 'Disable' : 'Enable',
+                        toggle_settings_hetzner_api_key_path(api_key),
+                        method: :post,
+                        class: "btn btn-sm #{api_key.enabled? ? 'btn-warning' : 'btn-success'}" %>
+
+                    <%= button_to "Delete", settings_hetzner_api_key_path(api_key),
+                        method: :delete,
+                        class: "btn btn-error btn-sm",
+                        data: { confirm: "Are you sure? This will also remove the key from Salt configuration." } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-8 text-base-content/60">
+          <p class="mb-2">No API keys configured yet.</p>
+          <p class="text-sm">Add your first Hetzner Cloud API key above to enable Salt Cloud provisioning.</p>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+
+  <script>
+    function testApiKey(event, apiKeyId) {
+      event.preventDefault();
+
+      if (!confirm('Test connection to Hetzner Cloud API?')) {
+        return;
+      }
+
+      const button = event.target;
+      const originalText = button.textContent;
+      button.textContent = 'Testing...';
+      button.disabled = true;
+
+      fetch(`/settings/hetzner_api_keys/${apiKeyId}/test`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(error => {
+        alert('Error: ' + error);
+      })
+      .finally(() => {
+        button.textContent = originalText;
+        button.disabled = false;
+      });
+    }
+  </script>
+<% end %>

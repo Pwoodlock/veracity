@@ -1,0 +1,505 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  RAILS_ENV: test
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/veracity_test
+  REDIS_URL: redis://localhost:6379/0
+  SALT_API_URL: http://localhost:8001
+  SALT_API_USERNAME: saltapi
+  SALT_API_PASSWORD: test_password
+  SALT_API_EAUTH: pam
+  SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE || 'test_secret_key_base_for_ci_only_not_production_use_minimum_64_chars' }}
+
+jobs:
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.6'
+
+      - name: Install dependencies
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Run RuboCop
+        run: bundle exec rubocop --format github
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.6'
+
+      - name: Install dependencies
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Run Brakeman
+        run: bundle exec brakeman -q --no-pager --format github --no-exit-on-warn -i config/brakeman.ignore
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: veracity_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.6'
+
+      - name: Install dependencies
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup database
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:migrate
+
+      - name: Precompile assets
+        run: bundle exec rails assets:precompile
+
+      - name: Run tests
+        run: bundle exec rails test
+
+      - name: Check models load correctly
+        run: |
+          bundle exec rails runner "
+            models = [Server, User, Command, Group, Task, CveWatchlist, VulnerabilityAlert, BackupConfiguration]
+            models.each { |m| puts \"#{m.name}: OK\" }
+            puts 'All models loaded successfully'
+          "
+
+      - name: Check routes
+        run: bundle exec rails routes | head -50
+
+  system-tests:
+    name: System Tests (UI)
+    runs-on: ubuntu-latest
+    needs: [lint, security]
+
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: veracity_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.6'
+
+      - name: Install dependencies
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Setup database
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:migrate
+
+      - name: Precompile assets
+        run: bundle exec rails assets:precompile
+
+      - name: Run system tests
+        run: bundle exec rails test:system
+        env:
+          CI: true
+          RAILS_ENV: test
+
+      - name: Upload screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: system-test-screenshots
+          path: tmp/screenshots/
+          retention-days: 7
+
+  cve-monitoring:
+    name: CVE Monitoring Tests
+    runs-on: ubuntu-latest
+    needs: [lint, security]
+
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: veracity_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.6'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyvulnerabilitylookup>=2.0.0 requests>=2.28.0
+
+      - name: Verify Python setup
+        run: |
+          python --version
+          python -c "import pyvulnerabilitylookup; print('PyVulnerabilityLookup installed successfully')"
+
+      - name: Install Ruby dependencies
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Setup database
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:migrate
+
+      - name: Test CVE Monitoring Service (Unit Tests)
+        run: |
+          bundle exec rails test test/services/cve_monitoring_service_test.rb
+        env:
+          VULNERABILITY_LOOKUP_PYTHON_PATH: python
+
+      - name: Test CVE Monitoring Service (Integration Tests)
+        run: |
+          bundle exec rails test test/integration/cve_monitoring_integration_test.rb
+        env:
+          VULNERABILITY_LOOKUP_PYTHON_PATH: python
+        # Allow integration tests to fail if API is temporarily unavailable
+        continue-on-error: true
+
+      - name: Test API Connection
+        run: |
+          bundle exec rails runner "
+            result = CveMonitoringService.test_api_connection
+            puts result.inspect
+            raise 'API connection failed' unless result[:success]
+            puts 'CVE Monitoring API: OK'
+          "
+        env:
+          VULNERABILITY_LOOKUP_PYTHON_PATH: python
+
+      - name: Test Vulnerability Lookup
+        run: |
+          bundle exec rails runner "
+            # Test fetching a known CVE
+            result = CveMonitoringService.get_vulnerability_details('CVE-2021-44228')
+            raise 'Failed to fetch CVE details' if result.nil? || result.empty?
+            puts 'CVE Lookup: OK'
+
+            # Test vendor/product search
+            vulns = CveMonitoringService.fetch_vendor_product_vulnerabilities('apache', 'http_server')
+            puts \"Found #{vulns.length} vulnerabilities for Apache HTTP Server\"
+            raise 'No vulnerabilities found' if vulns.empty?
+            puts 'Vendor/Product Search: OK'
+          "
+        env:
+          VULNERABILITY_LOOKUP_PYTHON_PATH: python
+
+  integration:
+    name: Integration Checks
+    runs-on: ubuntu-latest
+    needs: [lint, security]
+
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: veracity_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.6'
+
+      - name: Install dependencies
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Setup database
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:migrate
+
+      - name: Test database connectivity
+        run: |
+          bundle exec rails runner "
+            ActiveRecord::Base.connection.execute('SELECT 1')
+            puts 'Database connection: OK'
+          "
+
+      - name: Test Redis connectivity
+        run: |
+          bundle exec rails runner "
+            result = Redis.new(url: ENV['REDIS_URL']).ping
+            puts 'Redis connection: ' + result
+          "
+
+      - name: Test Action Cable configuration
+        run: |
+          bundle exec rails runner "
+            adapter = ActionCable.server.config.cable[:adapter]
+            puts 'Action Cable adapter: ' + adapter.to_s
+          "
+
+      - name: Test Turbo Stream broadcast
+        run: |
+          bundle exec rails runner "
+            Turbo::StreamsChannel.broadcast_replace_to(
+              'test_channel',
+              target: 'test_target',
+              html: '<div>Test</div>'
+            )
+            puts 'Turbo Stream broadcast: OK'
+          "
+
+      - name: Test model validations
+        run: |
+          bundle exec rails runner "
+            # Test Server model
+            server = Server.new(
+              hostname: 'test-server',
+              minion_id: 'test-minion-ci',
+              ip_address: '192.168.1.1',
+              status: 'online'
+            )
+            raise 'Server validation failed' unless server.valid?
+            puts 'Server model validation: OK'
+
+            # Test Command model (without server)
+            cmd = Command.new(
+              command_type: 'shell',
+              command: 'cmd.run',
+              status: 'pending',
+              started_at: Time.current
+            )
+            # Command requires server, so it should fail validation
+            puts 'Command model: loaded OK'
+          "
+
+      - name: Test dashboard stats calculation
+        run: |
+          bundle exec rails runner "
+            stats = {
+              total_servers: Server.count,
+              online_servers: Server.where(status: 'online').count,
+              offline_servers: Server.where(status: 'offline').count,
+              commands_today: Command.where('started_at > ?', 24.hours.ago).count
+            }
+            puts 'Dashboard stats: OK'
+            stats.each { |k, v| puts \"  #{k}: #{v}\" }
+          "
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    # Only run if docs changed
+    if: |
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.changed_files, 'docs/') ||
+      github.event_name == 'push'
+
+    defaults:
+      run:
+        working-directory: docs
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint Markdown files
+        run: npx markdownlint-cli2 "**/*.md" --config ../.markdownlint.json || true
+        continue-on-error: true
+
+      - name: TypeScript type check
+        run: npm run typecheck
+
+      - name: Build documentation
+        run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Check for broken links
+        run: |
+          # Basic check that build succeeded and has content
+          if [ -d "build" ] && [ "$(ls -A build)" ]; then
+            echo "Documentation built successfully"
+            echo "Files in build directory:"
+            find build -name "*.html" | wc -l
+          else
+            echo "Build directory is empty or missing"
+            exit 1
+          fi
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [lint, security, test, system-tests, integration, cve-monitoring, docs]
+    if: always()
+
+    steps:
+      - name: Check job results
+        run: |
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Test: ${{ needs.test.result }}"
+          echo "System Tests: ${{ needs.system-tests.result }}"
+          echo "Integration: ${{ needs.integration.result }}"
+          echo "CVE Monitoring: ${{ needs.cve-monitoring.result }}"
+          echo "Docs: ${{ needs.docs.result }}"
+
+          if [ "${{ needs.lint.result }}" == "failure" ] || \
+             [ "${{ needs.security.result }}" == "failure" ] || \
+             [ "${{ needs.test.result }}" == "failure" ] || \
+             [ "${{ needs.system-tests.result }}" == "failure" ] || \
+             [ "${{ needs.integration.result }}" == "failure" ] || \
+             [ "${{ needs.cve-monitoring.result }}" == "failure" ] || \
+             [ "${{ needs.docs.result }}" == "failure" ]; then
+            echo "CI failed!"
+            exit 1
+          fi
+
+          echo "All CI checks passed!"

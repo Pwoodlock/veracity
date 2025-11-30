@@ -1,0 +1,56 @@
+<!-- Failed Commands Tracker -->
+<% if failed_updates.any? %>
+  <div id="failed-commands-widget" class="card bg-base-200 border border-base-content/10 shadow-lg mb-8">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title text-error">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          Failed Commands (Last 7 Days)
+        </h2>
+        <div class="flex gap-2">
+          <%= button_to "Clear All", dashboard_clear_failed_commands_path, method: :delete,
+              class: "btn btn-error btn-sm",
+              data: { confirm: "Are you sure? This will delete all failed commands from the last 7 days." } %>
+          <%= link_to "View All →", commands_path(status: 'failed'), class: "btn btn-ghost btn-sm" %>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <% failed_updates.each do |failed_cmd| %>
+          <div class="alert alert-error shadow-sm">
+            <div class="w-full">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <div class="badge badge-error badge-sm"><%= failed_cmd.status.upcase %></div>
+                  <%= link_to failed_cmd.server.hostname, server_path(failed_cmd.server), class: "font-semibold hover:underline" %>
+                  <span class="text-xs opacity-60">
+                    <%= time_ago_in_words(failed_cmd.started_at) %> ago
+                  </span>
+                </div>
+                <%= link_to "View →", command_path(failed_cmd), class: "btn btn-ghost btn-xs" %>
+              </div>
+
+              <div class="text-sm mb-2">
+                <span class="opacity-80 font-medium">Command:</span>
+                <code class="bg-base-300 px-2 py-1 rounded text-xs ml-2 font-mono">
+                  <%= failed_cmd.command %>
+                </code>
+              </div>
+
+              <details class="mt-2">
+                <summary class="cursor-pointer text-sm font-medium hover:opacity-80">
+                  Show error details
+                </summary>
+                <div class="mockup-code mt-2 text-xs max-h-40 overflow-y-auto">
+                  <pre><code><%= failed_cmd.error_output || failed_cmd.output || 'No error details available' %></code></pre>
+                </div>
+              </details>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

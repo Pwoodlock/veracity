@@ -1,0 +1,466 @@
+<% content_for :head do %>
+  <title>NetBird Setup Keys - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Flash Messages -->
+    <% if flash[:notice] %>
+      <div class="alert alert-success mb-6">
+        <%= flash[:notice] %>
+      </div>
+    <% end %>
+    <% if flash[:alert] %>
+      <div class="alert alert-error mb-6">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <!-- Info Card -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <div class="flex items-start gap-4">
+        <div class="p-2 rounded-full bg-[#f68330]/20">
+          <!-- NetBird Logo -->
+          <svg class="w-10 h-10" xmlns="http://www.w3.org/2000/svg" viewBox="0 69.9 512 372.2">
+            <g transform="translate(-.385 1.9)">
+              <path d="M364.3 68c-61.8 5.7-92.5 41.3-104.1 59.3l-5.2 9.1c-.4.8-.6 1.3-.6 1.3l-.1-.1L79.5 440.2h218L512.4 68z" fill="#f68330"/>
+              <path d="M297.5 440.2.4 125s336-90.2 368.7 191.4z" fill="#f68330"/>
+              <path d="m253.5 138.9-91.2 157.9 135.2 143.4 71.6-124c-11.3-96.9-58.5-149.7-115.6-177.3" fill="#f35e32"/>
+            </g>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-xl font-semibold text-base-content mb-2">NetBird Zero-Trust Network</h2>
+          <p class="text-sm text-base-content/60 mb-4">
+            Deploy NetBird agents to your servers for secure, zero-trust networking.
+            Setup keys are used to automatically register and connect servers to your NetBird network.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-semibold text-base-content mb-2">How It Works</h3>
+              <ol class="text-sm text-base-content/60 space-y-1 list-decimal list-inside">
+                <li>Add a setup key from your NetBird dashboard</li>
+                <li>Select target servers (groups or individual minions)</li>
+                <li>Click Deploy to install and connect agents via Salt</li>
+                <li>Servers join your NetBird network automatically</li>
+              </ol>
+            </div>
+            <div>
+              <h3 class="font-semibold text-base-content mb-2">Deployment Script</h3>
+              <div class="bg-base-300 rounded p-3 text-xs font-mono text-base-content/80">
+                <div># Install NetBird agent</div>
+                <div>curl -fsSL https://pkgs.netbird.io/install.sh | sh</div>
+                <div class="mt-2"># Connect to network</div>
+                <div>netbird up --management-url &lt;URL&gt; --setup-key &lt;KEY&gt;</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Setup Key Form -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Add New Setup Key</h2>
+
+      <%= form_with model: @netbird_setup_key, url: settings_netbird_setup_keys_path, class: "space-y-4" do |f| %>
+        <% if @netbird_setup_key.errors.any? %>
+          <div class="alert alert-error">
+            <ul class="list-disc list-inside">
+              <% @netbird_setup_key.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Name -->
+          <div>
+            <label class="block text-sm font-medium text-base-content/80 mb-2">Key Name</label>
+            <%= f.text_field :name,
+                placeholder: "Production Servers",
+                class: "input input-bordered w-full",
+                required: true %>
+            <p class="mt-1 text-xs text-base-content/40">Descriptive name to identify this setup key</p>
+          </div>
+
+          <!-- NetBird Group (Optional) -->
+          <div>
+            <label class="block text-sm font-medium text-base-content/80 mb-2">NetBird Group (Optional)</label>
+            <%= f.text_field :netbird_group,
+                placeholder: "e.g., production-servers",
+                class: "input input-bordered w-full" %>
+            <p class="mt-1 text-xs text-base-content/40">NetBird group this key belongs to (for reference)</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Management URL -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-base-content/80 mb-2">Management URL</label>
+            <%= f.text_field :management_url,
+                placeholder: "https://netbird.example.com",
+                class: "input input-bordered w-full",
+                required: true %>
+            <p class="mt-1 text-xs text-base-content/40">Your NetBird management server URL</p>
+          </div>
+
+          <!-- Port -->
+          <div>
+            <label class="block text-sm font-medium text-base-content/80 mb-2">Port</label>
+            <%= f.number_field :port,
+                placeholder: "443",
+                class: "input input-bordered w-full",
+                min: 1,
+                max: 65535 %>
+            <p class="mt-1 text-xs text-base-content/40">Default: 443</p>
+          </div>
+        </div>
+
+        <!-- Setup Key -->
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-2">Setup Key</label>
+          <%= f.text_field :setup_key,
+              placeholder: "4F0F9A28-C7F6-4E87-B855-015FC929FC63",
+              class: "input input-bordered w-full font-mono",
+              required: true,
+              pattern: "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}" %>
+          <p class="mt-1 text-xs text-base-content/40">
+            UUID format setup key from your NetBird dashboard. This key will be encrypted and stored securely.
+          </p>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-sm font-medium text-base-content/80 mb-2">Notes (Optional)</label>
+          <%= f.text_area :notes,
+              placeholder: "Additional notes about this setup key...",
+              rows: 2,
+              class: "textarea textarea-bordered w-full" %>
+        </div>
+
+        <!-- Enabled checkbox -->
+        <div class="flex items-center gap-2">
+          <%= f.check_box :enabled, checked: true, class: "checkbox checkbox-primary" %>
+          <label class="text-sm text-base-content/80">Enable this setup key</label>
+        </div>
+
+        <%= f.submit "Add Setup Key", class: "btn btn-primary cursor-pointer" %>
+      <% end %>
+    </div>
+
+    <!-- Existing Setup Keys -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Existing Setup Keys</h2>
+
+      <% if @netbird_setup_keys.any? %>
+        <div class="space-y-4">
+          <% @netbird_setup_keys.each do |setup_key| %>
+            <div class="border border-base-content/10 rounded-lg p-4 <%= setup_key.enabled? ? 'bg-base-300' : 'bg-base-200' %>">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <h3 class="text-lg font-semibold text-base-content"><%= setup_key.name %></h3>
+                    <span class="badge <%= setup_key.enabled? ? 'badge-success' : 'badge-ghost' %>">
+                      <%= setup_key.enabled? ? 'Enabled' : 'Disabled' %>
+                    </span>
+                    <% if setup_key.netbird_group.present? %>
+                      <span class="badge badge-primary badge-outline"><%= setup_key.netbird_group %></span>
+                    <% end %>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-base-content/60 mb-3">
+                    <div>
+                      <span class="font-medium">Management URL:</span>
+                      <%= setup_key.full_management_url %>
+                    </div>
+                    <div>
+                      <span class="font-medium">Setup Key:</span>
+                      <span class="font-mono"><%= setup_key.formatted_setup_key %></span>
+                    </div>
+                    <div>
+                      <span class="font-medium">Usage Count:</span>
+                      <%= setup_key.usage_count %> deployments
+                    </div>
+                    <div>
+                      <span class="font-medium">Created:</span>
+                      <%= time_ago_in_words(setup_key.created_at) %> ago
+                    </div>
+                    <div>
+                      <span class="font-medium">Last Used:</span>
+                      <%= setup_key.last_used_at ? time_ago_in_words(setup_key.last_used_at) + ' ago' : 'Never' %>
+                    </div>
+                  </div>
+
+                  <% if setup_key.notes.present? %>
+                    <div class="text-sm text-base-content/60 italic mb-3">
+                      <span class="font-medium">Notes:</span> <%= setup_key.notes %>
+                    </div>
+                  <% end %>
+
+                  <!-- Action Buttons -->
+                  <div class="flex flex-wrap gap-2">
+                    <% if setup_key.enabled? %>
+                      <button type="button"
+                              onclick="openDeployModal('<%= setup_key.id %>', '<%= j(setup_key.name) %>')"
+                              class="btn btn-primary btn-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        Deploy
+                      </button>
+                    <% end %>
+
+                    <%= button_to setup_key.enabled? ? 'Disable' : 'Enable',
+                        toggle_settings_netbird_setup_key_path(setup_key),
+                        method: :post,
+                        class: "btn btn-sm #{setup_key.enabled? ? 'btn-warning' : 'btn-success'}" %>
+
+                    <%= button_to "Delete", settings_netbird_setup_key_path(setup_key),
+                        method: :delete,
+                        class: "btn btn-error btn-sm",
+                        data: { confirm: "Are you sure you want to delete this setup key?" } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-8 text-base-content/60">
+          <!-- NetBird Logo -->
+          <svg class="mx-auto h-16 w-16 mb-4 opacity-40" xmlns="http://www.w3.org/2000/svg" viewBox="0 69.9 512 372.2">
+            <g transform="translate(-.385 1.9)">
+              <path d="M364.3 68c-61.8 5.7-92.5 41.3-104.1 59.3l-5.2 9.1c-.4.8-.6 1.3-.6 1.3l-.1-.1L79.5 440.2h218L512.4 68z" fill="#f68330"/>
+              <path d="M297.5 440.2.4 125s336-90.2 368.7 191.4z" fill="#f68330"/>
+              <path d="m253.5 138.9-91.2 157.9 135.2 143.4 71.6-124c-11.3-96.9-58.5-149.7-115.6-177.3" fill="#f35e32"/>
+            </g>
+          </svg>
+          <p class="mb-2">No setup keys configured yet.</p>
+          <p class="text-sm">Add your first NetBird setup key above to enable agent deployment.</p>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+
+  <!-- Deploy Modal -->
+  <dialog id="deploy-modal" class="modal">
+    <div class="modal-box max-w-2xl">
+      <h3 class="font-bold text-lg mb-4">Deploy NetBird Agent</h3>
+      <p class="text-sm text-base-content/60 mb-4">
+        Select target servers to deploy the NetBird agent using setup key: <span id="deploy-key-name" class="font-semibold"></span>
+      </p>
+
+      <form id="deploy-form">
+        <input type="hidden" id="deploy-setup-key-id" name="setup_key_id">
+
+        <!-- Target Type Selection -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-base-content/80 mb-2">Target Type</label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="target_type" value="minion" class="radio radio-primary" checked onchange="updateTargetSelection()">
+              <span>Individual Servers</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="target_type" value="group" class="radio radio-primary" onchange="updateTargetSelection()">
+              <span>Server Groups</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="target_type" value="all" class="radio radio-primary" onchange="updateTargetSelection()">
+              <span>All Online Servers</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Server Selection (for individual) -->
+        <div id="minion-selection" class="mb-4">
+          <label class="block text-sm font-medium text-base-content/80 mb-2">Select Servers</label>
+          <div class="max-h-48 overflow-y-auto border border-base-content/10 rounded-lg p-2 space-y-1">
+            <% @servers.select(&:online?).each do |server| %>
+              <label class="flex items-center gap-2 p-2 hover:bg-base-200 rounded cursor-pointer">
+                <input type="checkbox" name="target_ids[]" value="<%= server.id %>" class="checkbox checkbox-sm checkbox-primary">
+                <span class="flex-1"><%= server.hostname %></span>
+                <% if server.group %>
+                  <span class="badge badge-ghost badge-sm"><%= server.group.name %></span>
+                <% end %>
+              </label>
+            <% end %>
+            <% if @servers.select(&:online?).empty? %>
+              <p class="text-sm text-base-content/60 p-2">No online servers available</p>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Group Selection (for groups) -->
+        <div id="group-selection" class="mb-4 hidden">
+          <label class="block text-sm font-medium text-base-content/80 mb-2">Select Groups</label>
+          <div class="max-h-48 overflow-y-auto border border-base-content/10 rounded-lg p-2 space-y-1">
+            <% @groups.each do |group| %>
+              <label class="flex items-center gap-2 p-2 hover:bg-base-200 rounded cursor-pointer">
+                <input type="checkbox" name="target_ids[]" value="<%= group.id %>" class="checkbox checkbox-sm checkbox-primary group-checkbox">
+                <span class="flex-1"><%= group.name %></span>
+                <span class="badge badge-ghost badge-sm"><%= group.servers.online.count %> online</span>
+              </label>
+            <% end %>
+            <% if @groups.empty? %>
+              <p class="text-sm text-base-content/60 p-2">No groups available</p>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- All Servers Info -->
+        <div id="all-selection" class="mb-4 hidden">
+          <div class="alert alert-info">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>This will deploy NetBird to all <%= @servers.select(&:online?).count %> online server(s).</span>
+          </div>
+        </div>
+
+        <div class="modal-action">
+          <button type="button" class="btn" onclick="document.getElementById('deploy-modal').close()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="deploy-submit-btn">
+            <span class="loading loading-spinner loading-sm hidden" id="deploy-loading"></span>
+            Deploy NetBird
+          </button>
+        </div>
+      </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+
+  <!-- Result Modal -->
+  <dialog id="result-modal" class="modal">
+    <div class="modal-box max-w-2xl">
+      <h3 class="font-bold text-lg mb-4" id="result-title">Deployment Result</h3>
+      <div id="result-content"></div>
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="document.getElementById('result-modal').close()">Close</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+
+  <script>
+    function openDeployModal(setupKeyId, setupKeyName) {
+      document.getElementById('deploy-setup-key-id').value = setupKeyId;
+      document.getElementById('deploy-key-name').textContent = setupKeyName;
+      document.getElementById('deploy-modal').showModal();
+    }
+
+    function updateTargetSelection() {
+      const targetType = document.querySelector('input[name="target_type"]:checked').value;
+
+      document.getElementById('minion-selection').classList.toggle('hidden', targetType !== 'minion');
+      document.getElementById('group-selection').classList.toggle('hidden', targetType !== 'group');
+      document.getElementById('all-selection').classList.toggle('hidden', targetType !== 'all');
+
+      // Clear checkboxes when switching
+      document.querySelectorAll('#minion-selection input[type="checkbox"]').forEach(cb => cb.checked = false);
+      document.querySelectorAll('#group-selection input[type="checkbox"]').forEach(cb => cb.checked = false);
+    }
+
+    document.getElementById('deploy-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const setupKeyId = document.getElementById('deploy-setup-key-id').value;
+      const targetType = document.querySelector('input[name="target_type"]:checked').value;
+      const targetIds = Array.from(document.querySelectorAll(`#${targetType}-selection input[type="checkbox"]:checked, #${targetType === 'all' ? 'minion' : targetType}-selection input[type="checkbox"]:checked`))
+        .map(cb => cb.value);
+
+      if (targetType !== 'all' && targetIds.length === 0) {
+        alert('Please select at least one target');
+        return;
+      }
+
+      const submitBtn = document.getElementById('deploy-submit-btn');
+      const loading = document.getElementById('deploy-loading');
+
+      submitBtn.disabled = true;
+      loading.classList.remove('hidden');
+
+      try {
+        const response = await fetch(`/settings/netbird_setup_keys/${setupKeyId}/deploy`, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            target_type: targetType,
+            target_ids: targetIds
+          })
+        });
+
+        const data = await response.json();
+
+        document.getElementById('deploy-modal').close();
+
+        // Show result
+        const resultContent = document.getElementById('result-content');
+        if (data.success) {
+          document.getElementById('result-title').textContent = 'Deployment Successful';
+          resultContent.innerHTML = `
+            <div class="alert alert-success mb-4">
+              <span>${data.message}</span>
+            </div>
+            ${data.results ? `
+              <div class="max-h-64 overflow-y-auto">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Server</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${Object.entries(data.results).map(([minion, result]) => `
+                      <tr>
+                        <td>${minion}</td>
+                        <td><span class="badge ${result.success ? 'badge-success' : 'badge-error'}">${result.success ? 'Success' : 'Failed'}</span></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : ''}
+            ${data.errors && data.errors.length > 0 ? `
+              <div class="alert alert-warning mt-4">
+                <span>Some deployments failed:</span>
+                <ul class="list-disc list-inside">
+                  ${data.errors.map(err => `<li>${err.minion_id}: ${err.error}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          `;
+        } else {
+          document.getElementById('result-title').textContent = 'Deployment Failed';
+          resultContent.innerHTML = `
+            <div class="alert alert-error">
+              <span>${data.message}</span>
+            </div>
+          `;
+        }
+
+        document.getElementById('result-modal').showModal();
+
+      } catch (error) {
+        alert('Error: ' + error.message);
+      } finally {
+        submitBtn.disabled = false;
+        loading.classList.add('hidden');
+      }
+    });
+  </script>
+<% end %>

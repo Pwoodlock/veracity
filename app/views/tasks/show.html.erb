@@ -1,0 +1,251 @@
+<% content_for :head do %>
+  <title><%= @task.name %> - Tasks - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Breadcrumbs -->
+  <div class="text-sm breadcrumbs mb-4">
+    <ul>
+      <li><%= link_to "Tasks", tasks_path %></li>
+      <li><%= @task.name %></li>
+    </ul>
+  </div>
+
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-3xl font-bold text-base-content"><%= @task.name %></h1>
+        <% if @task.description.present? %>
+          <p class="text-base-content/60 mt-1"><%= @task.description %></p>
+        <% end %>
+        <div class="flex gap-2 mt-4">
+          <% if @task.enabled? %>
+            <div class="badge badge-success gap-2">
+              <div class="badge badge-xs badge-success"></div>
+              Enabled
+            </div>
+          <% else %>
+            <div class="badge badge-ghost gap-2">
+              <div class="badge badge-xs badge-ghost"></div>
+              Disabled
+            </div>
+          <% end %>
+          <div class="badge badge-outline"><%= @task.target_name %></div>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <%= button_to execute_task_path(@task), method: :post, class: "btn btn-primary",
+            disabled: @task.running?,
+            title: @task.running? ? "Task is already running" : "Execute now" do %>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Execute Now
+        <% end %>
+        <%= link_to edit_task_path(@task), class: "btn btn-ghost" do %>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          Edit
+        <% end %>
+        <%= button_to @task, method: :delete, class: "btn btn-error btn-outline",
+            form: { data: { turbo_confirm: "Are you sure you want to delete this task? This will also delete all #{@task.task_runs.count} execution history records." } } do %>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Delete
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Task details -->
+    <div class="lg:col-span-1">
+      <div class="bg-base-200 rounded-lg border border-base-content/10 p-6">
+        <h2 class="text-lg font-semibold text-base-content mb-4">Task Details</h2>
+
+        <div class="space-y-4">
+          <div>
+            <div class="text-sm text-base-content/60 mb-1">Command</div>
+            <code class="block bg-base-300 p-3 rounded text-sm break-all"><%= @task.command %></code>
+          </div>
+
+          <div>
+            <div class="text-sm text-base-content/60 mb-1">Target Type</div>
+            <div class="font-medium"><%= @task.target_type.capitalize %></div>
+          </div>
+
+          <div>
+            <div class="text-sm text-base-content/60 mb-1">Target</div>
+            <div class="font-medium"><%= @task.target_name %></div>
+            <% if @task.target_type == 'pattern' %>
+              <code class="text-xs bg-base-300 px-2 py-1 rounded mt-1"><%= @task.target_pattern %></code>
+            <% end %>
+          </div>
+
+          <% if @task.cron_schedule.present? %>
+            <div>
+              <div class="text-sm text-base-content/60 mb-1">Schedule</div>
+              <code class="block bg-base-300 p-2 rounded text-sm"><%= @task.cron_schedule %></code>
+              <% if @task.next_run_at %>
+                <div class="text-xs text-base-content/60 mt-1">
+                  Next run: <%= @task.next_run_at.strftime("%B %d, %Y at %H:%M") %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <div>
+            <div class="text-sm text-base-content/60 mb-1">Created</div>
+            <div class="text-sm">
+              <%= @task.created_at.strftime("%B %d, %Y") %>
+              <span class="text-base-content/60">by <%= @task.user.email %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="bg-base-200 rounded-lg border border-base-content/10 p-6 mt-4">
+        <h2 class="text-lg font-semibold text-base-content mb-4">Statistics</h2>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-base-content"><%= @stats[:total_runs] %></div>
+            <div class="text-sm text-base-content/60">Total Runs</div>
+          </div>
+          <div class="text-center">
+            <div class="radial-progress text-success" style="--value:<%= @stats[:success_rate] %>; --size:4rem;">
+              <span class="text-sm"><%= @stats[:success_rate] %>%</span>
+            </div>
+            <div class="text-sm text-base-content/60">Success Rate</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-sm text-base-content/60">Avg Duration</span>
+            <span class="text-sm font-medium">
+              <% if @stats[:avg_duration] > 0 %>
+                <%= @stats[:avg_duration] < 60 ? "#{@stats[:avg_duration]}s" : "#{@stats[:avg_duration] / 60}m #{@stats[:avg_duration] % 60}s" %>
+              <% else %>
+                N/A
+              <% end %>
+            </span>
+          </div>
+          <% if @stats[:last_run] %>
+            <div class="flex justify-between">
+              <span class="text-sm text-base-content/60">Last Run</span>
+              <span class="text-sm font-medium"><%= time_ago_in_words(@stats[:last_run].created_at) %> ago</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Execution history -->
+    <div class="lg:col-span-2">
+      <div class="bg-base-200 rounded-lg border border-base-content/10">
+        <div class="p-6 border-b border-base-content/10">
+          <div class="flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-base-content">Execution History</h2>
+            <%= link_to task_task_runs_path(@task), class: "btn btn-ghost btn-sm" do %>
+              View All
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            <% end %>
+          </div>
+        </div>
+
+        <% if @recent_runs.any? %>
+          <div class="divide-y divide-base-content/10">
+            <% @recent_runs.each do |run| %>
+              <div class="p-6 hover:bg-base-300/50 transition-colors" id="task_run_<%= run.id %>">
+                <div class="flex justify-between items-start mb-3">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <% if run.running? %>
+                        <div class="badge badge-warning gap-2">
+                          <span class="loading loading-spinner loading-xs"></span>
+                          Running
+                        </div>
+                      <% elsif run.completed? %>
+                        <div class="badge badge-success gap-2">
+                          <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                          </svg>
+                          Completed
+                        </div>
+                      <% elsif run.failed? %>
+                        <div class="badge badge-error gap-2">
+                          <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                          </svg>
+                          Failed
+                        </div>
+                      <% else %>
+                        <div class="badge badge-ghost"><%= run.status.capitalize %></div>
+                      <% end %>
+                      <span class="text-sm text-base-content/60">
+                        <%= run.created_at.strftime("%b %d, %H:%M") %>
+                      </span>
+                    </div>
+                    <div class="text-sm text-base-content/60 mt-1">
+                      Triggered by: <%= run.trigger_source %>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <% if run.duration_human %>
+                      <div class="text-sm text-base-content/60">
+                        Duration: <%= run.duration_human %>
+                      </div>
+                    <% end %>
+                    <%= link_to task_task_run_path(@task, run), class: "btn btn-ghost btn-sm" do %>
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      View
+                    <% end %>
+                  </div>
+                </div>
+
+                <% if run.output.present? %>
+                  <div class="mt-3">
+                    <details class="collapse collapse-arrow bg-base-300 rounded">
+                      <summary class="collapse-title text-sm font-medium">Output Preview</summary>
+                      <div class="collapse-content">
+                        <pre class="text-xs overflow-x-auto whitespace-pre-wrap"><%= truncate(run.output, length: 500) %></pre>
+                      </div>
+                    </details>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="p-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-base-content">No execution history</h3>
+            <p class="mt-1 text-sm text-base-content/60">This task hasn't been executed yet.</p>
+            <div class="mt-4">
+              <%= button_to execute_task_path(@task), method: :post, class: "btn btn-primary btn-sm" do %>
+                Execute Now
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div><% end %>

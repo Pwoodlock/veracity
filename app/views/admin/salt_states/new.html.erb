@@ -1,0 +1,25 @@
+<% content_for :title, "New Salt State" %>
+
+<%= render layout: 'shared/sidebar' do %>
+  <div class="p-4 lg:p-6">
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex items-center gap-2 text-sm text-base-content/60 mb-1">
+        <%= link_to "Salt Editor", admin_salt_states_path, class: "hover:text-primary" %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        <span>New</span>
+      </div>
+      <h1 class="text-2xl font-bold text-base-content flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        New Salt State
+      </h1>
+      <p class="text-base-content/60 mt-1">Create a new Salt state file</p>
+    </div>
+
+    <%= render 'form', salt_state: @salt_state %>
+  </div>
+<% end %>

@@ -1,0 +1,42 @@
+WELCOME TO SERVER MANAGER!
+================================================================================
+
+Hello <%= @user.email %>,
+
+Your Server Manager account has been created successfully. You can now access the platform to manage servers, execute commands, and monitor your infrastructure.
+
+<% if @temporary_password.present? %>
+YOUR LOGIN CREDENTIALS:
+-----------------------
+Email: <%= @user.email %>
+Temporary Password: <%= @temporary_password %>
+
+[!] IMPORTANT SECURITY NOTICE:
+For your security, please change your password immediately after your first login.
+This temporary password should not be shared with anyone.
+
+<% end %>
+Your Account Role: <%= @user.role.titleize %>
+
+Log in here: <%= @login_url %>
+
+GETTING STARTED:
+----------------
+* Set up Two-Factor Authentication for enhanced security
+* Explore the dashboard to view server status
+* Review available servers and their metrics
+<% if @user.admin? || @user.operator? %>
+* Create scheduled tasks for automation
+* Execute commands on managed servers
+<% end %>
+
+<% if @user.admin? || @user.operator? %>
+RECOMMENDED: Enable Two-Factor Authentication to secure your account.
+Set up 2FA: <%= @two_factor_setup_url %>
+<% end %>
+
+If you have any questions or need assistance, please contact your system administrator.
+
+================================================================================
+This is an automated message from Server Manager.
+Please do not reply to this email.

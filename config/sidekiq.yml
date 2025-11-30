@@ -1,0 +1,18 @@
+# Sidekiq Configuration
+# https://github.com/sidekiq/sidekiq/wiki/Advanced-Options
+
+# Development and test environments
+:concurrency: 5
+
+# Queues (in order of priority)
+:queues:
+  - critical
+  - default
+  - low
+
+# Production settings (override with RAILS_MAX_THREADS env var)
+production:
+  :concurrency: <%= ENV.fetch("RAILS_MAX_THREADS", 10) %>
+
+# Scheduling with sidekiq-cron
+# Cron jobs are configured in config/initializers/sidekiq.rb

@@ -1,0 +1,55 @@
+<% content_for :head do %>
+  <title>Task Run #<%= @task_run.id.split('-').first %> - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<%= turbo_stream_from "task_run_#{@task_run.id}" %>
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Breadcrumbs -->
+  <div class="text-sm breadcrumbs mb-4">
+    <ul>
+      <li><%= link_to "Tasks", tasks_path %></li>
+      <% if @task %>
+        <li><%= link_to @task.name, @task %></li>
+        <li>Execution #<%= @task_run.id.split('-').first %></li>
+      <% else %>
+        <li>Execution #<%= @task_run.id.split('-').first %></li>
+      <% end %>
+    </ul>
+  </div>
+
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-3xl font-bold text-base-content">Task Execution</h1>
+        <p class="text-base-content/60 mt-1">
+          <%= @task_run.task.name %> - <%= @task_run.created_at.strftime("%B %d, %Y at %H:%M") %>
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <% if @task_run.running? %>
+          <%= button_to cancel_task_task_run_path(@task, @task_run), method: :post, class: "btn btn-error btn-outline" do %>
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Cancel
+          <% end %>
+        <% end %>
+        <%= link_to @task || tasks_path, class: "btn btn-ghost" do %>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div id="task_run_content">
+    <%= render "task_runs/task_run_content", task_run: @task_run %>
+  </div>
+</div>
+<% end %>

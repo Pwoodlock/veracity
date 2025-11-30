@@ -1,0 +1,166 @@
+<% content_for :head do %>
+  <title>Vulnerability Alerts - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-base-content">Vulnerability Alerts</h1>
+        <p class="text-base-content/80 mt-1">All CVE alerts affecting your infrastructure</p>
+      </div>
+      <div>
+        <%= link_to cve_monitoring_path,
+            class: "inline-flex items-center px-4 py-2 bg-base-200 text-white rounded-lg hover:bg-base-200 transition-colors" do %>
+          <span>← Back to Dashboard</span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-8">
+      <%= form_with url: cve_monitoring_alerts_path, method: :get, local: true, class: "flex flex-wrap items-center gap-4" do |f| %>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Severity</label>
+          <%= select_tag :severity,
+              options_for_select([['All Severities', ''], ['Critical', 'CRITICAL'], ['High', 'HIGH'], ['Medium', 'MEDIUM'], ['Low', 'LOW'], ['Info', 'INFO']], params[:severity]),
+              class: "w-full rounded-lg bg-base-200 border border-base-content/20 text-base-content shadow-sm focus:border-primary focus:ring-primary" %>
+        </div>
+
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-base-content/80 mb-1">Status</label>
+          <%= select_tag :status,
+              options_for_select([['All Statuses', ''], ['New', 'new'], ['Acknowledged', 'acknowledged'], ['Investigating', 'investigating'], ['Patched', 'patched'], ['Ignored', 'ignored']], params[:status]),
+              class: "w-full rounded-lg bg-base-200 border border-base-content/20 text-base-content shadow-sm focus:border-primary focus:ring-primary" %>
+        </div>
+
+        <div class="flex items-center gap-2 pt-6">
+          <label class="flex items-center cursor-pointer">
+            <%= check_box_tag :exploited, '1', params[:exploited] == 'true',
+                class: "rounded bg-base-200 border-base-content/20 text-primary shadow-sm focus:border-primary focus:ring-primary" %>
+            <span class="ml-2 text-sm text-base-content/80">Only Exploited</span>
+          </label>
+        </div>
+
+        <div class="flex gap-2 pt-6">
+          <%= submit_tag 'Apply Filters',
+              class: "px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors" %>
+          <%= link_to 'Clear', cve_monitoring_alerts_path,
+              class: "px-4 py-2 bg-base-200 text-base-content rounded-lg hover:bg-base-300 transition-colors" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Alerts Table -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+      <% if @alerts && @alerts.any? %>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-base-content/10">
+            <thead class="bg-base-100">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">
+                  CVE ID
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">
+                  Severity
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">
+                  Server
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">
+                  Status
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">
+                  Published
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-base-content/80 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-base-200 divide-y divide-base-content/10">
+              <% @alerts.each do |alert| %>
+                <tr class="hover:bg-base-200 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                      <%= link_to alert.cve_id, cve_monitoring_alert_path(alert),
+                          class: "text-primary hover:text-primary-focus font-medium" %>
+                      <% if alert.is_exploited %>
+                        <span class="badge badge-error badge-xs">KEV</span>
+                      <% end %>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                      <span class="px-3 py-1 text-xs rounded-full font-medium <%= alert.severity_badge_class %>">
+                        <%= alert.severity %>
+                      </span>
+                      <% if alert.cvss_score %>
+                        <span class="text-xs text-base-content/60">(<%= alert.cvss_score %>)</span>
+                      <% end %>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-base-content">
+                      <%= alert.server&.hostname || 'All Servers' %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-3 py-1 text-xs rounded-full font-medium <%= alert.status_badge_class %>">
+                      <%= alert.status.humanize %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-base-content/60">
+                    <%= alert.published_at&.strftime('%b %d, %Y') || 'Unknown' %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <div class="flex items-center gap-2">
+                      <% if alert.status == 'new' %>
+                        <%= button_to 'Acknowledge', acknowledge_cve_alert_path(alert), method: :post,
+                            class: "text-primary hover:text-primary-focus font-medium" %>
+                      <% end %>
+                      <% if alert.active? %>
+                        <%= button_to 'Mark Patched', patch_cve_alert_path(alert), method: :post,
+                            class: "text-success hover:text-success font-medium" %>
+                        <%= button_to 'Ignore', ignore_cve_alert_path(alert), method: :post,
+                            data: { turbo_confirm: 'Are you sure you want to ignore this alert?' },
+                            class: "text-base-content/60 hover:text-base-content/80 font-medium" %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if @alerts.respond_to?(:current_page) %>
+          <div class="px-6 py-4 border-t border-base-content/10">
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-base-content/80">
+                Showing page <%= @alerts.current_page %> of <%= @alerts.total_pages %>
+              </div>
+              <div class="flex gap-2">
+                <%= paginate @alerts %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="p-12 text-center">
+          <div class="text-base-content/60 mb-4">
+            <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-base-content mb-2">No vulnerability alerts found</h3>
+          <p class="text-base-content/60">Alerts will appear here when vulnerabilities are detected.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

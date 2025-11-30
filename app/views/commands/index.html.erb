@@ -1,0 +1,89 @@
+<% content_for :head do %>
+  <title>Command History - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Filters -->
+    <div class="mb-6 bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+      <%= form_with url: commands_path, method: :get, class: "flex gap-4 items-end" do |f| %>
+        <div>
+          <%= f.label :server_id, "Server", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.select :server_id, options_for_select([['All Servers', '']] + @servers.map { |s| [s.hostname, s.id] }, params[:server_id]), {}, class: "select select-bordered" %>
+        </div>
+        <div>
+          <%= f.label :status, "Status", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= f.select :status, options_for_select([['All', ''], ['Completed', 'completed'], ['Failed', 'failed'], ['Pending', 'pending'], ['Running', 'running'], ['Timeout', 'timeout']], params[:status]), {}, class: "select select-bordered" %>
+        </div>
+        <%= f.submit "Filter", class: "btn btn-primary cursor-pointer" %>
+        <%= link_to "Clear", commands_path, class: "btn btn-ghost" %>
+      <% end %>
+    </div>
+
+    <!-- Command List -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+      <div class="divide-y divide-base-content/10">
+        <% @commands.each do |command| %>
+          <div class="px-6 py-4 hover:bg-base-200">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center space-x-3">
+                <span class="status-badge status-<%= command.status %>">
+                  <%= command.status %>
+                </span>
+                <span class="text-sm font-medium text-base-content">
+                  <%= link_to command.server.hostname, server_path(command.server), class: "text-primary hover:text-primary/80" %>
+                </span>
+                <span class="text-xs text-base-content/60">
+                  <%= time_ago_in_words(command.started_at) %> ago
+                  <% if command.user_executed? %>
+                    by <%= command.user_display_name %>
+                  <% else %>
+                    (System)
+                  <% end %>
+                </span>
+                <% if command.task_execution_id.present? %>
+                  <span class="badge badge-secondary badge-xs">
+                    <%= link_to "Task Execution ##{command.task_execution.id.to_s[0..7]}", task_execution_path(command.task_execution), class: "hover:underline" %>
+                  </span>
+                <% end %>
+              </div>
+              <% if command.exit_code.present? %>
+                <span class="badge <%= command.exit_code == 0 ? 'badge-success' : 'badge-error' %> badge-xs">
+                  Exit: <%= command.exit_code %>
+                </span>
+              <% end %>
+            </div>
+
+            <div class="bg-base-300 text-success p-3 rounded font-mono text-xs mb-2">
+              $ <%= command.arguments.is_a?(Hash) ? command.arguments['args']&.first : command.command %>
+            </div>
+
+            <% if command.output.present? %>
+              <details>
+                <summary class="cursor-pointer text-sm text-primary hover:text-primary/80">Show output (<%= command.output.length %> chars)</summary>
+                <pre class="mt-2 bg-base-300 text-success p-3 rounded text-xs overflow-x-auto max-h-64"><%= command.output %></pre>
+              </details>
+            <% end %>
+
+            <% if command.error_output.present? %>
+              <div class="alert alert-error mt-2">
+                <div class="text-xs font-medium mb-1">Error:</div>
+                <pre class="text-xs overflow-x-auto"><%= command.error_output %></pre>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @commands.empty? %>
+        <div class="text-center py-12">
+          <p class="text-base-content/80">No commands found</p>
+          <p class="text-sm text-base-content/60 mt-2">Execute commands from the <%= link_to "Dashboard", dashboard_path, class: "text-primary hover:text-primary/80" %></p>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+<% end %>

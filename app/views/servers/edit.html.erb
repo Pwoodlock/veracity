@@ -1,0 +1,611 @@
+<% content_for :head do %>
+  <title>Edit Server - <%= @server.hostname %></title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-base-content">Edit <%= @server.hostname %></h2>
+      <p class="text-base-content/80 mt-1">Update server settings and group assignment</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+      <%= form_with model: @server, url: server_path(@server), method: :patch, class: "space-y-6" do |form| %>
+
+        <% if @server.errors.any? %>
+          <div class="alert alert-error">
+            <h3 class="font-medium mb-2"><%= pluralize(@server.errors.count, "error") %> prohibited this server from being saved:</h3>
+            <ul class="list-disc list-inside text-sm">
+              <% @server.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <!-- Server Info (read-only) -->
+        <div class="bg-base-100 border border-base-content/10 rounded-lg p-4 space-y-2">
+          <div class="flex justify-between">
+            <span class="text-sm font-medium text-base-content/80">Hostname:</span>
+            <span class="text-sm text-base-content"><%= @server.hostname %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm font-medium text-base-content/80">IP Address:</span>
+            <span class="text-sm text-base-content"><%= @server.ip_address %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm font-medium text-base-content/80">Minion ID:</span>
+            <span class="text-sm text-base-content"><%= @server.minion_id %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm font-medium text-base-content/80">Operating System:</span>
+            <span class="text-sm text-base-content"><%= @server.os_name %> <%= @server.os_version %></span>
+          </div>
+        </div>
+
+        <!-- Group Assignment -->
+        <div>
+          <%= form.label :group_id, "Group", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= form.select :group_id,
+                          options_for_select(
+                            [['No Group (Ungrouped)', nil]] +
+                            @groups.map { |g| [g.name, g.id] },
+                            @server.group_id
+                          ),
+                          {},
+                          class: "select select-bordered w-full" %>
+          <p class="mt-2 text-sm text-base-content/60">Assign this server to a group for better organization</p>
+        </div>
+
+        <!-- Environment -->
+        <div>
+          <%= form.label :environment, class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= form.select :environment,
+                          options_for_select(
+                            [['Production', 'production'], ['Staging', 'staging'], ['Development', 'development'], ['Testing', 'testing']],
+                            @server.environment
+                          ),
+                          { include_blank: 'Select environment' },
+                          class: "select select-bordered w-full" %>
+        </div>
+
+        <!-- Location -->
+        <div>
+          <%= form.label :location, class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= form.text_field :location,
+                              placeholder: "e.g., US-East, EU-West, Datacenter-1",
+                              class: "input input-bordered w-full" %>
+        </div>
+
+        <!-- Provider -->
+        <div>
+          <%= form.label :provider, class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= form.text_field :provider,
+                              placeholder: "e.g., Hetzner, AWS, DigitalOcean, On-Premise",
+                              class: "input input-bordered w-full" %>
+        </div>
+
+        <!-- Geographic Coordinates -->
+        <div>
+          <h3 class="text-sm font-semibold text-base-content mb-3">Geographic Location (Optional)</h3>
+
+          <!-- Quick Pick Datacenter Locations -->
+          <div class="mb-4">
+            <label for="datacenter_quick_pick" class="block text-sm font-medium text-base-content/80 mb-2">
+              Quick Pick Datacenter
+            </label>
+            <select id="datacenter_quick_pick"
+                    class="select select-bordered w-full">
+              <option value="">-- Select a datacenter to auto-fill coordinates --</option>
+              <optgroup label="My Servers">
+                <option value="52.835111,-6.938685">PVE-1 (Proxmox Host)</option>
+              </optgroup>
+              <optgroup label="Hetzner Germany">
+                <option value="49.452102,11.076750">Hetzner Nuremberg (NBG1-DC3)</option>
+                <option value="50.110924,8.682127">Hetzner Frankfurt (FSN1-DC14)</option>
+                <option value="52.520008,13.404954">Hetzner Berlin</option>
+              </optgroup>
+              <optgroup label="Hetzner Finland">
+                <option value="60.169857,24.938379">Hetzner Helsinki (HEL1-DC2)</option>
+              </optgroup>
+              <optgroup label="Hetzner USA">
+                <option value="37.774929,-122.419418">Hetzner Hillsboro, OR (US-West)</option>
+                <option value="39.043757,-77.487442">Hetzner Ashburn, VA (US-East)</option>
+              </optgroup>
+              <optgroup label="AWS Europe">
+                <option value="50.110924,8.682127">AWS Frankfurt (eu-central-1)</option>
+                <option value="53.338330,6.862780">AWS Ireland (eu-west-1)</option>
+                <option value="51.507351,-0.127758">AWS London (eu-west-2)</option>
+                <option value="48.856613,2.352222">AWS Paris (eu-west-3)</option>
+                <option value="59.329323,18.068581">AWS Stockholm (eu-north-1)</option>
+              </optgroup>
+              <optgroup label="AWS Americas">
+                <option value="37.774929,-122.419418">AWS N. California (us-west-1)</option>
+                <option value="45.523064,-122.676483">AWS Oregon (us-west-2)</option>
+                <option value="39.043757,-77.487442">AWS N. Virginia (us-east-1)</option>
+                <option value="40.712776,-74.005974">AWS Ohio (us-east-2)</option>
+              </optgroup>
+              <optgroup label="DigitalOcean">
+                <option value="40.712776,-74.005974">DigitalOcean New York</option>
+                <option value="37.774929,-122.419418">DigitalOcean San Francisco</option>
+                <option value="51.507351,-0.127758">DigitalOcean London</option>
+                <option value="52.370216,4.895168">DigitalOcean Amsterdam</option>
+                <option value="50.110924,8.682127">DigitalOcean Frankfurt</option>
+                <option value="1.352083,103.819839">DigitalOcean Singapore</option>
+              </optgroup>
+              <optgroup label="Google Cloud">
+                <option value="45.523064,-122.676483">GCP Oregon (us-west1)</option>
+                <option value="33.448376,-112.074036">GCP Iowa (us-central1)</option>
+                <option value="33.753746,-84.386330">GCP South Carolina (us-east1)</option>
+                <option value="51.507351,-0.127758">GCP London (europe-west2)</option>
+                <option value="50.850346,4.351721">GCP Belgium (europe-west1)</option>
+                <option value="53.427730,6.837780">GCP Netherlands (europe-west4)</option>
+              </optgroup>
+              <optgroup label="On-Premise / Other">
+                <option value="custom">Enter custom coordinates below</option>
+              </optgroup>
+            </select>
+            <p class="text-xs text-base-content/60 mt-2">
+              Select a datacenter to instantly populate coordinates below
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <%= form.label :latitude, "Latitude", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+              <%= form.number_field :latitude,
+                                    step: 0.000001,
+                                    placeholder: "49.452102",
+                                    id: "server_latitude",
+                                    class: "input input-bordered w-full" %>
+              <p class="text-xs text-base-content/60 mt-1">Range: -90 to 90 (North/South)</p>
+            </div>
+
+            <div>
+              <%= form.label :longitude, "Longitude", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+              <%= form.number_field :longitude,
+                                    step: 0.000001,
+                                    placeholder: "11.076750",
+                                    id: "server_longitude",
+                                    class: "input input-bordered w-full" %>
+              <p class="text-xs text-base-content/60 mt-1">Range: -180 to 180 (East/West)</p>
+            </div>
+          </div>
+          <p class="text-xs text-base-content/60 mt-2">
+            Or find coordinates manually:
+            <a href="https://www.latlong.net/" target="_blank" class="text-primary hover:text-primary/80 underline">LatLong.net</a> |
+            Right-click on Google Maps
+          </p>
+        </div>
+
+        <!-- Datacenter Quick Pick JavaScript -->
+        <script>
+          document.getElementById('datacenter_quick_pick').addEventListener('change', function() {
+            const value = this.value;
+
+            if (value && value !== 'custom') {
+              const [lat, lng] = value.split(',');
+              document.getElementById('server_latitude').value = lat;
+              document.getElementById('server_longitude').value = lng;
+
+              // Visual feedback
+              const latField = document.getElementById('server_latitude');
+              const lngField = document.getElementById('server_longitude');
+              latField.classList.add('input-success');
+              lngField.classList.add('input-success');
+
+              setTimeout(() => {
+                latField.classList.remove('input-success');
+                lngField.classList.remove('input-success');
+              }, 1500);
+            } else if (value === 'custom') {
+              // Clear fields for custom entry
+              document.getElementById('server_latitude').value = '';
+              document.getElementById('server_longitude').value = '';
+              document.getElementById('server_latitude').focus();
+            }
+          });
+        </script>
+
+        <!-- Hetzner Cloud Integration -->
+        <div class="border-t border-base-content/10 pt-6">
+          <h3 class="text-sm font-semibold text-base-content mb-3">Hetzner Cloud Integration (Optional)</h3>
+          <p class="text-sm text-base-content/80 mb-4">
+            Enable Hetzner Cloud features like server control (start/stop/reboot) and automatic snapshot creation before weekly updates.
+          </p>
+
+          <!-- Hetzner API Key Selection -->
+          <div class="mb-4">
+            <%= form.label :hetzner_api_key_id, "Hetzner Project (API Key)", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+            <%= form.select :hetzner_api_key_id,
+                            options_for_select(
+                              [['Not a Hetzner Server', nil]] +
+                              HetznerApiKey.enabled.map { |key| [key.name, key.id] },
+                              @server.hetzner_api_key_id
+                            ),
+                            {},
+                            id: 'hetzner_api_key_select',
+                            class: "select select-bordered w-full" %>
+            <p class="mt-2 text-sm text-base-content/60">
+              Select which Hetzner project this server belongs to. Configure API keys in
+              <%= link_to "Settings", settings_hetzner_api_keys_path, class: "text-primary hover:text-primary/80 underline", target: "_blank" %>.
+            </p>
+          </div>
+
+          <!-- Hetzner Fields Container (shown when API key is selected) -->
+          <div id="hetzner_fields" style="<%= 'display:none' unless @server.hetzner_api_key_id.present? %>">
+
+            <!-- Hetzner Server ID -->
+            <div class="mb-4">
+              <%= form.label :hetzner_server_id, "Hetzner Server ID", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+              <%= form.number_field :hetzner_server_id,
+                                    placeholder: "e.g., 12345678",
+                                    class: "input input-bordered w-full" %>
+              <p class="mt-2 text-sm text-base-content/60">
+                Find this ID in your Hetzner Cloud Console under server details. It's the numeric ID (not the name).
+              </p>
+            </div>
+
+            <!-- Auto-Snapshot Checkbox -->
+            <div class="alert alert-info">
+              <div class="flex items-start">
+                <div class="flex items-center h-5">
+                  <%= form.check_box :enable_hetzner_snapshot,
+                                      id: 'enable_hetzner_snapshot',
+                                      class: "checkbox checkbox-primary" %>
+                </div>
+                <div class="ml-3">
+                  <%= form.label :enable_hetzner_snapshot, "Create snapshot before system updates", class: "font-medium text-base-content cursor-pointer" %>
+                  <p class="text-sm text-base-content/80 mt-1">
+                    Automatically create a Hetzner Cloud snapshot before applying system updates (security or full).
+                    The system will wait 15 minutes for the snapshot to complete before proceeding with updates.
+                    Old snapshots are automatically cleaned up (keeps last 3).
+                  </p>
+                  <p class="text-xs mt-2 font-medium">
+                    Note: Snapshots are created when you manually trigger updates or via scheduled tasks. Not created during update checks.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Hetzner Fields Toggle JavaScript -->
+        <script>
+          document.getElementById('hetzner_api_key_select').addEventListener('change', function() {
+            const hetznerFields = document.getElementById('hetzner_fields');
+            if (this.value) {
+              hetznerFields.style.display = 'block';
+            } else {
+              hetznerFields.style.display = 'none';
+              // Clear fields when hiding
+              document.querySelector('#server_hetzner_server_id').value = '';
+              document.querySelector('#enable_hetzner_snapshot').checked = false;
+            }
+          });
+        </script>
+
+        <!-- Proxmox VE Integration -->
+        <div class="border-t border-base-content/10 pt-6">
+          <h3 class="text-sm font-semibold text-base-content mb-3">Proxmox VE Integration (Optional)</h3>
+          <p class="text-sm text-base-content/80 mb-4">
+            Enable Proxmox VE features like VM/LXC power control (start/stop/shutdown/reboot) and snapshot management.
+          </p>
+
+          <!-- Proxmox API Key Selection -->
+          <div class="mb-4">
+            <%= form.label :proxmox_api_key_id, "Proxmox Instance (API Key)", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+            <%= form.select :proxmox_api_key_id,
+                            options_for_select(
+                              [['Not a Proxmox VM/LXC', nil]] +
+                              ProxmoxApiKey.enabled.map { |key| [key.name, key.id] },
+                              @server.proxmox_api_key_id
+                            ),
+                            {},
+                            id: 'proxmox_api_key_select',
+                            class: "select select-bordered w-full" %>
+            <p class="mt-2 text-sm text-base-content/60">
+              Select which Proxmox instance this server belongs to. Configure API keys in
+              <%= link_to "Settings", settings_proxmox_api_keys_path, class: "text-primary hover:text-primary/80 underline", target: "_blank" %>.
+            </p>
+          </div>
+
+          <!-- Proxmox Fields Container (shown when API key is selected) -->
+          <div id="proxmox_fields" style="<%= 'display:none' unless @server.proxmox_api_key_id.present? %>">
+
+            <!-- Autodiscover Section -->
+            <div class="mb-6 p-4 alert alert-info">
+              <h4 class="text-sm font-semibold mb-3">Quick Setup: Autodiscover</h4>
+              <p class="text-sm text-base-content/80 mb-3">
+                Automatically discover and select VMs/LXCs from your Proxmox node instead of manually entering details.
+              </p>
+
+              <div class="flex items-center space-x-3">
+                <%= form.text_field :proxmox_node,
+                                    placeholder: "Enter node name (e.g., pve-1.fritz.box)",
+                                    id: "discover_node_input",
+                                    class: "input input-bordered flex-1" %>
+                <button type="button" id="discover_vms_btn"
+                        class="btn btn-secondary flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                  Discover VMs
+                </button>
+              </div>
+
+              <!-- Discovered VMs List (initially hidden) -->
+              <div id="discovered_vms_container" class="mt-4" style="display: none;">
+                <h5 class="text-sm font-semibold mb-2">Available VMs & LXCs:</h5>
+                <div id="discovered_vms_list" class="space-y-2 max-h-64 overflow-y-auto">
+                  <!-- VMs will be inserted here via JavaScript -->
+                </div>
+              </div>
+
+              <!-- Loading/Error Messages -->
+              <div id="discover_message" class="mt-3" style="display: none;"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <!-- Proxmox Node -->
+              <div>
+                <%= form.label :proxmox_node, "Proxmox Node (or use autodiscover above)", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+                <%= form.text_field :proxmox_node,
+                                      placeholder: "e.g., pve-1, pve-1.fritz.box",
+                                      id: "server_proxmox_node",
+                                      class: "input input-bordered w-full" %>
+                <p class="mt-1 text-xs text-base-content/60">
+                  Proxmox node hostname (must match Salt minion ID)
+                </p>
+              </div>
+
+              <!-- Proxmox VMID -->
+              <div>
+                <%= form.label :proxmox_vmid, "VM/LXC ID (VMID)", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+                <%= form.number_field :proxmox_vmid,
+                                      placeholder: "e.g., 100, 101, 102",
+                                      id: "server_proxmox_vmid",
+                                      class: "input input-bordered w-full" %>
+                <p class="mt-1 text-xs text-base-content/60">
+                  Numeric VM or container ID from Proxmox
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <!-- Proxmox Type -->
+              <div>
+                <%= form.label :proxmox_type, "Type", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+                <%= form.select :proxmox_type,
+                                options_for_select(
+                                  [
+                                    ['QEMU Virtual Machine', 'qemu'],
+                                    ['LXC Container', 'lxc']
+                                  ],
+                                  @server.proxmox_type
+                                ),
+                                {},
+                                id: "server_proxmox_type",
+                                class: "select select-bordered w-full" %>
+                <p class="mt-1 text-xs text-base-content/60">
+                  Select QEMU (VM) or LXC (container)
+                </p>
+              </div>
+
+              <!-- Proxmox Cluster (Optional) -->
+              <div>
+                <%= form.label :proxmox_cluster, "Cluster Name (Optional)", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+                <%= form.text_field :proxmox_cluster,
+                                      placeholder: "e.g., homelab-cluster",
+                                      class: "input input-bordered w-full" %>
+                <p class="mt-1 text-xs text-base-content/60">
+                  Optional: Proxmox cluster name if applicable
+                </p>
+              </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-info">
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm">
+                    <strong>Proxmox Integration Features:</strong>
+                  </p>
+                  <ul class="text-sm text-base-content/80 mt-2 space-y-1 list-disc list-inside">
+                    <li>Start, stop, shutdown, and reboot VM/LXC</li>
+                    <li>Real-time power state monitoring</li>
+                    <li>Create, list, rollback, and delete snapshots</li>
+                    <li>Full command audit trail</li>
+                    <li>All operations execute via Salt → Proxmox API</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Proxmox Fields Toggle JavaScript -->
+        <script>
+          document.getElementById('proxmox_api_key_select').addEventListener('change', function() {
+            const proxmoxFields = document.getElementById('proxmox_fields');
+            if (this.value) {
+              proxmoxFields.style.display = 'block';
+            } else {
+              proxmoxFields.style.display = 'none';
+              // Clear fields when hiding
+              document.querySelector('#server_proxmox_node').value = '';
+              document.querySelector('#server_proxmox_vmid').value = '';
+              document.querySelector('#server_proxmox_cluster').value = '';
+            }
+          });
+
+          // Proxmox VM Discovery
+          document.getElementById('discover_vms_btn').addEventListener('click', function() {
+            const apiKeySelect = document.getElementById('proxmox_api_key_select');
+            const nodeInput = document.getElementById('discover_node_input');
+            const button = this;
+            const messageDiv = document.getElementById('discover_message');
+            const vmsContainer = document.getElementById('discovered_vms_container');
+            const vmsList = document.getElementById('discovered_vms_list');
+
+            // Validation
+            const apiKeyId = apiKeySelect.value;
+            const nodeName = nodeInput.value.trim();
+
+            if (!apiKeyId) {
+              showMessage('Please select a Proxmox API key first', 'error');
+              return;
+            }
+
+            if (!nodeName) {
+              showMessage('Please enter a Proxmox node name', 'error');
+              return;
+            }
+
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Discovering...';
+
+            // Make API request
+            fetch(`/settings/proxmox_api_keys/${apiKeyId}/discover_vms`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+              },
+              body: JSON.stringify({ node: nodeName })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success && data.vms && data.vms.length > 0) {
+                // Display VMs
+                vmsList.innerHTML = '';
+                data.vms.forEach(vm => {
+                  const vmCard = createVMCard(vm);
+                  vmsList.appendChild(vmCard);
+                });
+                vmsContainer.style.display = 'block';
+                showMessage(`Found ${data.vms.length} VM(s)/LXC(s)`, 'success');
+              } else if (data.success && data.vms && data.vms.length === 0) {
+                vmsContainer.style.display = 'none';
+                showMessage('No VMs or LXCs found on this node', 'warning');
+              } else {
+                vmsContainer.style.display = 'none';
+                showMessage(data.message || 'Failed to discover VMs', 'error');
+              }
+            })
+            .catch(error => {
+              vmsContainer.style.display = 'none';
+              showMessage('Error: ' + error.message, 'error');
+            })
+            .finally(() => {
+              // Re-enable button
+              button.disabled = false;
+              button.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>Discover VMs';
+            });
+          });
+
+          function createVMCard(vm) {
+            const card = document.createElement('div');
+            card.className = 'p-3 bg-base-200 border border-base-content/10 rounded-lg hover:border-purple-500 cursor-pointer transition';
+
+            const statusColor = vm.status === 'running' ? 'text-success' : 'text-base-content/60';
+            const typeLabel = vm.type === 'qemu' ? 'VM' : 'LXC';
+            const typeBadge = vm.type === 'qemu' ? 'badge badge-info badge-xs' : 'badge badge-success badge-xs';
+
+            card.innerHTML = `
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-2">
+                    <span class="font-mono font-semibold text-base-content">${vm.vmid}</span>
+                    <span class="text-base-content">${vm.name}</span>
+                    <span class="${typeBadge}">${typeLabel}</span>
+                  </div>
+                  <div class="text-xs ${statusColor} mt-1">
+                    Status: ${vm.status} | CPUs: ${vm.cpus} | Memory: ${formatBytes(vm.maxmem)}
+                  </div>
+                </div>
+                <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            `;
+
+            // Click handler to populate form
+            card.addEventListener('click', function() {
+              document.getElementById('server_proxmox_node').value = document.getElementById('discover_node_input').value.trim();
+              document.getElementById('server_proxmox_vmid').value = vm.vmid;
+              document.getElementById('server_proxmox_type').value = vm.type;
+
+              // Visual feedback
+              document.querySelectorAll('#discovered_vms_list > div').forEach(el => {
+                el.classList.remove('border-secondary', 'bg-secondary/10');
+                el.classList.add('border-base-content/10');
+              });
+              card.classList.add('border-secondary', 'bg-secondary/10');
+              card.classList.remove('border-base-content/10');
+
+              showMessage(`Selected: ${vm.name} (${typeLabel} ${vm.vmid})`, 'success');
+            });
+
+            return card;
+          }
+
+          function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+          }
+
+          function showMessage(text, type) {
+            const messageDiv = document.getElementById('discover_message');
+            const colors = {
+              success: 'alert alert-success',
+              error: 'alert alert-error',
+              warning: 'alert alert-warning'
+            };
+
+            messageDiv.className = colors[type] || 'alert alert-info';
+            messageDiv.textContent = text;
+            messageDiv.style.display = 'block';
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+              messageDiv.style.display = 'none';
+            }, 5000);
+          }
+        </script>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3 pt-4 border-t border-base-content/10">
+          <%= link_to "Cancel", server_path(@server), class: "px-4 py-2 border border-base-content/10 text-base-content/80 rounded-lg hover:bg-base-200 transition" %>
+          <%= form.submit "Save Changes", class: "px-6 py-2 btn-primary text-white rounded-lg  transition cursor-pointer" %>
+        </div>
+
+      <% end %>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-6 bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-4">
+      <h3 class="font-medium text-base-content mb-3">Quick Actions</h3>
+      <div class="flex gap-3">
+        <%= button_to "Sync Server Data", sync_server_path(@server), method: :post, class: "btn btn-success" %>
+        <%= link_to "View Server Details", server_path(@server), class: "btn btn-primary" %>
+      </div>
+    </div>
+
+  </div>
+<% end %>

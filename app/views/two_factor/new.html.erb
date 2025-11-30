@@ -1,0 +1,103 @@
+<% content_for :head do %>
+  <title>Enable 2FA - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<!-- Navigation -->
+  <nav class="bg-base-200 shadow-sm border-b border-base-content/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center space-x-8">
+          <h1 class="text-xl font-bold text-base-content">Enable Two-Factor Authentication</h1>
+          <%= link_to "Dashboard", dashboard_path, class: "text-primary hover:text-primary-focus" %>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-sm text-base-content/80"><%= current_user.email %></span>
+          <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "px-4 py-2 bg-base-200 text-white rounded-lg hover:bg-base-200" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <% if flash[:alert] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:alert] %></p>
+      </div>
+    <% end %>
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-3xl font-bold text-base-content">Set Up Two-Factor Authentication</h2>
+      <p class="text-base-content/80 mt-1">Scan the QR code with your authenticator app</p>
+    </div>
+
+    <!-- Setup Instructions -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h3 class="text-lg font-medium text-base-content mb-4">Step 1: Install an Authenticator App</h3>
+      <p class="text-sm text-base-content/80 mb-4">
+        If you don't have an authenticator app yet, install one of these:
+      </p>
+      <ul class="list-disc list-inside space-y-1 text-sm text-base-content/80 mb-4">
+        <li>Google Authenticator (iOS/Android)</li>
+        <li>Microsoft Authenticator (iOS/Android)</li>
+        <li>Authy (iOS/Android/Desktop)</li>
+        <li>1Password (if you use it as your password manager)</li>
+      </ul>
+    </div>
+
+    <!-- QR Code -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h3 class="text-lg font-medium text-base-content mb-4">Step 2: Scan this QR Code</h3>
+
+      <div class="flex justify-center mb-6">
+        <div class="bg-base-200 p-4 rounded-lg border-4 border-base-content/20">
+          <%= @qr_code.as_svg(
+                module_size: 4,
+                color: "000",
+                shape_rendering: "crispEdges",
+                standalone: true
+              ).html_safe %>
+        </div>
+      </div>
+
+      <div class="bg-base-300 rounded-lg p-4">
+        <p class="text-xs text-base-content/80 mb-2"><strong>Can't scan the QR code?</strong> Enter this code manually:</p>
+        <code class="block bg-base-200 border border-base-content/20 text-base-content px-3 py-2 rounded text-sm font-mono text-center break-all">
+          <%= current_user.otp_secret %>
+        </code>
+      </div>
+    </div>
+
+    <!-- Verification Form -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-medium text-base-content mb-4">Step 3: Verify Setup</h3>
+      <p class="text-sm text-base-content/80 mb-4">
+        Enter the 6-digit code from your authenticator app to complete setup:
+      </p>
+
+      <%= form_with url: two_factor_path, method: :post, class: "space-y-4" do |f| %>
+        <div>
+          <%= label_tag :otp_code, "Verification Code", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= text_field_tag :otp_code, nil,
+              placeholder: "123456",
+              autocomplete: "off",
+              maxlength: 6,
+              pattern: "[0-9]{6}",
+              required: true,
+              autofocus: true,
+              class: "input input-bordered w-full text-center text-2xl font-mono tracking-widest" %>
+          <p class="mt-2 text-xs text-base-content/60">Enter the 6-digit code from your authenticator app</p>
+        </div>
+
+        <div class="flex gap-3">
+          <%= link_to "Cancel", two_factor_path, class: "btn btn-ghost flex-1" %>
+          <%= f.submit "Verify and Enable 2FA", class: "btn btn-primary flex-1" %>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+<% end %>

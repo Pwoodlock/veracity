@@ -1,0 +1,345 @@
+<% content_for :head do %>
+  <title>Email Settings - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-base-content">Email / SMTP Configuration</h1>
+      <p class="mt-2 text-sm text-base-content/80">Configure SMTP settings for sending password reset emails, notifications, and alerts</p>
+    </div>
+
+    <!-- Flash Messages -->
+    <% if flash[:notice] %>
+      <div class="mb-6 alert alert-success">
+        <%= flash[:notice] %>
+      </div>
+    <% end %>
+
+    <% if flash[:alert] %>
+      <div class="mb-6 alert alert-error">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <%= form_with url: settings_update_email_path, method: :post, class: "space-y-6" do |f| %>
+
+      <!-- SMTP Server Settings -->
+      <div class="bg-base-200 shadow rounded-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-base-content">SMTP Server Settings</h2>
+          <div class="flex gap-2">
+            <%= link_to "/rails/mailers", target: "_blank", class: "btn btn-primary btn-sm" do %>
+              Email Previews
+            <% end %>
+            <%= button_tag type: "button", id: "reset-settings-btn", class: "btn btn-warning btn-sm" do %>
+              Reset to Defaults
+            <% end %>
+          </div>
+        </div>
+        <p class="text-sm text-base-content/80 mb-6">Configure your SMTP provider (SMTP2GO, SendGrid, Mailgun, etc.)</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- SMTP Address -->
+          <div>
+            <label class="block text-sm font-medium text-base-content mb-2">SMTP Server Address</label>
+            <input type="text" name="smtp[address]" value="<%= @smtp_config[:address] %>"
+                   placeholder="mail.smtp2go.com"
+                   class="input input-bordered w-full">
+            <p class="mt-1 text-xs text-base-content/40">Example: mail.smtp2go.com, smtp.sendgrid.net</p>
+          </div>
+
+          <!-- SMTP Port -->
+          <div>
+            <label class="block text-sm font-medium text-base-content mb-2">Port</label>
+            <select name="smtp[port]" class="select select-bordered w-full">
+              <option value="465" <%= 'selected' if @smtp_config[:port].to_s == '465' %>>465 (SSL)</option>
+              <option value="587" <%= 'selected' if @smtp_config[:port].to_s == '587' %>>587 (STARTTLS)</option>
+              <option value="2525" <%= 'selected' if @smtp_config[:port].to_s == '2525' %>>2525 (Alternative)</option>
+              <option value="25" <%= 'selected' if @smtp_config[:port].to_s == '25' %>>25 (Standard)</option>
+            </select>
+            <p class="mt-1 text-xs text-base-content/40">465 recommended for SSL, 587 for STARTTLS</p>
+          </div>
+
+          <!-- SMTP Username -->
+          <div>
+            <label class="block text-sm font-medium text-base-content mb-2">Username</label>
+            <input type="text" name="smtp[username]" value="<%= @smtp_config[:username] %>"
+                   placeholder="your-smtp-username" autocomplete="off"
+                   class="input input-bordered w-full">
+          </div>
+
+          <!-- SMTP Password -->
+          <div>
+            <label class="block text-sm font-medium text-base-content mb-2">Password / API Key</label>
+            <div class="flex gap-2">
+              <input type="password" id="smtp_password" name="smtp[password]" value="<%= @smtp_config[:password] %>"
+                     placeholder="<%= @smtp_config[:password].present? ? '••••••••••••' : 'Enter password' %>"
+                     autocomplete="new-password"
+                     class="input input-bordered flex-1">
+              <button type="button" id="toggle-password" class="btn btn-ghost">
+                👁️
+              </button>
+            </div>
+            <p class="mt-1 text-xs text-base-content/40">Leave blank to keep current password</p>
+          </div>
+
+          <!-- Authentication -->
+          <div>
+            <label class="block text-sm font-medium text-base-content mb-2">Authentication</label>
+            <select name="smtp[authentication]" class="select select-bordered w-full">
+              <option value="plain" <%= 'selected' if @smtp_config[:authentication] == 'plain' %>>Plain</option>
+              <option value="login" <%= 'selected' if @smtp_config[:authentication] == 'login' %>>Login</option>
+              <option value="cram_md5" <%= 'selected' if @smtp_config[:authentication] == 'cram_md5' %>>CRAM-MD5</option>
+            </select>
+          </div>
+
+          <!-- SSL/TLS -->
+          <div>
+            <label class="block text-sm font-medium text-base-content mb-2">SSL/TLS Encryption</label>
+            <select name="smtp[enable_ssl]" class="select select-bordered w-full">
+              <option value="true" <%= 'selected' if @smtp_config[:enable_ssl].to_s == 'true' %>>Enable SSL (Port 465)</option>
+              <option value="false" <%= 'selected' if @smtp_config[:enable_ssl].to_s == 'false' %>>Enable STARTTLS (Port 587)</option>
+            </select>
+          </div>
+
+          <!-- Domain -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-base-content mb-2">Domain (HELO domain)</label>
+            <input type="text" name="smtp[domain]" value="<%= @smtp_config[:domain] %>"
+                   placeholder="yourdomain.com"
+                   class="input input-bordered w-full">
+            <p class="mt-1 text-xs text-base-content/40">Your domain name for SMTP HELO command</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mailer Settings -->
+      <div class="bg-base-200 shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold text-base-content mb-4">Email Settings</h2>
+        <p class="text-sm text-base-content/80 mb-6">Configure sender information and application URLs</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- From Email -->
+          <div>
+            <label class="block text-sm font-medium text-base-content mb-2">From Email Address</label>
+            <input type="email" name="mailer[from]" value="<%= @mailer_config[:from] %>"
+                   placeholder="noreply@yourdomain.com"
+                   class="input input-bordered w-full">
+            <p class="mt-1 text-xs text-base-content/40">Email address shown in "From" field</p>
+          </div>
+
+          <!-- Application Host -->
+          <div>
+            <label class="block text-sm font-medium text-base-content mb-2">Application Host</label>
+            <input type="text" name="mailer[host]" value="<%= @mailer_config[:host] %>"
+                   placeholder="sm.yourdomain.com"
+                   class="input input-bordered w-full">
+            <p class="mt-1 text-xs text-base-content/40">Used for generating links in emails</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="bg-base-200 shadow rounded-lg p-6">
+        <div class="flex justify-between items-center">
+          <button type="submit" class="btn btn-primary">
+            Save Settings
+          </button>
+          <div class="flex gap-3">
+            <button type="button" id="test-connection-btn" class="btn btn-ghost">
+              🔌 Test Connection
+            </button>
+            <button type="button" id="send-test-email-btn" data-modal-target="sendTestModal" class="btn btn-success">
+              📨 Send Test Email
+            </button>
+          </div>
+        </div>
+      </div>
+
+    <% end %>
+
+    <!-- Test Results -->
+    <div id="test-results" class="hidden mt-6">
+      <div id="test-alert" class="px-4 py-3 rounded-lg">
+        <span id="test-message"></span>
+      </div>
+    </div>
+
+    <!-- Quick Setup Guide -->
+    <div class="mt-6 bg-base-200 shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Quick Setup Guide</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-semibold text-base-content mb-2">SMTP2GO Configuration</h3>
+          <ul class="text-sm text-base-content/80 space-y-1">
+            <li><strong>Server:</strong> mail.smtp2go.com</li>
+            <li><strong>Port:</strong> 465 (SSL) or 587 (STARTTLS)</li>
+            <li><strong>Authentication:</strong> Plain</li>
+            <li><strong>Username:</strong> Your SMTP2GO username</li>
+            <li><strong>Password:</strong> Your SMTP2GO password or API key</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-semibold text-base-content mb-2">Email Features</h3>
+          <ul class="text-sm text-base-content/80 space-y-1">
+            <li>✉️ Password reset emails (Devise)</li>
+            <li>👋 New user welcome emails</li>
+            <li>👤 Admin notifications for new users</li>
+            <li>2FA enable/disable notifications</li>
+            <li>Server offline alerts (coming soon)</li>
+            <li>[!] Task failure notifications (coming soon)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Send Test Email Modal -->
+  <div id="sendTestModal" class="hidden fixed inset-0 bg-base-200 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-base-200">
+      <div class="mt-3">
+        <h3 class="text-lg font-semibold text-base-content mb-4">Send Test Email</h3>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-base-content mb-2">Recipient Email Address</label>
+          <input type="email" id="test-email-recipient" value="<%= current_user.email %>"
+                 placeholder="email@example.com"
+                 class="input input-bordered w-full">
+        </div>
+        <div class="flex gap-3 justify-end">
+          <button type="button" id="close-modal" class="btn btn-ghost">
+            Cancel
+          </button>
+          <button type="button" id="confirm-send-test" class="btn btn-primary">
+            Send Test Email
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Toggle password visibility
+      document.getElementById('toggle-password')?.addEventListener('click', function() {
+        const passwordInput = document.getElementById('smtp_password');
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          this.textContent = '🙈';
+        } else {
+          passwordInput.type = 'password';
+          this.textContent = '👁️';
+        }
+      });
+
+      // Test connection
+      document.getElementById('test-connection-btn')?.addEventListener('click', function() {
+        const btn = this;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Testing...';
+
+        fetch('<%= settings_test_connection_email_path %>', {
+          method: 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          showTestResult(data.success, data.message);
+        })
+        .catch(error => {
+          showTestResult(false, 'Connection test failed: ' + error.message);
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        });
+      });
+
+      // Modal controls
+      const modal = document.getElementById('sendTestModal');
+      document.getElementById('send-test-email-btn')?.addEventListener('click', function() {
+        modal.classList.remove('hidden');
+      });
+
+      document.getElementById('close-modal')?.addEventListener('click', function() {
+        modal.classList.add('hidden');
+      });
+
+      // Send test email
+      document.getElementById('confirm-send-test')?.addEventListener('click', function() {
+        const recipient = document.getElementById('test-email-recipient').value;
+        const btn = this;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Sending...';
+
+        fetch('<%= settings_send_test_email_path %>', {
+          method: 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ recipient: recipient })
+        })
+        .then(response => response.json())
+        .then(data => {
+          showTestResult(data.success, data.message);
+          if (data.success) {
+            modal.classList.add('hidden');
+          }
+        })
+        .catch(error => {
+          showTestResult(false, 'Failed to send test email: ' + error.message);
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        });
+      });
+
+      // Reset settings
+      document.getElementById('reset-settings-btn')?.addEventListener('click', function() {
+        if (confirm('Are you sure you want to reset email settings to environment defaults?')) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '<%= settings_reset_email_path %>';
+
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'authenticity_token';
+          csrfInput.value = document.querySelector('[name="csrf-token"]').content;
+          form.appendChild(csrfInput);
+
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+
+      function showTestResult(success, message) {
+        const resultsDiv = document.getElementById('test-results');
+        const alertDiv = document.getElementById('test-alert');
+        const messageSpan = document.getElementById('test-message');
+
+        alertDiv.className = success
+          ? 'alert alert-success'
+          : 'alert alert-error';
+
+        messageSpan.innerHTML = (success ? '[OK] ' : '[X] ') + message;
+        resultsDiv.classList.remove('hidden');
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          resultsDiv.classList.add('hidden');
+        }, 5000);
+      }
+    });
+  </script>
+<% end %>

@@ -1,0 +1,34 @@
+<% content_for :head do %>
+  <title>Edit <%= @user.email %> - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-3xl font-bold text-base-content">Edit User</h2>
+      <p class="text-base-content/80 mt-1">Update user account and permissions</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-base-200 rounded-lg shadow-md border border-base-content/10 p-6">
+      <%= render 'form', user: @user %>
+    </div>
+
+    <!-- 2FA Management -->
+    <% if @user.otp_required_for_login %>
+      <div class="mt-6 bg-base-200 rounded-lg shadow-md border border-base-content/10 p-6">
+        <h3 class="font-medium text-base-content mb-3">Two-Factor Authentication</h3>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-base-content/80">2FA is currently <span class="font-medium text-success">enabled</span> for this user</p>
+          </div>
+          <%= button_to "Disable 2FA", toggle_otp_user_path(@user), method: :post,
+              data: { confirm: "Are you sure you want to disable 2FA for #{@user.email}?" },
+              class: "btn btn-error" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

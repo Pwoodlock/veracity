@@ -1,0 +1,26 @@
+<% content_for :head do %>
+  <title>New Task - Veracity</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Breadcrumbs -->
+  <div class="text-sm breadcrumbs mb-4">
+    <ul>
+      <li><%= link_to "Tasks", tasks_path %></li>
+      <li>New Task</li>
+    </ul>
+  </div>
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-base-content">Create New Task</h1>
+    <p class="text-base-content/60 mt-1">Define a new automated task for your servers</p>
+  </div>
+
+  <!-- Form -->
+  <div class="bg-base-200 rounded-lg border border-base-content/10 p-6">
+    <%= render 'tasks/form', task: @task %>
+  </div>
+</div><% end %>

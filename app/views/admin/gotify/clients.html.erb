@@ -1,0 +1,129 @@
+<% content_for :head do %>
+  <title>Client Tokens - Gotify Admin</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= render 'admin/gotify/tabs', active: 'clients' %>
+
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-base-content">Client Tokens</h1>
+      <button onclick="document.getElementById('create-modal').classList.remove('hidden')"
+              class="btn btn-primary">
+        Create Client Token
+      </button>
+    </div>
+
+    <% if flash[:success] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:success] %></p>
+      </div>
+    <% end %>
+    <% if flash[:client_token] %>
+      <div class="alert alert-info mb-6">
+        <p class="font-medium mb-2">Client token created successfully!</p>
+        <div class="flex items-center space-x-2">
+          <code class="flex-1 text-xs bg-base-200 px-3 py-2 rounded border" id="new-token"><%= flash[:client_token] %></code>
+          <button onclick="copyNewToken()" class="btn btn-primary btn-sm">
+            Copy Token
+          </button>
+        </div>
+        <p class="text-sm mt-2">Save this token securely. You won't be able to see it again.</p>
+      </div>
+    <% end %>
+    <% if flash[:error] %>
+      <div class="alert alert-error mb-6">
+        <p><%= flash[:error] %></p>
+      </div>
+    <% end %>
+
+    <div class="bg-base-200 rounded-lg shadow overflow-hidden">
+      <% if @clients.any? %>
+        <table class="min-w-full divide-y divide-base-content/10">
+          <thead class="bg-base-300">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/40 uppercase">Name</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/40 uppercase">Token</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content/40 uppercase">Created</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-base-content/40 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-base-content/10">
+            <% @clients.each do |client| %>
+              <tr class="hover:bg-base-300">
+                <td class="px-6 py-4 text-sm font-medium text-base-content"><%= client['name'] %></td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center space-x-2">
+                    <code class="text-xs bg-base-100 px-2 py-1 rounded">••••••••••••••••</code>
+                    <span class="text-xs text-base-content/40">Hidden for security</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-base-content/40">
+                  <%= Time.parse(client['created'] || Time.now.to_s).strftime('%B %d, %Y') rescue 'Unknown' %>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <%= button_to "Revoke", admin_gotify_revoke_client_path(id: client['id']), method: :delete,
+                      data: { confirm: "Revoke client token '#{client['name']}'?" },
+                      class: "text-error hover:text-error text-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="px-6 py-12 text-center">
+          <svg class="mx-auto h-12 w-12 text-base-content/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-base-content">No client tokens</h3>
+          <p class="mt-1 text-sm text-base-content/40">Client tokens are used to read messages from Gotify.</p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Info Card -->
+    <div class="alert alert-info mt-6">
+      <h3 class="text-sm font-semibold mb-2">About Client Tokens</h3>
+      <p class="text-sm">
+        Client tokens are used by Gotify mobile apps and web clients to receive notifications.
+        Each client (phone, browser, etc.) should have its own token for security.
+      </p>
+    </div>
+  </div>
+
+  <!-- Create Client Modal -->
+  <div id="create-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-base-200 rounded-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-xl font-bold mb-4">Create Client Token</h2>
+      <%= form_with url: admin_gotify_create_client_path, method: :post, class: "space-y-4" do %>
+        <div>
+          <label class="block text-sm font-medium text-base-content mb-1">Client Name</label>
+          <input type="text" name="name" required placeholder="e.g., My Phone"
+                 class="input input-bordered w-full">
+          <p class="text-xs text-base-content/40 mt-1">Give this client a descriptive name</p>
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button" onclick="document.getElementById('create-modal').classList.add('hidden')"
+                  class="px-4 py-2 border rounded-lg text-base-content hover:bg-base-300">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <script>
+    function copyNewToken() {
+      const token = document.getElementById('new-token').textContent;
+      navigator.clipboard.writeText(token).then(() => {
+        alert('Token copied to clipboard!');
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('create-modal').classList.add('hidden');
+      }
+    });
+  </script>
+<% end %>

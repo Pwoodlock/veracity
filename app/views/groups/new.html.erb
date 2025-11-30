@@ -1,0 +1,19 @@
+<% content_for :head do %>
+  <title>Create New Group - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-3xl font-bold text-base-content">Create New Group</h2>
+      <p class="text-base-content/80 mt-1">Organize your servers into logical groups</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-base-200 rounded-lg shadow-md border border-base-content/10 p-6">
+      <%= render 'form', group: @group %>
+    </div>
+  </div>
+<% end %>

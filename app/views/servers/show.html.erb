@@ -1,0 +1,472 @@
+<% content_for :head do %>
+  <title><%= @server.hostname %> - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Server Header -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-base-content"><%= @server.hostname %></h1>
+          <p class="text-base-content/80 mt-1"><%= @server.ip_address %></p>
+        </div>
+        <span class="status-badge status-<%= @server.status %>">
+          <%= @server.status %>
+        </span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap gap-3 pt-4 border-t border-base-content/10">
+        <%= link_to edit_server_path(@server), class: "inline-flex items-center px-4 py-2 btn-primary text-white text-sm font-medium rounded-lg  transition" do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+          Edit Server
+        <% end %>
+
+        <%= button_to sync_server_path(@server), method: :post, class: "btn btn-success", data: { confirm: "Sync server data from Salt?" } do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Sync Data
+        <% end %>
+
+        <%= link_to diagnose_server_path(@server), class: "btn btn-secondary", data: { turbo: false } do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+          </svg>
+          Run Diagnostics
+        <% end %>
+
+        <% if @server.proxmox_server? %>
+          <%= button_to manual_refresh_proxmox_server_path(@server), method: :post, class: "btn btn-info" do %>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh Proxmox
+          <% end %>
+        <% end %>
+
+        <%= button_to server_path(@server), method: :delete, class: "btn btn-error", data: { confirm: "Are you sure you want to delete #{@server.hostname}? This action cannot be undone." } do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          Delete Server
+        <% end %>
+
+        <%= link_to servers_path, class: "inline-flex items-center px-4 py-2 border border-base-content/10 bg-base-200 text-base-content text-sm font-medium rounded-lg hover:bg-base-300 transition" do %>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back to Servers
+        <% end %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+      <!-- System Information -->
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+        <div class="px-6 py-4 border-b border-base-content/10">
+          <h2 class="text-lg font-semibold text-base-content">System Information</h2>
+        </div>
+        <div class="px-6 py-4 space-y-3">
+          <div class="flex justify-between">
+            <span class="text-base-content/80">Minion ID:</span>
+            <span class="font-mono text-sm text-base-content"><%= @server.minion_id %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/80">Operating System:</span>
+            <span class="text-base-content"><%= @server.os_name %> <%= @server.os_version %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/80">OS Family:</span>
+            <span class="text-base-content"><%= @server.os_family %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/80">CPU Cores:</span>
+            <span class="text-base-content"><%= @server.cpu_cores %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/80">Memory:</span>
+            <span class="text-base-content"><%= @server.memory_gb %> GB</span>
+          </div>
+          <% if @server.disk_gb.present? %>
+            <div class="flex justify-between">
+              <span class="text-base-content/80">Disk:</span>
+              <span class="text-base-content"><%= @server.disk_gb %> GB</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Connection Status -->
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+        <div class="px-6 py-4 border-b border-base-content/10">
+          <h2 class="text-lg font-semibold text-base-content">Connection Status</h2>
+        </div>
+        <div class="px-6 py-4 space-y-3">
+          <div class="flex justify-between">
+            <span class="text-base-content/80">Last Seen:</span>
+            <span class="text-base-content"><%= @server.last_seen ? time_ago_in_words(@server.last_seen) + " ago" : "Never" %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/80">Last Heartbeat:</span>
+            <span class="text-base-content"><%= @server.last_heartbeat ? time_ago_in_words(@server.last_heartbeat) + " ago" : "Never" %></span>
+          </div>
+          <% if @server.environment.present? %>
+            <div class="flex justify-between">
+              <span class="text-base-content/80">Environment:</span>
+              <span class="px-2 py-1 bg-base-200 text-base-content rounded text-sm"><%= @server.environment %></span>
+            </div>
+          <% end %>
+          <% if @server.location.present? %>
+            <div class="flex justify-between">
+              <span class="text-base-content/80">Location:</span>
+              <span class="text-base-content"><%= @server.location %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Diagnostic Information (New Section) -->
+    <% if @server.last_ping_attempt.present? || @server.ping_failure_count.to_i > 0 %>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg mb-6">
+        <div class="px-6 py-4 border-b border-base-content/10 flex justify-between items-center">
+          <h2 class="text-lg font-semibold text-base-content">Diagnostic Information</h2>
+          <% if @server.ping_failure_count.to_i >= 3 %>
+            <span class="badge badge-error badge-xs">
+              ATTENTION NEEDED
+            </span>
+          <% elsif @server.ping_failure_count.to_i > 0 %>
+            <span class="badge badge-warning badge-xs">
+              DEGRADED
+            </span>
+          <% else %>
+            <span class="badge badge-success badge-xs">
+              HEALTHY
+            </span>
+          <% end %>
+        </div>
+        <div class="px-6 py-4 space-y-3">
+          <div class="flex justify-between">
+            <span class="text-base-content/80">Last Ping Attempt:</span>
+            <span class="text-base-content"><%= @server.last_ping_attempt ? time_ago_in_words(@server.last_ping_attempt) + " ago" : "Never" %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/80">Last Successful Ping:</span>
+            <span class="text-base-content"><%= @server.last_ping_success ? time_ago_in_words(@server.last_ping_success) + " ago" : "Never" %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/80">Consecutive Failures:</span>
+            <% failure_count = @server.ping_failure_count || 0 %>
+            <% failure_class = failure_count >= 5 ? 'text-error' : failure_count >= 3 ? 'text-warning' : 'text-success' %>
+            <span class="<%= failure_class %> font-semibold"><%= failure_count %></span>
+          </div>
+          <% if @server.last_ping_error.present? %>
+            <div class="pt-3 border-t border-base-content/10">
+              <span class="text-base-content/80 block mb-2">Last Error:</span>
+              <div class="bg-base-300 p-3 rounded">
+                <code class="text-sm text-error"><%= @server.last_ping_error %></code>
+              </div>
+            </div>
+          <% end %>
+          <% if @server.proxmox_server? && @server.proxmox_power_state.present? %>
+            <div class="pt-3 border-t border-base-content/10">
+              <div class="flex justify-between">
+                <span class="text-base-content/80">Proxmox Power State:</span>
+                <span class="<%= @server.proxmox_power_state_badge[:class] %> px-2 py-1 rounded text-sm">
+                  <%= @server.proxmox_power_state_badge[:text] %>
+                </span>
+              </div>
+              <% if @server.status == 'offline' && @server.proxmox_power_state == 'running' %>
+                <div class="alert alert-warning mt-2">
+                  <p class="text-sm">
+                    VM is running in Proxmox but Salt minion is not responding. Try running diagnostics or manually refreshing Proxmox status.
+                  </p>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Hetzner Cloud Control Panel (only shown for Hetzner servers) -->
+    <% if @server.can_use_hetzner_features? %>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg mb-6">
+        <div class="px-6 py-4 border-b border-base-content/10">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-base-content">Hetzner Cloud Control</h2>
+              <p class="text-sm text-base-content/80 mt-1">
+                Project: <span class="font-medium"><%= @server.hetzner_api_key.name %></span>
+                <% if @server.enable_hetzner_snapshot? %>
+                  | <span class="badge badge-success badge-xs">
+                    Auto-Snapshot Enabled
+                  </span>
+                <% end %>
+              </p>
+            </div>
+            <% if @server.hetzner_power_state.present? %>
+              <% badge = @server.hetzner_power_state_badge %>
+              <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full <%= badge[:class] %>">
+                <%= badge[:text] %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="px-6 py-4">
+          <!-- Server Control Buttons -->
+          <div class="flex flex-wrap gap-3 mb-4">
+            <%= button_to start_hetzner_server_path(@server), method: :post, class: "btn btn-success", disabled: @server.hetzner_power_state == 'running' do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Start Server
+            <% end %>
+
+            <%= button_to stop_hetzner_server_path(@server), method: :post, class: "btn btn-warning", disabled: @server.hetzner_power_state == 'off', data: { confirm: "Are you sure you want to stop #{@server.hostname}? The server will be gracefully shut down." } do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+              </svg>
+              Stop Server
+            <% end %>
+
+            <%= button_to reboot_hetzner_server_path(@server), method: :post, class: "btn btn-warning", disabled: @server.hetzner_power_state != 'running', data: { confirm: "Are you sure you want to reboot #{@server.hostname}? The server will restart immediately." } do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Reboot Server
+            <% end %>
+
+            <%= button_to refresh_hetzner_status_server_path(@server), method: :post, class: "inline-flex items-center px-4 py-2 btn-primary text-white text-sm font-medium rounded-lg  transition" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Refresh Status
+            <% end %>
+          </div>
+
+          <!-- Snapshot Management -->
+          <div class="border-t border-base-content/10 pt-4">
+            <h3 class="text-sm font-semibold text-base-content mb-3">Snapshot Management</h3>
+            <div class="flex flex-wrap gap-3">
+              <%= link_to hetzner_snapshots_server_path(@server), class: "inline-flex items-center px-4 py-2 border border-base-content/10 bg-base-200 text-base-content text-sm font-medium rounded-lg hover:bg-base-300 transition" do %>
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                View Snapshots
+              <% end %>
+
+              <%= button_to create_hetzner_snapshot_server_path(@server), method: :post, class: "btn btn-secondary", data: { confirm: "Create a manual snapshot of #{@server.hostname}? This will take a few minutes to complete." } do %>
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Snapshot Now
+              <% end %>
+            </div>
+
+            <% if @server.enable_hetzner_snapshot? %>
+              <div class="alert alert-info mt-3">
+                <p class="text-sm">
+                  <strong>Automatic Snapshots Enabled:</strong> A snapshot will be created automatically before each weekly system update.
+                  The system waits 15 minutes for snapshot completion before applying updates.
+                </p>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Server Info -->
+          <div class="border-t border-base-content/10 pt-4 mt-4">
+            <h3 class="text-sm font-semibold text-base-content mb-2">Server Information</h3>
+            <div class="text-sm text-base-content/80">
+              <p>Hetzner Server ID: <span class="font-mono font-medium text-base-content"><%= @server.hetzner_server_id %></span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Proxmox VM/LXC Control Panel (only shown for Proxmox servers) -->
+    <% if @server.can_use_proxmox_features? %>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg mb-6">
+        <div class="px-6 py-4 border-b border-base-content/10">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-base-content">Proxmox VE Control</h2>
+              <p class="text-sm text-base-content/80 mt-1">
+                <%= @server.proxmox_type_display %> on <span class="font-medium"><%= @server.proxmox_node %></span>
+                | VMID: <span class="font-mono font-medium"><%= @server.proxmox_vmid %></span>
+                | API: <span class="font-medium"><%= @server.proxmox_api_key.name %></span>
+              </p>
+            </div>
+            <%# Power state badge based on Salt minion status (syncs every 5 min) %>
+            <% if @server.online? %>
+              <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-green-900 text-green-300">
+                Running
+              </span>
+            <% else %>
+              <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-red-900 text-red-300">
+                Stopped
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="px-6 py-4">
+          <!-- VM/LXC Control Buttons -->
+          <!-- Button state is based on Salt minion status (online/offline) which syncs every 5 minutes -->
+          <!-- If minion is online, VM must be running. If offline, VM is likely stopped (or minion crashed). -->
+          <div class="flex flex-wrap gap-3 mb-4">
+            <%= button_to start_proxmox_server_path(@server), method: :post, class: "btn btn-success", disabled: @server.online? do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Start
+            <% end %>
+
+            <%= button_to shutdown_proxmox_server_path(@server), method: :post, class: "btn btn-warning", disabled: !@server.online?, data: { confirm: "Gracefully shutdown #{@server.hostname}? The OS will be signaled to shut down properly." } do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Shutdown (Graceful)
+            <% end %>
+
+            <%= button_to stop_proxmox_server_path(@server), method: :post, class: "btn btn-error", disabled: !@server.online?, data: { confirm: "Force stop #{@server.hostname}? This immediately powers off the VM/LXC without graceful shutdown!" } do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+              </svg>
+              Stop (Force)
+            <% end %>
+
+            <%= button_to reboot_proxmox_server_path(@server), method: :post, class: "btn btn-warning", disabled: !@server.online?, data: { confirm: "Reboot #{@server.hostname}? The VM/LXC will restart immediately." } do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Reboot
+            <% end %>
+          </div>
+
+          <!-- Snapshot Management -->
+          <div class="border-t border-base-content/10 pt-4">
+            <h3 class="text-sm font-semibold text-base-content mb-3">Snapshot Management</h3>
+            <div class="flex flex-wrap gap-3">
+              <%= link_to proxmox_snapshots_server_path(@server), class: "inline-flex items-center px-4 py-2 border border-base-content/10 bg-base-200 text-base-content text-sm font-medium rounded-lg hover:bg-base-300 transition" do %>
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                View & Manage Snapshots
+              <% end %>
+            </div>
+
+            <div class="alert alert-info mt-3">
+              <p class="text-sm">
+                <strong>Proxmox Snapshots:</strong> Create point-in-time snapshots of your <%= @server.proxmox_vm? ? 'VM' : 'LXC container' %>.
+                Snapshots can be used to quickly rollback to a previous state.
+                <% if @server.proxmox_vm? %>
+                  VM snapshots do not include RAM state by default.
+                <% end %>
+              </p>
+            </div>
+          </div>
+
+          <!-- Server Info -->
+          <div class="border-t border-base-content/10 pt-4 mt-4">
+            <h3 class="text-sm font-semibold text-base-content mb-2">Server Information</h3>
+            <div class="text-sm text-base-content/80 space-y-1">
+              <p>Node: <span class="font-mono font-medium text-base-content"><%= @server.proxmox_node %></span></p>
+              <p>VMID: <span class="font-mono font-medium text-base-content"><%= @server.proxmox_vmid %></span></p>
+              <p>Type: <span class="font-medium text-base-content"><%= @server.proxmox_type_display %></span></p>
+              <% if @server.proxmox_cluster.present? %>
+                <p>Cluster: <span class="font-medium text-base-content"><%= @server.proxmox_cluster %></span></p>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Latest Metrics -->
+    <% if @latest_metrics %>
+      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg mb-6">
+        <div class="px-6 py-4 border-b border-base-content/10">
+          <h2 class="text-lg font-semibold text-base-content">Latest Metrics</h2>
+          <p class="text-sm text-base-content/60">Collected <%= time_ago_in_words(@latest_metrics.collected_at) %> ago</p>
+        </div>
+        <div class="px-6 py-4">
+          <div class="grid grid-cols-4 gap-4">
+            <div>
+              <div class="text-sm text-base-content/80">CPU Usage</div>
+              <div class="text-2xl font-bold text-base-content"><%= @latest_metrics.cpu_percent&.round(1) %>%</div>
+            </div>
+            <div>
+              <div class="text-sm text-base-content/80">Memory Usage</div>
+              <div class="text-2xl font-bold text-base-content"><%= @latest_metrics.memory_percent&.round(1) %>%</div>
+            </div>
+            <div>
+              <div class="text-sm text-base-content/80">Load Average</div>
+              <div class="text-2xl font-bold text-base-content"><%= @latest_metrics.load_1m&.round(2) %></div>
+            </div>
+            <div>
+              <div class="text-sm text-base-content/80">Processes</div>
+              <div class="text-2xl font-bold text-base-content"><%= @latest_metrics.process_count %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Recent Commands -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+      <div class="px-6 py-4 border-b border-base-content/10">
+        <h2 class="text-lg font-semibold text-base-content">Recent Commands</h2>
+      </div>
+      <div class="divide-y divide-base-content/10">
+        <% if @recent_commands.any? %>
+          <% @recent_commands.each do |command| %>
+            <div class="px-6 py-4">
+              <div class="flex items-start justify-between mb-2">
+                <span class="status-badge status-<%= command.status %>">
+                  <%= command.status %>
+                </span>
+                <span class="text-sm text-base-content/60">
+                  <%= time_ago_in_words(command.started_at) %> ago
+                  <% if command.user_executed? %>
+                    by <%= command.user_display_name %>
+                  <% else %>
+                    (System)
+                  <% end %>
+                </span>
+              </div>
+              <div class="bg-base-300 text-success p-2 rounded font-mono text-xs mb-2">
+                $ <%= command.arguments.is_a?(Hash) ? command.arguments['args']&.first : command.command %>
+              </div>
+              <% if command.output.present? %>
+                <details class="text-sm">
+                  <summary class="cursor-pointer text-primary hover:text-primary/80">Show output</summary>
+                  <pre class="mt-2 bg-base-200 text-base-content p-2 rounded text-xs overflow-x-auto"><%= command.output %></pre>
+                </details>
+              <% end %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="px-6 py-8 text-center text-base-content/60">
+            No commands executed on this server yet
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+  </div>
+<% end %>

@@ -1,0 +1,103 @@
+<% content_for :head do %>
+  <title>Two-Factor Authentication - Server Manager</title>
+<% end %>
+
+<%= render layout: 'shared/sidebar' do %>
+
+<!-- Navigation -->
+  <nav class="bg-base-200 shadow-sm border-b border-base-content/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center space-x-8">
+          <h1 class="text-xl font-bold text-base-content">Two-Factor Authentication</h1>
+          <%= link_to "Dashboard", dashboard_path, class: "text-primary hover:text-primary-focus" %>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-sm text-base-content/80"><%= current_user.email %></span>
+          <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "px-4 py-2 bg-base-200 text-white rounded-lg hover:bg-base-200" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <% if flash[:notice] %>
+      <div class="alert alert-success mb-6">
+        <p><%= flash[:notice] %></p>
+      </div>
+    <% end %>
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h2 class="text-3xl font-bold text-base-content">Two-Factor Authentication</h2>
+      <p class="text-base-content/80 mt-1">Add an extra layer of security to your account</p>
+    </div>
+
+    <!-- 2FA Status Card -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6">
+      <% if current_user.otp_required_for_login %>
+        <!-- 2FA Enabled -->
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center">
+              <svg class="w-6 h-6 text-success" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-lg font-medium text-base-content">2FA is Enabled</h3>
+            <p class="mt-1 text-sm text-base-content/80">
+              Your account is protected with two-factor authentication. You'll need to enter a verification code when signing in.
+            </p>
+            <div class="mt-4">
+              <p class="text-sm text-base-content/80 mb-2">
+                <strong>Backup codes remaining:</strong> <%= current_user.otp_backup_codes&.length || 0 %>
+              </p>
+              <p class="text-xs text-base-content/60 mb-4">
+                Backup codes can be used if you lose access to your authenticator app
+              </p>
+              <%= button_to "Disable 2FA", two_factor_path, method: :delete,
+                  data: { confirm: "Are you sure? This will make your account less secure." },
+                  class: "btn btn-error" %>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <!-- 2FA Disabled -->
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 rounded-full bg-warning/20 flex items-center justify-center">
+              <svg class="w-6 h-6 text-warning" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-lg font-medium text-base-content">2FA is Not Enabled</h3>
+            <p class="mt-1 text-sm text-base-content/80">
+              Two-factor authentication adds an extra layer of security to your account. We strongly recommend enabling it.
+            </p>
+            <div class="mt-4">
+              <%= link_to "Enable 2FA", new_two_factor_path, class: "btn btn-primary" %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="mt-6 pt-6 border-t border-base-content/10">
+          <h4 class="text-sm font-medium text-base-content mb-3">How it works:</h4>
+          <ol class="list-decimal list-inside space-y-2 text-sm text-base-content/80">
+            <li>Install an authenticator app on your phone (Google Authenticator, Authy, etc.)</li>
+            <li>Scan the QR code we provide with your authenticator app</li>
+            <li>Enter the 6-digit code to verify setup</li>
+            <li>Save your backup codes in a secure place</li>
+            <li>From now on, you'll need both your password and a code from your authenticator app to sign in</li>
+          </ol>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+<% end %>

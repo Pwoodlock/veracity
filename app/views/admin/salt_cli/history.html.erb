@@ -1,0 +1,203 @@
+<% content_for :title, "Salt CLI History - Admin" %>
+
+<%= render layout: 'shared/sidebar' do %>
+  <div class="p-4 lg:p-6">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-base-content flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Command History
+        </h1>
+        <p class="text-base-content/60 mt-1">Audit log of all Salt CLI commands executed</p>
+      </div>
+      <div class="flex gap-2 mt-4 lg:mt-0">
+        <%= link_to admin_salt_cli_path, class: "btn btn-sm btn-primary gap-2" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Back to CLI
+        <% end %>
+        <%= button_to admin_salt_cli_clear_history_path, method: :delete, class: "btn btn-sm btn-error btn-outline gap-2", data: { confirm: "Are you sure you want to clear all command history?" } do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Clear All
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats shadow mb-6 w-full">
+      <div class="stat">
+        <div class="stat-title">Total Commands</div>
+        <div class="stat-value text-primary"><%= SaltCliCommand.count %></div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">Successful</div>
+        <div class="stat-value text-success"><%= SaltCliCommand.where(status: 'completed').where(exit_status: 0).count %></div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">Failed</div>
+        <div class="stat-value text-error"><%= SaltCliCommand.where(status: 'failed').count %></div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">Today</div>
+        <div class="stat-value"><%= SaltCliCommand.where('created_at >= ?', Time.current.beginning_of_day).count %></div>
+      </div>
+    </div>
+
+    <!-- Command History Table -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body p-0">
+        <% if @commands.any? %>
+          <div class="overflow-x-auto">
+            <table class="table table-zebra">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>User</th>
+                  <th>Command</th>
+                  <th>Status</th>
+                  <th>Duration</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @commands.each do |cmd| %>
+                  <tr>
+                    <td class="whitespace-nowrap">
+                      <div class="text-sm"><%= cmd.created_at.strftime('%Y-%m-%d %H:%M:%S') %></div>
+                      <div class="text-xs text-base-content/50"><%= time_ago_in_words(cmd.created_at) %> ago</div>
+                    </td>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <div class="avatar placeholder">
+                          <div class="bg-neutral text-neutral-content rounded-full w-8">
+                            <span class="text-xs"><%= cmd.user.email[0..1].upcase %></span>
+                          </div>
+                        </div>
+                        <div class="text-sm"><%= cmd.user.email %></div>
+                      </div>
+                    </td>
+                    <td>
+                      <code class="text-xs bg-base-200 px-2 py-1 rounded font-mono max-w-md truncate block">
+                        <%= truncate(cmd.command, length: 80) %>
+                      </code>
+                    </td>
+                    <td>
+                      <% case cmd.status %>
+                      <% when 'completed' %>
+                        <% if cmd.exit_status == 0 %>
+                          <span class="badge badge-success badge-sm gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Success
+                          </span>
+                        <% else %>
+                          <span class="badge badge-warning badge-sm">Exit <%= cmd.exit_status %></span>
+                        <% end %>
+                      <% when 'failed' %>
+                        <span class="badge badge-error badge-sm gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Failed
+                        </span>
+                      <% when 'running' %>
+                        <span class="badge badge-info badge-sm gap-1">
+                          <span class="loading loading-spinner loading-xs"></span>
+                          Running
+                        </span>
+                      <% else %>
+                        <span class="badge badge-ghost badge-sm"><%= cmd.status %></span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <% if cmd.duration %>
+                        <span class="text-sm"><%= number_with_precision(cmd.duration, precision: 2) %>s</span>
+                      <% else %>
+                        <span class="text-base-content/50">-</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <div class="flex gap-1">
+                        <button class="btn btn-ghost btn-xs" onclick="showOutput(<%= cmd.id %>)">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                        <%= button_to admin_salt_cli_command_path(cmd), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { confirm: "Delete this command?" } do %>
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="text-center py-12">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="text-lg font-semibold text-base-content/50">No commands yet</h3>
+            <p class="text-base-content/40 mt-1">Commands executed in the Salt CLI will appear here</p>
+            <%= link_to "Go to Salt CLI", admin_salt_cli_path, class: "btn btn-primary btn-sm mt-4" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output Modal -->
+  <dialog id="output-modal" class="modal">
+    <div class="modal-box max-w-4xl">
+      <h3 class="font-bold text-lg mb-4">Command Output</h3>
+      <div class="mb-4">
+        <label class="text-sm text-base-content/60">Command:</label>
+        <code id="modal-command" class="block bg-base-200 px-3 py-2 rounded font-mono text-sm mt-1"></code>
+      </div>
+      <div>
+        <label class="text-sm text-base-content/60">Output:</label>
+        <pre id="modal-output" class="bg-[#1a1b26] text-[#a9b1d6] p-4 rounded font-mono text-sm mt-1 overflow-auto max-h-96 whitespace-pre-wrap"></pre>
+      </div>
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn">Close</button>
+        </form>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+<% end %>
+
+<script>
+  // Store command data for modal
+  const commandData = {
+    <% @commands.each do |cmd| %>
+      <%= cmd.id %>: {
+        command: <%= cmd.command.to_json %>,
+        output: <%= (cmd.output || 'No output').to_json %>
+      },
+    <% end %>
+  };
+
+  function showOutput(id) {
+    const data = commandData[id];
+    if (data) {
+      document.getElementById('modal-command').textContent = data.command;
+      document.getElementById('modal-output').textContent = data.output;
+      document.getElementById('output-modal').showModal();
+    }
+  }
+</script>
