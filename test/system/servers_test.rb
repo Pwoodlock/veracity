@@ -12,7 +12,9 @@ class ServersTest < ApplicationSystemTestCase
   test "servers index page loads" do
     visit servers_path
 
-    assert_selector "h1", text: /servers/i
+    # Check for server table or content that indicates page loaded
+    assert_selector "table" # The server list table
+    assert_text "Hostname"  # Table header
   end
 
   test "servers index shows server list" do

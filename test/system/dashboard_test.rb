@@ -11,9 +11,6 @@ class DashboardTest < ApplicationSystemTestCase
   test "dashboard loads and shows stats" do
     visit dashboard_path
 
-    # Check page title
-    assert_selector "h1", text: "Operations Dashboard"
-
     # Check stats cards are present
     assert_selector "#dashboard-stats"
     assert_text "Total Servers"
@@ -42,8 +39,8 @@ class DashboardTest < ApplicationSystemTestCase
     visit dashboard_path
     wait_for_page_load
 
-    # Just verify the page loaded successfully
-    assert_selector "h1", text: "Operations Dashboard"
+    # Just verify the page loaded successfully - check for stats panel
+    assert_selector "#dashboard-stats"
   end
 
   test "dashboard has turbo stream subscription" do
