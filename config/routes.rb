@@ -25,6 +25,8 @@ Rails.application.routes.draw do
   get "onboarding/install" => "onboarding#install", as: :onboarding_install
   post "onboarding/accept_key" => "onboarding#accept_key", as: :accept_key_onboarding
   post "onboarding/reject_key" => "onboarding#reject_key", as: :reject_key_onboarding
+  post "onboarding/bulk_accept_keys" => "onboarding#bulk_accept_keys", as: :bulk_accept_keys_onboarding
+  post "onboarding/bulk_reject_keys" => "onboarding#bulk_reject_keys", as: :bulk_reject_keys_onboarding
   post "onboarding/refresh" => "onboarding#refresh", as: :refresh_onboarding
 
   # Users (admin only)

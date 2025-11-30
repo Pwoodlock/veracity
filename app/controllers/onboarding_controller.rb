@@ -4,7 +4,7 @@ class OnboardingController < ApplicationController
   # SECURITY: Authorization checks for minion key management
   # Viewers: Can view onboarding page (index, install)
   # Operators & Admins: Can accept/reject minion keys
-  before_action :require_operator!, only: [:accept_key, :reject_key, :refresh]
+  before_action :require_operator!, only: [:accept_key, :reject_key, :bulk_accept_keys, :bulk_reject_keys, :refresh]
 
   # Show pending minion keys and accept form
   def index
@@ -36,41 +36,14 @@ class OnboardingController < ApplicationController
       result = SaltService.accept_key_with_verification(minion_id, fingerprint)
 
       if result[:success]
-        # Try to discover and register the minion
-        sleep 2
+        # Key accepted - register minion in background to avoid blocking
+        # The minion needs a moment to establish connection after key acceptance
+        flash[:success] = "✓ Minion key accepted: #{minion_id}. Server will be registered automatically."
 
-        begin
-          minions_data = SaltService.discover_all_minions
-          minion_data = minions_data.find { |m| m[:minion_id] == minion_id }
-
-          if minion_data
-            server = Server.find_or_initialize_by(minion_id: minion_id)
-            grains = minion_data[:grains]
-
-            # Update server details
-            server.hostname = grains['id'] || grains['nodename'] || minion_id
-            server.ip_address = grains['fqdn_ip4']&.first || grains['ipv4']&.first
-            server.status = minion_data[:online] ? 'online' : 'offline'
-            server.os_family = grains['os_family']
-            server.os_name = grains['os']
-            server.os_version = grains['osrelease'] || grains['osmajorrelease']&.to_s
-            server.cpu_cores = grains['num_cpus']
-            server.memory_gb = (grains['mem_total'].to_f / 1024.0).round(2) if grains['mem_total']
-            server.grains = grains
-            server.last_seen = Time.current if minion_data[:online]
-            server.last_heartbeat = Time.current if minion_data[:online]
-
-            if server.save
-              flash[:success] = "✓ Minion key accepted and server registered: #{server.hostname}"
-            else
-              flash[:warning] = "Key accepted but server registration had issues: #{server.errors.full_messages.join(', ')}"
-            end
-          else
-            flash[:warning] = "Key accepted! Minion #{minion_id} is not responding yet. It may take a moment to come online."
-          end
-        rescue StandardError => e
-          Rails.logger.error "Error auto-registering minion #{minion_id}: #{e.message}"
-          flash[:warning] = "Key accepted but automatic registration failed: #{e.message}"
+        # Queue background registration (non-blocking)
+        Thread.new do
+          sleep 1.5  # Reduced from 2 seconds
+          register_accepted_minions([minion_id])
         end
       else
         flash[:error] = "Failed to accept key: #{result[:message]}"
@@ -115,6 +88,89 @@ class OnboardingController < ApplicationController
     redirect_to onboarding_path
   end
 
+  # Bulk accept multiple minion keys
+  def bulk_accept_keys
+    minion_keys = params[:minion_keys] || []
+
+    if minion_keys.empty?
+      flash[:error] = "No minions selected"
+      redirect_to onboarding_path
+      return
+    end
+
+    Rails.logger.info "User #{current_user.email} bulk accepting #{minion_keys.size} keys"
+
+    accepted = []
+    failed = []
+
+    minion_keys.each do |key_data|
+      minion_id = key_data[:minion_id]
+      fingerprint = key_data[:fingerprint]
+
+      begin
+        result = SaltService.accept_key_with_verification(minion_id, fingerprint)
+        if result[:success]
+          accepted << minion_id
+        else
+          failed << { minion_id: minion_id, error: result[:message] }
+        end
+      rescue StandardError => e
+        failed << { minion_id: minion_id, error: e.message }
+      end
+    end
+
+    # Wait once for all minions to connect, then discover
+    if accepted.any?
+      sleep 2
+      register_accepted_minions(accepted)
+    end
+
+    if failed.empty?
+      flash[:success] = "✓ Successfully accepted #{accepted.size} minion key(s)"
+    elsif accepted.any?
+      flash[:warning] = "Accepted #{accepted.size} key(s), but #{failed.size} failed: #{failed.map { |f| f[:minion_id] }.join(', ')}"
+    else
+      flash[:error] = "Failed to accept all keys: #{failed.map { |f| "#{f[:minion_id]}: #{f[:error]}" }.join('; ')}"
+    end
+
+    redirect_to onboarding_path
+  end
+
+  # Bulk reject multiple minion keys
+  def bulk_reject_keys
+    minion_ids = params[:minion_ids] || []
+
+    if minion_ids.empty?
+      flash[:error] = "No minions selected"
+      redirect_to onboarding_path
+      return
+    end
+
+    Rails.logger.info "User #{current_user.email} bulk rejecting #{minion_ids.size} keys"
+
+    rejected = []
+    failed = []
+
+    minion_ids.each do |minion_id|
+      begin
+        SaltService.reject_key(minion_id)
+        rejected << minion_id
+      rescue StandardError => e
+        failed << { minion_id: minion_id, error: e.message }
+      end
+    end
+
+    if failed.empty?
+      flash[:success] = "Rejected #{rejected.size} minion key(s)"
+    elsif rejected.any?
+      flash[:warning] = "Rejected #{rejected.size} key(s), but #{failed.size} failed"
+    else
+      flash[:error] = "Failed to reject all keys"
+    end
+
+    redirect_to onboarding_path
+  end
+
   # Refresh the pending keys list
   def refresh
     load_pending_keys
@@ -143,6 +199,37 @@ class OnboardingController < ApplicationController
       Rails.logger.error "Failed to fetch pending keys: #{e.message}"
       flash.now[:error] = "Error fetching pending keys: #{e.message}"
       @pending_keys = []
+    end
+  end
+
+  # Register multiple accepted minions efficiently
+  def register_accepted_minions(minion_ids)
+    begin
+      minions_data = SaltService.discover_all_minions
+
+      minion_ids.each do |minion_id|
+        minion_data = minions_data.find { |m| m[:minion_id] == minion_id }
+        next unless minion_data
+
+        server = Server.find_or_initialize_by(minion_id: minion_id)
+        grains = minion_data[:grains]
+
+        server.hostname = grains['id'] || grains['nodename'] || minion_id
+        server.ip_address = grains['fqdn_ip4']&.first || grains['ipv4']&.first
+        server.status = minion_data[:online] ? 'online' : 'offline'
+        server.os_family = grains['os_family']
+        server.os_name = grains['os']
+        server.os_version = grains['osrelease'] || grains['osmajorrelease']&.to_s
+        server.cpu_cores = grains['num_cpus']
+        server.memory_gb = (grains['mem_total'].to_f / 1024.0).round(2) if grains['mem_total']
+        server.grains = grains
+        server.last_seen = Time.current if minion_data[:online]
+        server.last_heartbeat = Time.current if minion_data[:online]
+
+        server.save
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error registering minions: #{e.message}"
     end
   end
 end

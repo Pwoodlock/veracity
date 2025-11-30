@@ -5,33 +5,174 @@
       <p class="text-sm text-base-content/60 mt-2">All minions are either accepted or rejected</p>
     </div>
   <% else %>
-    <div class="space-y-3">
-      <% pending_keys.each do |key| %>
-        <div class="border border-base-content/10 rounded-lg p-4 hover:border-primary hover:bg-primary/10 cursor-pointer transition-colors"
-             data-minion-id="<%= key[:minion_id] %>"
-             data-fingerprint="<%= key[:fingerprint] %>"
-             title="Click to auto-fill form below">
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <div class="font-medium text-base-content"><%= key[:minion_id] %></div>
-              <div class="text-xs text-base-content/60 mt-1 font-mono break-all">
-                <%= key[:fingerprint] || '(fingerprint unavailable)' %>
+    <!-- Bulk Actions Form -->
+    <%= form_with url: bulk_accept_keys_onboarding_path, method: :post, id: "bulk-keys-form", data: { turbo: false } do |f| %>
+      <!-- Select All & Bulk Action Buttons -->
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-base-content/10">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="select-all-keys" class="checkbox checkbox-primary checkbox-sm" />
+          <span class="text-sm font-medium text-base-content">Select All</span>
+          <span id="selected-count" class="badge badge-primary badge-sm hidden">0</span>
+        </label>
+        <div class="flex gap-2">
+          <button type="submit" id="bulk-accept-btn" class="btn btn-success btn-sm" disabled>
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Accept Selected
+          </button>
+          <button type="button" id="bulk-reject-btn" class="btn btn-error btn-sm" disabled onclick="bulkReject()">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Reject Selected
+          </button>
+        </div>
+      </div>
+
+      <!-- Minion Keys List -->
+      <div class="space-y-3">
+        <% pending_keys.each_with_index do |key, index| %>
+          <div class="border border-base-content/10 rounded-lg p-4 hover:border-primary/50 transition-colors">
+            <div class="flex items-start gap-3">
+              <!-- Checkbox -->
+              <input type="checkbox"
+                     class="checkbox checkbox-primary checkbox-sm mt-1 minion-checkbox"
+                     data-minion-id="<%= key[:minion_id] %>"
+                     data-fingerprint="<%= key[:fingerprint] %>"
+                     data-index="<%= index %>" />
+
+              <!-- Hidden fields for bulk submit (populated by JS) -->
+              <input type="hidden"
+                     name="minion_keys[][minion_id]"
+                     class="minion-id-field"
+                     data-index="<%= index %>"
+                     disabled />
+              <input type="hidden"
+                     name="minion_keys[][fingerprint]"
+                     class="minion-fingerprint-field"
+                     data-index="<%= index %>"
+                     disabled />
+
+              <!-- Minion Info -->
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-base-content"><%= key[:minion_id] %></div>
+                <div class="text-xs text-base-content/60 mt-1 font-mono break-all">
+                  <%= key[:fingerprint] || '(fingerprint unavailable)' %>
+                </div>
+              </div>
+
+              <!-- Individual Actions -->
+              <div class="flex gap-2 flex-shrink-0">
+                <%= form_with url: accept_key_onboarding_path, method: :post, class: "inline", data: { turbo: false }, onsubmit: "return confirm('Accept this minion key?');" do |af| %>
+                  <%= af.hidden_field :minion_id, value: key[:minion_id] %>
+                  <%= af.hidden_field :fingerprint, value: key[:fingerprint] %>
+                  <%= af.submit "Accept", class: "btn btn-success btn-xs" %>
+                <% end %>
+                <%= form_with url: reject_key_onboarding_path, method: :post, class: "inline", data: { turbo: false }, onsubmit: "return confirm('Reject this minion key?');" do |rf| %>
+                  <%= rf.hidden_field :minion_id, value: key[:minion_id] %>
+                  <%= rf.submit "Reject", class: "btn btn-error btn-xs" %>
+                <% end %>
               </div>
             </div>
-            <div class="ml-4 flex space-x-2">
-              <%= form_with url: accept_key_onboarding_path, method: :post, class: "inline", data: { turbo: false }, onsubmit: "return confirm('Accept this minion key?');" do |f| %>
-                <%= f.hidden_field :minion_id, value: key[:minion_id] %>
-                <%= f.hidden_field :fingerprint, value: key[:fingerprint] %>
-                <%= f.submit "Accept", class: "btn btn-success btn-xs" %>
-              <% end %>
-              <%= form_with url: reject_key_onboarding_path, method: :post, class: "inline", data: { turbo: false }, onsubmit: "return confirm('Reject this minion key? This action cannot be undone.');" do |f| %>
-                <%= f.hidden_field :minion_id, value: key[:minion_id] %>
-                <%= f.submit "Reject", class: "btn btn-error btn-xs" %>
-              <% end %>
-            </div>
           </div>
-        </div>
-      <% end %>
-    </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <!-- Bulk Reject Form (separate form for reject action) -->
+    <%= form_with url: bulk_reject_keys_onboarding_path, method: :post, id: "bulk-reject-form", data: { turbo: false }, style: "display: none;" do |f| %>
+      <div id="reject-minion-ids"></div>
+    <% end %>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const selectAllCheckbox = document.getElementById('select-all-keys');
+        const minionCheckboxes = document.querySelectorAll('.minion-checkbox');
+        const bulkAcceptBtn = document.getElementById('bulk-accept-btn');
+        const bulkRejectBtn = document.getElementById('bulk-reject-btn');
+        const selectedCountBadge = document.getElementById('selected-count');
+
+        function updateUI() {
+          const checked = document.querySelectorAll('.minion-checkbox:checked');
+          const count = checked.length;
+
+          // Update buttons
+          bulkAcceptBtn.disabled = count === 0;
+          bulkRejectBtn.disabled = count === 0;
+
+          // Update count badge
+          if (count > 0) {
+            selectedCountBadge.textContent = count;
+            selectedCountBadge.classList.remove('hidden');
+          } else {
+            selectedCountBadge.classList.add('hidden');
+          }
+
+          // Update select all checkbox state
+          selectAllCheckbox.checked = count === minionCheckboxes.length && count > 0;
+          selectAllCheckbox.indeterminate = count > 0 && count < minionCheckboxes.length;
+
+          // Enable/disable hidden fields based on checkbox state
+          minionCheckboxes.forEach((cb) => {
+            const index = cb.dataset.index;
+            const idField = document.querySelector(`.minion-id-field[data-index="${index}"]`);
+            const fpField = document.querySelector(`.minion-fingerprint-field[data-index="${index}"]`);
+
+            if (cb.checked) {
+              idField.disabled = false;
+              idField.value = cb.dataset.minionId;
+              fpField.disabled = false;
+              fpField.value = cb.dataset.fingerprint;
+            } else {
+              idField.disabled = true;
+              fpField.disabled = true;
+            }
+          });
+        }
+
+        // Select All handler
+        selectAllCheckbox.addEventListener('change', function() {
+          minionCheckboxes.forEach(cb => cb.checked = this.checked);
+          updateUI();
+        });
+
+        // Individual checkbox handlers
+        minionCheckboxes.forEach(cb => {
+          cb.addEventListener('change', updateUI);
+        });
+
+        // Bulk accept confirmation
+        document.getElementById('bulk-keys-form').addEventListener('submit', function(e) {
+          const count = document.querySelectorAll('.minion-checkbox:checked').length;
+          if (!confirm(`Accept ${count} minion key(s)?`)) {
+            e.preventDefault();
+          }
+        });
+
+        // Bulk reject function
+        window.bulkReject = function() {
+          const checked = document.querySelectorAll('.minion-checkbox:checked');
+          const count = checked.length;
+
+          if (!confirm(`Reject ${count} minion key(s)? This cannot be undone.`)) {
+            return;
+          }
+
+          const container = document.getElementById('reject-minion-ids');
+          container.innerHTML = '';
+
+          checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'minion_ids[]';
+            input.value = cb.dataset.minionId;
+            container.appendChild(input);
+          });
+
+          document.getElementById('bulk-reject-form').submit();
+        };
+      });
+    </script>
   <% end %>
 </div>
