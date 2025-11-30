@@ -149,7 +149,7 @@ test_package_installations() {
   # Test PyVulnerabilityLookup
   if "${INTEGRATIONS_VENV_DIR}/bin/python" -c "import pyvulnerabilitylookup; print('PyVulnerabilityLookup:', pyvulnerabilitylookup.__version__)" >> "${LOG_FILE}" 2>&1; then
     local pyvuln_version
-    pyvuln_version=$(\"${INTEGRATIONS_VENV_DIR}/bin/python\" -c "import pyvulnerabilitylookup; print(pyvulnerabilitylookup.__version__)" 2>/dev/null)
+    pyvuln_version=$("${INTEGRATIONS_VENV_DIR}/bin/python" -c "import pyvulnerabilitylookup; print(pyvulnerabilitylookup.__version__)" 2>/dev/null)
     success "PyVulnerabilityLookup ${pyvuln_version} OK"
   else
     error "PyVulnerabilityLookup test failed"
@@ -159,7 +159,7 @@ test_package_installations() {
   # Test hcloud
   if "${INTEGRATIONS_VENV_DIR}/bin/python" -c "import hcloud; print('hcloud:', hcloud.__version__)" >> "${LOG_FILE}" 2>&1; then
     local hcloud_version
-    hcloud_version=$(\"${INTEGRATIONS_VENV_DIR}/bin/python\" -c "import hcloud; print(hcloud.__version__)" 2>/dev/null)
+    hcloud_version=$("${INTEGRATIONS_VENV_DIR}/bin/python" -c "import hcloud; print(hcloud.__version__)" 2>/dev/null)
     success "hcloud ${hcloud_version} OK"
   else
     error "hcloud test failed"
@@ -169,7 +169,7 @@ test_package_installations() {
   # Test proxmoxer
   if "${INTEGRATIONS_VENV_DIR}/bin/python" -c "import proxmoxer; print('proxmoxer:', proxmoxer.__version__)" >> "${LOG_FILE}" 2>&1; then
     local proxmoxer_version
-    proxmoxer_version=$(\"${INTEGRATIONS_VENV_DIR}/bin/python\" -c "import proxmoxer; print(proxmoxer.__version__)" 2>/dev/null)
+    proxmoxer_version=$("${INTEGRATIONS_VENV_DIR}/bin/python" -c "import proxmoxer; print(proxmoxer.__version__)" 2>/dev/null)
     success "proxmoxer ${proxmoxer_version} OK"
   else
     error "proxmoxer test failed"
