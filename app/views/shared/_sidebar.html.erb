@@ -59,11 +59,8 @@
     <aside class="bg-base-200 w-64 min-h-full flex flex-col border-r border-base-content/10">
       <!-- Logo section -->
       <div class="p-6 border-b border-base-content/5">
-        <%= link_to root_path, class: "flex items-center gap-3 hover:opacity-80 transition group" do %>
-          <div class="relative">
-            <div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-full blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
-            <img src="<%= SystemSetting.logo_url %>" alt="<%= SystemSetting.company_name %>" class="relative h-9 w-auto">
-          </div>
+        <%= link_to root_path, class: "flex items-center gap-3 hover:opacity-80 transition" do %>
+          <img src="<%= SystemSetting.logo_url %>" alt="<%= SystemSetting.company_name %>" class="h-9 w-auto">
           <span class="text-base-content font-bold text-xl tracking-tight"><%= SystemSetting.company_name %></span>
         <% end %>
       </div>
