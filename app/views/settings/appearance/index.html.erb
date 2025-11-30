@@ -137,5 +137,24 @@
     </div>
 
 
+    </div>
+
+    <!-- Visual Effects -->
+    <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-semibold text-base-content mb-4">Visual Effects</h2>
+      
+      <%= form_with url: settings_update_glassmorphism_appearance_path, method: :post do |f| %>
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-4">
+            <%= check_box_tag :glassmorphism_enabled, '1', @glassmorphism_enabled, class: "toggle toggle-primary", onchange: "this.form.submit()" %>
+            <span class="label-text text-base-content font-medium">Enable Glassmorphism</span>
+          </label>
+          <p class="text-sm text-base-content/60 mt-2 ml-14">
+            Adds a semi-transparent, blurred background effect to cards and the sidebar.
+          </p>
+        </div>
+      <% end %>
+    </div>
+
   </div>
 <% end %>

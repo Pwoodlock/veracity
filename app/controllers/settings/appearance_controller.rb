@@ -6,6 +6,7 @@ class Settings::AppearanceController < ApplicationController
     @custom_logo = SystemSetting.logo_url
     @company_name = SystemSetting.company_name
     @tagline = SystemSetting.tagline
+    @glassmorphism_enabled = SystemSetting.glassmorphism_enabled?
   end
 
   def update_logo
@@ -104,6 +105,12 @@ class Settings::AppearanceController < ApplicationController
 
     SystemSetting.set('tagline', tagline)
     redirect_to settings_appearance_path, notice: 'Tagline updated successfully!'
+  end
+
+  def update_glassmorphism
+    enabled = params[:glassmorphism_enabled] == '1'
+    SystemSetting.set('glassmorphism_enabled', enabled.to_s, 'boolean')
+    redirect_to settings_appearance_path, notice: "Glassmorphism #{enabled ? 'enabled' : 'disabled'} successfully!"
   end
 
   private

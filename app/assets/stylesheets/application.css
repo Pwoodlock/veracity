@@ -2,8 +2,10 @@
 
 /* DaisyUI Lo-Fi Theme Customization - Darker Green */
 [data-theme="lofi"] {
-  --su: 142 65% 35%;    /* Darker success color (was 142 76% 36%) */
-  --suc: 142 65% 35%;   /* Darker success content */
+  --su: 142 65% 35%;
+  /* Darker success color (was 142 76% 36%) */
+  --suc: 142 65% 35%;
+  /* Darker success content */
 }
 
 /* Font size fixes for consistent rendering */
@@ -20,10 +22,13 @@ body {
 
 /* Custom animations */
 @keyframes pulse-border-dark {
-  0%, 100% {
+
+  0%,
+  100% {
     border-color: hsl(var(--p));
     box-shadow: 0 0 0 0 hsl(var(--p) / 0.6);
   }
+
   50% {
     border-color: hsl(var(--p) / 0.8);
     box-shadow: 0 0 0 8px hsl(var(--p) / 0);
@@ -31,9 +36,17 @@ body {
 }
 
 @keyframes highlight-flash {
-  0% { background-color: transparent; }
-  50% { background-color: hsl(var(--p) / 0.1); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: hsl(var(--p) / 0.1);
+  }
+
+  100% {
+    background-color: transparent;
+  }
 }
 
 .widget-update {
@@ -51,4 +64,33 @@ body {
 
 .compact-card-hover:hover {
   transform: scale(1.01);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Glassmorphism Effects */
+.glassmorphism-enabled .card,
+.glassmorphism-enabled .drawer-side>aside {
+  background-color: hsl(var(--b1) / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--bc) / 0.1);
+}
+
+.glassmorphism-enabled .drawer-side>aside {
+  background-color: hsl(var(--b2) / 0.7);
 }

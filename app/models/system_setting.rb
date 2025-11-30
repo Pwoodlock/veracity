@@ -82,6 +82,10 @@ class SystemSetting < ApplicationRecord
     get('tagline', 'Infrastructure Management Platform with Batteries Included')
   end
 
+  def self.glassmorphism_enabled?
+    get('glassmorphism_enabled') == 'true'
+  end
+
   private
 
   # Check environment variable for a given setting key

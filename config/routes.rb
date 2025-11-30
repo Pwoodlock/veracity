@@ -88,6 +88,7 @@ Rails.application.routes.draw do
     delete 'appearance/remove_logo', to: 'appearance#remove_logo', as: :remove_logo_appearance
     post 'appearance/update_company_name', to: 'appearance#update_company_name', as: :update_company_name_appearance
     post 'appearance/update_tagline', to: 'appearance#update_tagline', as: :update_tagline_appearance
+    post 'appearance/update_glassmorphism', to: 'appearance#update_glassmorphism', as: :update_glassmorphism_appearance
 
     resources :backups, only: [:index] do
       collection do

@@ -104,7 +104,7 @@
     </style>
   </head>
 
-  <body class="bg-base-300 text-base-content min-h-screen">
+  <body class="bg-base-300 text-base-content min-h-screen <%= 'glassmorphism-enabled' if SystemSetting.glassmorphism_enabled? %>">
     <%= yield %>
   </body>
 </html>
