@@ -143,7 +143,7 @@
     <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg p-6 mb-6">
       <h2 class="text-xl font-semibold text-base-content mb-4">Visual Effects</h2>
       
-      <%= form_with url: settings_update_glassmorphism_appearance_path, method: :post do |f| %>
+      <%= form_with url: settings_update_glassmorphism_appearance_path, method: :post, local: true do |f| %>
         <div class="form-control">
           <label class="label cursor-pointer justify-start gap-4">
             <%= check_box_tag :glassmorphism_enabled, '1', @glassmorphism_enabled, class: "toggle toggle-primary", onchange: "this.form.submit()" %>

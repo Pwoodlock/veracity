@@ -110,7 +110,7 @@ class Settings::AppearanceController < ApplicationController
   def update_glassmorphism
     enabled = params[:glassmorphism_enabled] == '1'
     SystemSetting.set('glassmorphism_enabled', enabled.to_s, 'boolean')
-    redirect_to settings_appearance_path, notice: "Glassmorphism #{enabled ? 'enabled' : 'disabled'} successfully!"
+    redirect_to settings_appearance_path, notice: "Glassmorphism #{enabled ? 'enabled' : 'disabled'} successfully!", status: :see_other
   end
 
   private
