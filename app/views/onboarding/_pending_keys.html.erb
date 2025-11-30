@@ -6,7 +6,8 @@
     </div>
   <% else %>
     <!-- Bulk Actions Form -->
-    <%= form_with url: bulk_accept_keys_onboarding_path, method: :post, id: "bulk-keys-form", data: { turbo: false } do |f| %>
+    <form action="<%= bulk_accept_keys_onboarding_path %>" method="post" id="bulk-keys-form">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
       <!-- Select All & Bulk Action Buttons -->
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-base-content/10">
         <label class="flex items-center gap-2 cursor-pointer">
@@ -78,12 +79,13 @@
           </div>
         <% end %>
       </div>
-    <% end %>
+    </form>
 
     <!-- Bulk Reject Form (separate form for reject action) -->
-    <%= form_with url: bulk_reject_keys_onboarding_path, method: :post, id: "bulk-reject-form", data: { turbo: false }, style: "display: none;" do |f| %>
+    <form action="<%= bulk_reject_keys_onboarding_path %>" method="post" id="bulk-reject-form" style="display: none;">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
       <div id="reject-minion-ids"></div>
-    <% end %>
+    </form>
 
     <script>
       document.addEventListener('DOMContentLoaded', function() {
