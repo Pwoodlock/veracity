@@ -4,7 +4,7 @@
 
 **Modern Server Management Platform**
 
-[![Version](https://img.shields.io/badge/version-0.0.1--alpha-blue.svg)](https://github.com/Pwoodlock/veracity-)
+[![Version](https://img.shields.io/badge/version-0.0.1--alpha-blue.svg)](https://github.com/Pwoodlock/veracity)
 [![Ruby](https://img.shields.io/badge/Ruby-3.3.6-CC342D.svg?logo=ruby)](https://www.ruby-lang.org/)
 [![Rails](https://img.shields.io/badge/Rails-8.0-CC0000.svg?logo=rubyonrails)](https://rubyonrails.org/)
 [![SaltStack](https://img.shields.io/badge/SaltStack-3007-57BCAD.svg)](https://saltproject.io/)
@@ -12,7 +12,7 @@
 
 A comprehensive infrastructure management platform built with Ruby on Rails and SaltStack API, External API Services.
 
-[**Documentation**](https://pwoodlock.github.io/veracity-/) · [**Quick Start**](#quick-start) · [**Features**](#features)
+[**Documentation**](https://pwoodlock.github.io/veracity/) · [**Quick Start**](#quick-start) · [**Features**](#features)
 
 </div>
 
@@ -25,14 +25,14 @@ A comprehensive infrastructure management platform built with Ruby on Rails and 
 ### One-Line Installation
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Pwoodlock/veracity-/main/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/Pwoodlock/veracity/main/install.sh | sudo bash
 ```
 
 ### Clone and Install
 
 ```bash
-git clone https://github.com/Pwoodlock/veracity-.git
-cd veracity-
+git clone https://github.com/Pwoodlock/veracity.git
+cd veracity
 sudo ./install.sh
 ```
 
@@ -119,15 +119,15 @@ sudo ./install.sh --rollback
 
 ## Documentation
 
-- **Full Documentation:** https://pwoodlock.github.io/veracity-/
+- **Full Documentation:** https://pwoodlock.github.io/veracity/
 - **Installation Guide:** [INSTALLATION.md](INSTALLATION.md)
 
 ---
 
 ## Support
 
-- **Issues:** https://github.com/Pwoodlock/veracity-/issues
-- **Discussions:** https://github.com/Pwoodlock/veracity-/discussions
+- **Issues:** https://github.com/Pwoodlock/veracity/issues
+- **Discussions:** https://github.com/Pwoodlock/veracity/discussions
 
 ---
 

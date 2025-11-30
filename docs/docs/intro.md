@@ -43,14 +43,14 @@ Before installing, ensure your system meets these requirements:
 **One-line install:**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Pwoodlock/veracity-/main/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/Pwoodlock/veracity/main/install.sh | sudo bash
 ```
 
 **Or clone and run:**
 
 ```bash
-git clone https://github.com/Pwoodlock/veracity-.git
-cd veracity-
+git clone https://github.com/Pwoodlock/veracity.git
+cd veracity
 sudo ./install.sh
 ```
 
@@ -94,5 +94,5 @@ Once installation completes:
 
 ## Need Help?
 
-- [GitHub Issues](https://github.com/Pwoodlock/veracity-/issues)
-- [GitHub Discussions](https://github.com/Pwoodlock/veracity-/discussions)
+- [GitHub Issues](https://github.com/Pwoodlock/veracity/issues)
+- [GitHub Discussions](https://github.com/Pwoodlock/veracity/discussions)

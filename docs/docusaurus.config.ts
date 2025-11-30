@@ -18,12 +18,12 @@ const config: Config = {
   url: 'https://pwoodlock.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/veracity-/',
+  baseUrl: '/veracity/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'Pwoodlock', // Usually your GitHub org/user name.
-  projectName: 'veracity-', // Usually your repo name.
+  projectName: 'veracity', // Usually your repo name.
 
   onBrokenLinks: 'throw',
 
@@ -44,7 +44,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/Pwoodlock/veracity-/tree/main/docs/',
+            'https://github.com/Pwoodlock/veracity/tree/main/docs/',
         },
         blog: false,
         theme: {
@@ -88,7 +88,7 @@ const config: Config = {
           label: 'Docs',
         },
         {
-          href: 'https://github.com/Pwoodlock/veracity-',
+          href: 'https://github.com/Pwoodlock/veracity',
           label: 'GitHub',
           position: 'right',
         },
@@ -111,11 +111,11 @@ const config: Config = {
           items: [
             {
               label: 'GitHub Issues',
-              href: 'https://github.com/Pwoodlock/veracity-/issues',
+              href: 'https://github.com/Pwoodlock/veracity/issues',
             },
             {
               label: 'GitHub Discussions',
-              href: 'https://github.com/Pwoodlock/veracity-/discussions',
+              href: 'https://github.com/Pwoodlock/veracity/discussions',
             },
           ],
         },
@@ -124,7 +124,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/Pwoodlock/veracity-',
+              href: 'https://github.com/Pwoodlock/veracity',
             },
           ],
         },

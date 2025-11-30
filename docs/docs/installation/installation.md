@@ -31,14 +31,14 @@ Complete guide for installing Veracity on your server.
 ### Method 1: One-Line Install (Recommended)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Pwoodlock/veracity-/main/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/Pwoodlock/veracity/main/install.sh | sudo bash
 ```
 
 ### Method 2: Clone and Install
 
 ```bash
-git clone https://github.com/Pwoodlock/veracity-.git
-cd veracity-
+git clone https://github.com/Pwoodlock/veracity.git
+cd veracity
 sudo ./install.sh
 ```
 
