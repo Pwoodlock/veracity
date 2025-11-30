@@ -90,7 +90,16 @@ class OnboardingController < ApplicationController
 
   # Bulk accept multiple minion keys
   def bulk_accept_keys
-    minion_keys = params[:minion_keys] || []
+    minion_keys_param = params[:minion_keys]
+
+    # Handle both array and hash formats from form submission
+    minion_keys = if minion_keys_param.is_a?(ActionController::Parameters)
+                    minion_keys_param.values.map(&:to_h)
+                  elsif minion_keys_param.is_a?(Array)
+                    minion_keys_param
+                  else
+                    []
+                  end
 
     if minion_keys.empty?
       flash[:error] = "No minions selected"
@@ -104,8 +113,8 @@ class OnboardingController < ApplicationController
     failed = []
 
     minion_keys.each do |key_data|
-      minion_id = key_data[:minion_id]
-      fingerprint = key_data[:fingerprint]
+      minion_id = key_data['minion_id'] || key_data[:minion_id]
+      fingerprint = key_data['fingerprint'] || key_data[:fingerprint]
 
       begin
         result = SaltService.accept_key_with_verification(minion_id, fingerprint)
