@@ -459,15 +459,15 @@ class SaltService
       })
 
       # Check if deletion was successful
+      # wheel.key.delete returns success: true if it worked, return: {} (empty hash)
       if api_result && api_result['return']
         data = api_result['return'].first
-        if data && data['data'] && data['data']['return']
-          deleted_keys = data['data']['return']['minions_pre'] || data['data']['return']['minions'] || []
-
-          if deleted_keys.include?(minion_id)
+        if data && data['data']
+          success = data['data']['success']
+          if success
             Rails.logger.info "Successfully deleted key: #{minion_id}"
           else
-            Rails.logger.warn "Key deletion may have failed for #{minion_id}, not in deleted list"
+            Rails.logger.error "Failed to delete key #{minion_id}: API returned success=false"
           end
         end
       else
