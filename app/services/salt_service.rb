@@ -447,7 +447,9 @@ class SaltService
 
     # Delete a minion key
     def delete_key(minion_id)
-      # First try the API delete
+      Rails.logger.info "Deleting minion key: #{minion_id}"
+
+      # Use Salt API wheel.key.delete
       api_result = api_call(:post, '/', {
         body: {
           client: 'wheel',
@@ -456,16 +458,20 @@ class SaltService
         }.to_json
       })
 
-      # Verify key is actually deleted by using salt-key command directly
-      # This ensures the key is removed from all lists (accepted, unaccepted, rejected)
-      begin
-        # Use local command execution on the salt master to force delete the key
-        delete_cmd = "salt-key -d #{minion_id} -y"
-        system_result = `#{delete_cmd} 2>&1`
+      # Check if deletion was successful
+      if api_result && api_result['return']
+        data = api_result['return'].first
+        if data && data['data'] && data['data']['return']
+          deleted_keys = data['data']['return']['minions_pre'] || data['data']['return']['minions'] || []
 
-        Rails.logger.info "Forced key deletion for #{minion_id}: #{system_result}"
-      rescue => e
-        Rails.logger.warn "Could not force delete key via salt-key command: #{e.message}"
+          if deleted_keys.include?(minion_id)
+            Rails.logger.info "Successfully deleted key: #{minion_id}"
+          else
+            Rails.logger.warn "Key deletion may have failed for #{minion_id}, not in deleted list"
+          end
+        end
+      else
+        Rails.logger.error "Failed to delete key #{minion_id}: No return data from API"
       end
 
       api_result
