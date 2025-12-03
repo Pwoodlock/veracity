@@ -1073,5 +1073,74 @@ class SaltService
 
       messages.join("\n")
     end
+
+    # Clean up orphaned pending keys (keys that don't have associated servers)
+    # This is useful after reinstalling Salt master or cleaning up old infrastructure
+    # @return [Hash] Result with :success, :deleted_keys, :failed_keys
+    def cleanup_orphaned_pending_keys
+      Rails.logger.info "Cleaning up orphaned pending keys"
+
+      # Get all pending keys
+      pending_keys_data = list_pending_keys
+      pending_minion_ids = pending_keys_data.map { |k| k[:minion_id] }
+
+      return {
+        success: true,
+        deleted_keys: [],
+        failed_keys: [],
+        message: "No pending keys to clean up"
+      } if pending_minion_ids.empty?
+
+      # Get all minion_ids that exist in the database
+      existing_minion_ids = Server.pluck(:minion_id)
+
+      # Find orphaned keys (pending keys that don't have a server record)
+      orphaned_keys = pending_minion_ids - existing_minion_ids
+
+      if orphaned_keys.empty?
+        return {
+          success: true,
+          deleted_keys: [],
+          failed_keys: [],
+          message: "No orphaned pending keys found. All pending keys are awaiting acceptance."
+        }
+      end
+
+      Rails.logger.info "Found #{orphaned_keys.count} orphaned pending keys: #{orphaned_keys.join(', ')}"
+
+      deleted = []
+      failed = []
+
+      orphaned_keys.each do |minion_id|
+        begin
+          result = delete_key(minion_id)
+          if result && result['return']
+            deleted << minion_id
+            Rails.logger.info "Deleted orphaned key: #{minion_id}"
+          else
+            failed << minion_id
+            Rails.logger.warn "Failed to delete orphaned key: #{minion_id}"
+          end
+        rescue StandardError => e
+          Rails.logger.error "Error deleting orphaned key #{minion_id}: #{e.message}"
+          failed << minion_id
+        end
+      end
+
+      {
+        success: failed.empty?,
+        deleted_keys: deleted,
+        failed_keys: failed,
+        message: "Deleted #{deleted.count} orphaned key(s)#{failed.any? ? ", #{failed.count} failed" : ""}"
+      }
+    rescue StandardError => e
+      Rails.logger.error "Error cleaning up orphaned keys: #{e.message}"
+      {
+        success: false,
+        deleted_keys: [],
+        failed_keys: [],
+        message: "Error: #{e.message}"
+      }
+    end
   end
 end

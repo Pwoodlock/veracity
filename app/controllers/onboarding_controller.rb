@@ -4,7 +4,9 @@ class OnboardingController < ApplicationController
   # SECURITY: Authorization checks for minion key management
   # Viewers: Can view onboarding page (index, install)
   # Operators & Admins: Can accept/reject minion keys
+  # Admins only: Can cleanup orphaned keys
   before_action :require_operator!, only: [:accept_key, :reject_key, :bulk_accept_keys, :bulk_reject_keys, :refresh]
+  before_action :require_admin!, only: [:cleanup_orphaned_keys]
 
   # Show pending minion keys and accept form
   def index
@@ -147,6 +149,8 @@ class OnboardingController < ApplicationController
   end
 
   # Bulk reject multiple minion keys
+  # NOTE: This actually DELETES the keys permanently, not just rejects them
+  # This prevents orphaned keys from accumulating
   def bulk_reject_keys
     minion_ids = params[:minion_ids] || []
 
@@ -156,26 +160,54 @@ class OnboardingController < ApplicationController
       return
     end
 
-    Rails.logger.info "User #{current_user.email} bulk rejecting #{minion_ids.size} keys"
+    Rails.logger.info "User #{current_user.email} bulk deleting #{minion_ids.size} keys"
 
-    rejected = []
+    deleted = []
     failed = []
 
     minion_ids.each do |minion_id|
       begin
-        SaltService.reject_key(minion_id)
-        rejected << minion_id
+        result = SaltService.delete_key(minion_id)
+        if result && result['return']
+          deleted << minion_id
+        else
+          failed << { minion_id: minion_id, error: "API returned false" }
+        end
       rescue StandardError => e
         failed << { minion_id: minion_id, error: e.message }
       end
     end
 
     if failed.empty?
-      flash[:success] = "Rejected #{rejected.size} minion key(s)"
-    elsif rejected.any?
-      flash[:warning] = "Rejected #{rejected.size} key(s), but #{failed.size} failed"
+      flash[:success] = "Deleted #{deleted.size} minion key(s)"
+    elsif deleted.any?
+      flash[:warning] = "Deleted #{deleted.size} key(s), but #{failed.size} failed"
     else
-      flash[:error] = "Failed to reject all keys"
+      flash[:error] = "Failed to delete all keys"
+    end
+
+    redirect_to onboarding_path
+  end
+
+  # Clean up orphaned pending keys (keys without associated servers)
+  def cleanup_orphaned_keys
+    Rails.logger.info "User #{current_user.email} cleaning up orphaned keys"
+
+    begin
+      result = SaltService.cleanup_orphaned_pending_keys
+
+      if result[:success]
+        if result[:deleted_keys].any?
+          flash[:success] = "#{result[:message]}: #{result[:deleted_keys].join(', ')}"
+        else
+          flash[:notice] = result[:message]
+        end
+      else
+        flash[:warning] = result[:message]
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error during cleanup: #{e.message}"
+      flash[:error] = "Cleanup failed: #{e.message}"
     end
 
     redirect_to onboarding_path
