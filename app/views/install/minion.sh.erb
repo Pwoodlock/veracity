@@ -150,19 +150,17 @@ cleanup_salt_minion() {
   esac
   echo -e "${GREEN}✓${NC} Package removed"
 
-  # Step 4: Remove configuration and data directories
-  echo -e "${BLUE}[Cleanup 4/6]${NC} Removing configuration files and directories..."
-  rm -rf /etc/salt/minion* 2>/dev/null || true
-  rm -rf /etc/salt/pki/minion/ 2>/dev/null || true
-  rm -rf /etc/salt/minion.d/ 2>/dev/null || true
-  echo -e "${GREEN}✓${NC} Configuration removed"
+  # Step 4: Remove ALL configuration and data directories
+  echo -e "${BLUE}[Cleanup 4/6]${NC} Removing ALL Salt configuration and data..."
+  rm -rf /etc/salt 2>/dev/null || true
+  echo -e "${GREEN}✓${NC} All configuration removed"
 
-  # Step 5: Remove logs and cache
-  echo -e "${BLUE}[Cleanup 5/6]${NC} Removing logs and cache..."
-  rm -rf /var/log/salt/minion* 2>/dev/null || true
-  rm -rf /var/cache/salt/minion/ 2>/dev/null || true
-  rm -rf /var/run/salt/minion/ 2>/dev/null || true
-  echo -e "${GREEN}✓${NC} Logs and cache cleared"
+  # Step 5: Remove ALL logs, cache, and runtime files
+  echo -e "${BLUE}[Cleanup 5/6]${NC} Removing ALL logs, cache, and runtime data..."
+  rm -rf /var/cache/salt 2>/dev/null || true
+  rm -rf /var/log/salt 2>/dev/null || true
+  rm -rf /var/run/salt 2>/dev/null || true
+  echo -e "${GREEN}✓${NC} All logs and cache cleared"
 
   # Step 6: Verify cleanup
   echo -e "${BLUE}[Cleanup 6/6]${NC} Verifying complete removal..."
