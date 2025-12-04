@@ -368,9 +368,10 @@ phase_borgbackup() {
 
 #######################################
 # Install Python integrations phase
+# NOTE: Must run AFTER Application phase (needs /opt/veracity/app to exist)
 #######################################
 phase_python_integrations() {
-  progress_bar 9 12 "Installing Python integrations..."
+  progress_bar 10 12 "Installing Python integrations..."
   source "${SCRIPT_DIR}/scripts/install/services/python_integrations.sh"
   setup_python_integrations
   add_rollback "Remove integrations venv" "rm -rf /opt/veracity/app/integrations_venv 2>/dev/null"
@@ -381,7 +382,7 @@ phase_python_integrations() {
 #######################################
 phase_application() {
   validate_phase_prerequisites "Application" || return 1
-  progress_bar 10 12 "Setting up application..."
+  progress_bar 9 12 "Setting up application..."
   source "${SCRIPT_DIR}/scripts/install/app-setup.sh"
   setup_application
   add_rollback "Remove application" "rm -rf /opt/veracity/app 2>/dev/null"
@@ -453,8 +454,8 @@ run_installation() {
   run_phase "Caddy" phase_caddy "required" || return 1
   run_phase "Gotify" phase_gotify "optional"
   run_phase "BorgBackup" phase_borgbackup "optional"
-  run_phase "PythonIntegrations" phase_python_integrations "required" || return 1
   run_phase "Application" phase_application "required" || return 1
+  run_phase "PythonIntegrations" phase_python_integrations "required" || return 1
   run_phase "Systemd" phase_systemd "required" || return 1
   run_phase "Firewall" phase_firewall "required" || return 1
   run_phase "HealthChecks" phase_health_checks "optional"
