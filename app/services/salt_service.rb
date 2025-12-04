@@ -887,7 +887,7 @@ class SaltService
         grains = sync_minion_grains(minion_id)
         os_family = grains['os_family']&.downcase || 'unknown'
 
-        # For RedHat family, detect which package manager is available
+        # Build complete uninstall command (stop, disable, remove, purge)
         uninstall_command = nil
         if os_family == 'redhat' || os_family == 'rhel'
           # Check if dnf is available (RHEL 8+, Fedora, AlmaLinux, Rocky)
@@ -895,21 +895,26 @@ class SaltService
           has_dnf = dnf_check && dnf_check['return']&.first&.dig(minion_id)&.include?('/dnf')
 
           if has_dnf
-            uninstall_command = 'dnf remove -y salt-minion'
-            Rails.logger.info "Using dnf for RedHat family uninstall"
+            # Complete cleanup for dnf-based systems (AlmaLinux, Rocky, RHEL 8+)
+            uninstall_command = 'systemctl stop salt-minion && systemctl disable salt-minion && dnf remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
+            Rails.logger.info "Using dnf for RedHat family uninstall with full cleanup"
           else
-            uninstall_command = 'yum remove -y salt-minion'
-            Rails.logger.info "Using yum for RedHat family uninstall"
+            # Complete cleanup for yum-based systems (RHEL 7, CentOS 7)
+            uninstall_command = 'systemctl stop salt-minion && systemctl disable salt-minion && yum remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
+            Rails.logger.info "Using yum for RedHat family uninstall with full cleanup"
           end
         else
           # Determine uninstall command for other OS families
           uninstall_command = case os_family
                              when 'debian'
-                               'apt-get remove -y salt-minion && apt-get purge -y salt-minion && apt-get autoremove -y'
+                               # Complete cleanup for Debian/Ubuntu
+                               'systemctl stop salt-minion && systemctl disable salt-minion && apt-get remove -y salt-minion && apt-get purge -y salt-minion && apt-get autoremove -y && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
                              when 'suse'
-                               'zypper remove -y salt-minion'
+                               # Complete cleanup for SUSE
+                               'systemctl stop salt-minion && systemctl disable salt-minion && zypper remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
                              when 'arch'
-                               'pacman -Rns --noconfirm salt'
+                               # Complete cleanup for Arch
+                               'systemctl stop salt-minion && systemctl disable salt-minion && pacman -Rns --noconfirm salt && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
                              else
                                return {
                                  success: false,
