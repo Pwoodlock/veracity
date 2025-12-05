@@ -233,8 +233,11 @@ install_gems() {
   info "  • Installing to vendor/bundle"
   echo ""
 
+  # Configure bundle to exclude development/test groups (new bundler syntax)
+  sudo -u "${DEPLOY_USER}" bash -c "${ruby_cmd} cd ${APP_DIR} && bundle config set --local without 'development test'"
+
   # Use retry_command for network resilience
-  if ! retry_command 3 5 run_with_timeout 1200 sudo -u "${DEPLOY_USER}" bash -c "${ruby_cmd} cd ${APP_DIR} && RAILS_ENV=production bundle install --jobs=4 --retry=3 --without development test"; then
+  if ! retry_command 3 5 run_with_timeout 1200 sudo -u "${DEPLOY_USER}" bash -c "${ruby_cmd} cd ${APP_DIR} && RAILS_ENV=production bundle install --jobs=4 --retry=3"; then
     error "Failed to install gems after multiple attempts"
     error "This may be due to:"
     error "  - Network connectivity issues"

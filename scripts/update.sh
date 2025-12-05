@@ -143,13 +143,18 @@ update_dependencies() {
   info "Updating Ruby gems..."
 
   cd "$APP_DIR"
-  sudo -u "$DEPLOY_USER" bash -c "export PATH=/home/${DEPLOY_USER}/.rbenv/shims:\$PATH && bundle install --deployment --without development test"
+
+  # Configure bundle (new bundler syntax - flags are deprecated)
+  sudo -u "$DEPLOY_USER" bash -c "export PATH=\"\$HOME/.local/bin:\$PATH\" && eval \"\$(mise activate bash)\" && cd ${APP_DIR} && bundle config set --local deployment true && bundle config set --local without 'development test'"
+
+  # Run bundle install
+  sudo -u "$DEPLOY_USER" bash -c "export PATH=\"\$HOME/.local/bin:\$PATH\" && eval \"\$(mise activate bash)\" && cd ${APP_DIR} && bundle install"
 
   success "Ruby gems updated"
 
   info "Updating Node packages..."
 
-  sudo -u "$DEPLOY_USER" bash -c "export PATH=/home/${DEPLOY_USER}/.rbenv/shims:\$PATH && yarn install --production --frozen-lockfile"
+  sudo -u "$DEPLOY_USER" bash -c "export PATH=\"\$HOME/.local/bin:\$PATH\" && eval \"\$(mise activate bash)\" && cd ${APP_DIR} && yarn install --production --frozen-lockfile"
 
   success "Node packages updated"
 }
