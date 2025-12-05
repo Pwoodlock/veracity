@@ -888,6 +888,8 @@ class SaltService
         os_family = grains['os_family']&.downcase || 'unknown'
 
         # Build complete uninstall command (stop, disable, remove, purge)
+        # IMPORTANT: We use nohup and background (&) so the command survives salt-minion shutdown
+        # The sleep at the start gives Salt time to return success before the minion stops
         uninstall_command = nil
         if os_family == 'redhat' || os_family == 'rhel'
           # Check if dnf is available (RHEL 8+, Fedora, AlmaLinux, Rocky)
@@ -896,25 +898,26 @@ class SaltService
 
           if has_dnf
             # Complete cleanup for dnf-based systems (AlmaLinux, Rocky, RHEL 8+)
-            uninstall_command = 'systemctl stop salt-minion && systemctl disable salt-minion && dnf remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
-            Rails.logger.info "Using dnf for RedHat family uninstall with full cleanup"
+            # nohup ensures command continues after salt-minion is stopped
+            uninstall_command = "nohup bash -c 'sleep 2 && systemctl stop salt-minion && systemctl disable salt-minion && dnf remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt' > /tmp/salt-uninstall.log 2>&1 &"
+            Rails.logger.info "Using dnf for RedHat family uninstall with full cleanup (backgrounded)"
           else
             # Complete cleanup for yum-based systems (RHEL 7, CentOS 7)
-            uninstall_command = 'systemctl stop salt-minion && systemctl disable salt-minion && yum remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
-            Rails.logger.info "Using yum for RedHat family uninstall with full cleanup"
+            uninstall_command = "nohup bash -c 'sleep 2 && systemctl stop salt-minion && systemctl disable salt-minion && yum remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt' > /tmp/salt-uninstall.log 2>&1 &"
+            Rails.logger.info "Using yum for RedHat family uninstall with full cleanup (backgrounded)"
           end
         else
           # Determine uninstall command for other OS families
           uninstall_command = case os_family
                              when 'debian'
                                # Complete cleanup for Debian/Ubuntu
-                               'systemctl stop salt-minion && systemctl disable salt-minion && apt-get remove -y salt-minion && apt-get purge -y salt-minion && apt-get autoremove -y && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
+                               "nohup bash -c 'sleep 2 && systemctl stop salt-minion && systemctl disable salt-minion && apt-get remove -y salt-minion && apt-get purge -y salt-minion && apt-get autoremove -y && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt' > /tmp/salt-uninstall.log 2>&1 &"
                              when 'suse'
                                # Complete cleanup for SUSE
-                               'systemctl stop salt-minion && systemctl disable salt-minion && zypper remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
+                               "nohup bash -c 'sleep 2 && systemctl stop salt-minion && systemctl disable salt-minion && zypper remove -y salt-minion && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt' > /tmp/salt-uninstall.log 2>&1 &"
                              when 'arch'
                                # Complete cleanup for Arch
-                               'systemctl stop salt-minion && systemctl disable salt-minion && pacman -Rns --noconfirm salt && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt'
+                               "nohup bash -c 'sleep 2 && systemctl stop salt-minion && systemctl disable salt-minion && pacman -Rns --noconfirm salt && rm -rf /etc/salt /var/cache/salt /var/log/salt /var/run/salt' > /tmp/salt-uninstall.log 2>&1 &"
                              else
                                return {
                                  success: false,
@@ -926,23 +929,24 @@ class SaltService
 
         Rails.logger.info "Running uninstall command for #{os_family}: #{uninstall_command}"
 
-        # Run uninstall command with longer timeout (3 minutes)
-        result = run_command(minion_id, 'cmd.run', [uninstall_command], timeout: 180)
+        # Run uninstall command - this returns immediately since it's backgrounded
+        # The actual uninstall happens in the background after a 2-second delay
+        result = run_command(minion_id, 'cmd.run', [uninstall_command], timeout: 30)
 
         if result && result[:success]
-          output = result[:output] || "No output"
+          output = result[:output] || "Uninstall command dispatched (running in background)"
 
-          Rails.logger.info "Uninstall command completed for #{minion_id}: #{output}"
+          Rails.logger.info "Uninstall command dispatched for #{minion_id}: #{output}"
           {
             success: true,
-            message: "Salt minion uninstallation completed on #{minion_id}",
+            message: "Salt minion uninstallation initiated on #{minion_id} (running in background)",
             output: output
           }
         else
-          Rails.logger.error "Failed to run uninstall command on #{minion_id}: #{result[:output]}"
+          Rails.logger.error "Failed to dispatch uninstall command on #{minion_id}: #{result[:output]}"
           {
             success: false,
-            message: "Failed to execute uninstall command",
+            message: "Failed to dispatch uninstall command",
             output: result[:output] || result.inspect
           }
         end
@@ -968,11 +972,14 @@ class SaltService
       }
 
       # Step 1: Try to uninstall salt-minion from the server (if online)
+      # The uninstall command runs in background with a 2-second delay to allow
+      # Salt to return success before the minion stops
       uninstall_result = uninstall_minion(minion_id)
       results[:uninstall] = uninstall_result
 
-      # Wait a moment for uninstall to process
-      sleep 2 if uninstall_result[:success]
+      # Wait for the backgrounded uninstall to start (2s delay + 3s buffer)
+      # This ensures salt-minion has stopped before we delete the key
+      sleep 5 if uninstall_result[:success]
 
       # Step 2: Delete the minion key from Salt master
       begin
@@ -1136,7 +1143,7 @@ class SaltService
       # Uninstall status
       if results[:uninstall]
         if results[:uninstall][:success]
-          messages << "Salt minion uninstalled from server"
+          messages << "Salt minion uninstall initiated (running in background)"
         else
           messages << "Could not uninstall from server: #{results[:uninstall][:message]}"
         end
@@ -1151,7 +1158,7 @@ class SaltService
         end
       end
 
-      messages.join("\n")
+      messages.join(". ")
     end
   end
 end
