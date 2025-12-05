@@ -871,21 +871,36 @@ class SaltService
       Rails.logger.info "Uninstalling salt-minion from #{minion_id}"
 
       begin
-        # First check if server is online
-        ping_result = ping_minion(minion_id)
-        is_online = ping_result && ping_result['return']&.first&.dig(minion_id)
+        # Try to get OS family to determine package manager
+        # Don't check ping status - just try to run the uninstall command
+        grains = sync_minion_grains(minion_id)
+        os_family = grains['os_family']&.downcase if grains.present?
 
-        unless is_online
-          return {
-            success: false,
-            message: "Server is offline, cannot uninstall remotely",
-            output: "Minion not responding to ping"
-          }
+        # Fallback: try to get OS family from the Server model if grains failed
+        if os_family.blank?
+          server = Server.find_by(minion_id: minion_id)
+          if server&.grains.present?
+            os_family = server.grains['os_family']&.downcase
+            Rails.logger.info "Using cached OS family from database: #{os_family}"
+          elsif server&.os_name.present?
+            # Map common OS names to families
+            os_family = case server.os_name.downcase
+                       when /ubuntu|debian/
+                         'debian'
+                       when /centos|rocky|alma|rhel|red hat|fedora/
+                         'redhat'
+                       when /suse|opensuse/
+                         'suse'
+                       when /arch/
+                         'arch'
+                       else
+                         'unknown'
+                       end
+            Rails.logger.info "Inferred OS family from os_name '#{server.os_name}': #{os_family}"
+          end
         end
 
-        # Get OS family to determine package manager
-        grains = sync_minion_grains(minion_id)
-        os_family = grains['os_family']&.downcase || 'unknown'
+        os_family ||= 'unknown'
 
         # Build complete uninstall command (stop, disable, remove, purge)
         # IMPORTANT: We use nohup and background (&) so the command survives salt-minion shutdown
