@@ -731,49 +731,19 @@ class SaltService
       # Create pillar content in YAML format
       pillar_content = data.to_yaml
 
-      # Write pillar file using Salt's file_roots runner
-      # This creates /srv/pillar/minions/<minion_id>/<pillar_name>.sls
+      # Write pillar file directly to filesystem
+      # Rails runs on the same server as Salt master, so direct file ops work
       pillar_dir = "/srv/pillar/minions/#{minion_id}"
       pillar_file = "#{pillar_dir}/#{pillar_name}.sls"
 
-      # Use Salt master's cmd.run to create the pillar file
-      # This runs on the Salt master itself, not a minion
-      result = api_call(:post, '/', {
-        body: {
-          client: 'runner',
-          fun: 'salt.cmd',
-          arg: [
-            'file.mkdir',
-            pillar_dir
-          ]
-        }.to_json
-      })
+      # Create directory if it doesn't exist
+      FileUtils.mkdir_p(pillar_dir)
 
       # Write the pillar file
-      write_result = api_call(:post, '/', {
-        body: {
-          client: 'runner',
-          fun: 'salt.cmd',
-          arg: [
-            'file.write',
-            pillar_file,
-            pillar_content
-          ]
-        }.to_json
-      })
+      File.write(pillar_file, pillar_content)
 
-      # Ensure proper permissions (readable only by salt)
-      api_call(:post, '/', {
-        body: {
-          client: 'runner',
-          fun: 'salt.cmd',
-          arg: [
-            'file.set_mode',
-            pillar_file,
-            '0600'
-          ]
-        }.to_json
-      })
+      # Set secure permissions (readable only by root/salt)
+      File.chmod(0600, pillar_file)
 
       Rails.logger.info "Pillar file written: #{pillar_file}"
       { success: true, pillar_file: pillar_file }
@@ -791,16 +761,8 @@ class SaltService
 
       pillar_file = "/srv/pillar/minions/#{minion_id}/#{pillar_name}.sls"
 
-      result = api_call(:post, '/', {
-        body: {
-          client: 'runner',
-          fun: 'salt.cmd',
-          arg: [
-            'file.remove',
-            pillar_file
-          ]
-        }.to_json
-      })
+      # Delete file directly from filesystem
+      FileUtils.rm_f(pillar_file)
 
       Rails.logger.info "Pillar file deleted: #{pillar_file}"
       { success: true }
