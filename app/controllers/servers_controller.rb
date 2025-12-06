@@ -1,12 +1,12 @@
 class ServersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_server, only: [:show, :edit, :update, :destroy, :sync, :diagnose, :manual_refresh_proxmox, :start_hetzner, :stop_hetzner, :reboot_hetzner, :refresh_hetzner_status, :hetzner_snapshots, :create_hetzner_snapshot, :delete_hetzner_snapshot, :start_proxmox, :stop_proxmox, :shutdown_proxmox, :reboot_proxmox, :refresh_proxmox_status, :proxmox_snapshots, :create_proxmox_snapshot, :rollback_proxmox_snapshot, :delete_proxmox_snapshot]
+  before_action :set_server, only: [:show, :edit, :update, :destroy, :sync, :manual_refresh_proxmox, :start_hetzner, :stop_hetzner, :reboot_hetzner, :refresh_hetzner_status, :hetzner_snapshots, :create_hetzner_snapshot, :delete_hetzner_snapshot, :start_proxmox, :stop_proxmox, :shutdown_proxmox, :reboot_proxmox, :refresh_proxmox_status, :proxmox_snapshots, :create_proxmox_snapshot, :rollback_proxmox_snapshot, :delete_proxmox_snapshot]
 
   # SECURITY: Authorization checks to prevent IDOR attacks
   # Viewers: Can only view servers (index, show)
   # Operators: Can view and manage servers (edit, update, sync, Hetzner/Proxmox controls)
   # Admins: Full access including destroy
-  before_action :require_operator!, only: [:edit, :update, :sync, :diagnose, :manual_refresh_proxmox, :start_hetzner, :stop_hetzner, :reboot_hetzner, :refresh_hetzner_status, :hetzner_snapshots, :create_hetzner_snapshot, :delete_hetzner_snapshot, :fetch_hetzner_servers, :start_proxmox, :stop_proxmox, :shutdown_proxmox, :reboot_proxmox, :refresh_proxmox_status, :proxmox_snapshots, :create_proxmox_snapshot, :rollback_proxmox_snapshot, :delete_proxmox_snapshot, :fetch_proxmox_vms]
+  before_action :require_operator!, only: [:edit, :update, :sync, :manual_refresh_proxmox, :start_hetzner, :stop_hetzner, :reboot_hetzner, :refresh_hetzner_status, :hetzner_snapshots, :create_hetzner_snapshot, :delete_hetzner_snapshot, :fetch_hetzner_servers, :start_proxmox, :stop_proxmox, :shutdown_proxmox, :reboot_proxmox, :refresh_proxmox_status, :proxmox_snapshots, :create_proxmox_snapshot, :rollback_proxmox_snapshot, :delete_proxmox_snapshot, :fetch_proxmox_vms]
   before_action :require_admin!, only: [:destroy]
 
   # List all servers
@@ -515,27 +515,6 @@ class ServersController < ApplicationController
       redirect_to proxmox_snapshots_server_path(@server), notice: "Snapshot '#{snap_name}' deleted successfully."
     else
       redirect_to proxmox_snapshots_server_path(@server), alert: "Failed to delete snapshot: #{result[:error]}"
-    end
-  end
-
-  # Run comprehensive diagnostics on a server
-  def diagnose
-    begin
-      @diagnostic_results = SaltHealthCheckService.diagnose(@server)
-
-      respond_to do |format|
-        format.html # Will render app/views/servers/diagnose.html.erb
-        format.json { render json: @diagnostic_results }
-      end
-    rescue StandardError => e
-      Rails.logger.error "Error running diagnostics for server #{@server.minion_id}: #{e.message}"
-
-      respond_to do |format|
-        format.html do
-          redirect_to server_path(@server), alert: "Failed to run diagnostics: #{e.message}"
-        end
-        format.json { render json: { error: e.message }, status: :internal_server_error }
-      end
     end
   end
 

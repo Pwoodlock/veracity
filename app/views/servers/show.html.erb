@@ -34,13 +34,6 @@
           Sync Data
         <% end %>
 
-        <%= link_to diagnose_server_path(@server), class: "btn btn-secondary", data: { turbo: false } do %>
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-          </svg>
-          Run Diagnostics
-        <% end %>
-
         <% if @server.proxmox_server? %>
           <%= button_to manual_refresh_proxmox_server_path(@server), method: :post, class: "btn btn-info" do %>
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,7 +180,7 @@
               <% if @server.status == 'offline' && @server.proxmox_power_state == 'running' %>
                 <div class="alert alert-warning mt-2">
                   <p class="text-sm">
-                    VM is running in Proxmox but Salt minion is not responding. Try running diagnostics or manually refreshing Proxmox status.
+                    VM is running in Proxmox but Salt minion is not responding. Try manually refreshing Proxmox status or check the Salt minion on the server.
                   </p>
                 </div>
               <% end %>

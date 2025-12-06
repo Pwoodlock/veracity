@@ -195,7 +195,6 @@ Rails.application.routes.draw do
     end
     member do
       post :sync
-      get :diagnose
       post :manual_refresh_proxmox
       # Hetzner Cloud control actions
       post :start_hetzner
