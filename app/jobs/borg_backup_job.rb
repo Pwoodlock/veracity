@@ -48,20 +48,37 @@ class BorgBackupJob < ApplicationJob
       # Create temporary directory for database dump with secure random name
       db_backup_dir = create_secure_temp_directory
 
-      # Create PostgreSQL dump using array-based command
+      # Create PostgreSQL dump using database credentials from Rails config
       Rails.logger.info "Creating PostgreSQL dump..."
       db_dump_path = File.join(db_backup_dir, 'database.sql.gz')
 
       # Validate output path
       validate_file_path(db_dump_path)
 
-      # Use array-based command execution to prevent injection
-      # Split into two commands: pg_dump | gzip
-      pg_dump_command = ['sudo', '-u', 'postgres', 'pg_dump', 'server_manager_production']
+      # Get database configuration from Rails
+      db_config = ActiveRecord::Base.connection_db_config.configuration_hash
+      db_name = db_config[:database]
+      db_host = db_config[:host] || 'localhost'
+      db_port = db_config[:port] || 5432
+      db_user = db_config[:username]
+      db_password = db_config[:password]
+
+      # Build pg_dump command with credentials
+      pg_dump_command = [
+        'pg_dump',
+        '-h', db_host.to_s,
+        '-p', db_port.to_s,
+        '-U', db_user.to_s,
+        '-d', db_name.to_s,
+        '--no-password'  # Use PGPASSWORD env var instead
+      ]
       gzip_command = ['gzip']
 
-      # Execute pg_dump
-      pg_stdout, pg_stderr, pg_status = Open3.capture3(*pg_dump_command)
+      # Set PGPASSWORD environment variable for authentication
+      pg_env = { 'PGPASSWORD' => db_password.to_s }
+
+      # Execute pg_dump with credentials
+      pg_stdout, pg_stderr, pg_status = Open3.capture3(pg_env, *pg_dump_command)
 
       unless pg_status.success?
         raise "Database dump failed: #{pg_stderr}"
