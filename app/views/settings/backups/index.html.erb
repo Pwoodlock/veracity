@@ -7,22 +7,11 @@
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- Settings Tabs -->
-    <div class="mb-6 border-b border-base-content/10">
-      <nav class="-mb-px flex space-x-8">
-        <%= link_to settings_backups_path, class: "border-b-2 border-primary py-4 px-1 text-sm font-medium text-primary" do %>
-          Borg Backup
-        <% end %>
-        <%= link_to settings_hetzner_api_keys_path, class: "border-b-2 border-transparent py-4 px-1 text-sm font-medium text-base-content/60 hover:text-base-content/80 hover:border-base-content/20" do %>
-          Hetzner API Keys
-        <% end %>
-        <%= link_to settings_maintenance_path, class: "border-b-2 border-transparent py-4 px-1 text-sm font-medium text-base-content/60 hover:text-base-content/80 hover:border-base-content/20" do %>
-          Maintenance
-        <% end %>
-      </nav>
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-base-content">Borg Backup Configuration</h1>
+      <p class="mt-2 text-sm text-base-content/60">Configure automated backups using Borg Backup</p>
     </div>
-
-    <h1 class="text-2xl font-bold text-base-content mb-6">Borg Backup Configuration</h1>
 
     <!-- Flash Messages -->
     <% if flash[:success] %>
