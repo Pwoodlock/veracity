@@ -410,7 +410,8 @@ NETBIRDEOF
   # Set permissions
   chown -R root:root /srv/salt /srv/pillar
   chmod -R 755 /srv/salt
-  chmod 600 /srv/pillar/*.sls
+  # Pillar files need to be readable by salt-master (644, not 600)
+  chmod 644 /srv/pillar/*.sls
 
   # Allow deploy user to write minion-specific pillar files
   chown deploy:deploy /srv/pillar/minions
