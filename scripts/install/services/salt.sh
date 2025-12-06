@@ -412,6 +412,10 @@ NETBIRDEOF
   chmod -R 755 /srv/salt
   chmod 600 /srv/pillar/*.sls
 
+  # Allow deploy user to write minion-specific pillar files
+  chown deploy:deploy /srv/pillar/minions
+  chmod 755 /srv/pillar/minions
+
   success "Salt directories and state files created"
 }
 
