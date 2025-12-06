@@ -332,14 +332,87 @@ create_salt_directories() {
 
   # Create directories
   mkdir -p /srv/salt/states
-  mkdir -p /srv/pillar
+  mkdir -p /srv/pillar/minions
   mkdir -p /var/log/salt
+
+  # Create pillar top.sls to map pillar data to minions
+  cat > /srv/pillar/top.sls << 'PILLAREOF'
+# Pillar Top File
+# Maps pillar data to minions
+
+base:
+  '*':
+    - common
+PILLAREOF
+
+  # Create common pillar file
+  cat > /srv/pillar/common.sls << 'COMMONEOF'
+# Common Pillar Data (non-sensitive)
+# Per-minion secrets are in /srv/pillar/minions/<minion_id>/
+COMMONEOF
+
+  # Deploy NetBird state file for Salt-based deployments
+  cat > /srv/salt/netbird.sls << 'NETBIRDEOF'
+# Salt State for Deploying NetBird Agent
+# This state installs and configures NetBird using PILLAR DATA for secrets
+
+# Install NetBird using the official installer
+netbird_install:
+  cmd.run:
+    - name: curl -fsSL https://pkgs.netbird.io/install.sh | sh
+    - unless: which netbird
+    - timeout: 300
+
+# Write setup key to a temporary file (secure - not in command line)
+netbird_setup_key_file:
+  file.managed:
+    - name: /tmp/.netbird_setup_key
+    - contents: {{ pillar['netbird']['setup_key'] }}
+    - mode: 0600
+    - user: root
+    - group: root
+    - require:
+      - cmd: netbird_install
+
+# Connect to NetBird network using the key file
+netbird_connect:
+  cmd.run:
+    - name: |
+        SETUP_KEY=$(cat /tmp/.netbird_setup_key)
+        netbird up --management-url {{ pillar['netbird']['management_url'] }} --setup-key "$SETUP_KEY"
+    - require:
+      - file: netbird_setup_key_file
+    - unless: netbird status 2>/dev/null | grep -q "Connected"
+
+# Remove the temporary setup key file immediately after use
+netbird_cleanup_key:
+  file.absent:
+    - name: /tmp/.netbird_setup_key
+    - require:
+      - cmd: netbird_connect
+
+# Ensure NetBird service is running
+netbird_service:
+  service.running:
+    - name: netbird
+    - enable: True
+    - require:
+      - cmd: netbird_connect
+
+# Verify NetBird is connected
+netbird_verify:
+  cmd.run:
+    - name: netbird status
+    - require:
+      - service: netbird_service
+NETBIRDEOF
 
   # Set permissions
   chown -R root:root /srv/salt /srv/pillar
-  chmod -R 755 /srv/salt /srv/pillar
+  chmod -R 755 /srv/salt
+  chmod 600 /srv/pillar/*.sls
 
-  success "Salt directories created"
+  success "Salt directories and state files created"
 }
 
 #######################################
