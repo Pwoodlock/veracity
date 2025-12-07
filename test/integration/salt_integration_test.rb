@@ -20,11 +20,17 @@ class SaltIntegrationTest < ActionDispatch::IntegrationTest
   AVAILABILITY_TIMEOUT = 5
 
   def setup
+    # Allow real HTTP connections to Salt API for integration tests
+    WebMock.allow_net_connect!
+
     skip_unless_salt_api_available
   end
 
   def teardown
     cleanup_test_artifacts
+
+    # Restore WebMock blocking
+    WebMock.disable_net_connect!(allow_localhost: true)
   end
 
   protected
