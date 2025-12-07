@@ -233,7 +233,8 @@ Rails.application.routes.draw do
   post "dashboard/full_updates" => "dashboard#trigger_full_updates", as: :dashboard_full_updates
   delete "dashboard/clear_failed_commands" => "dashboard#clear_failed_commands", as: :dashboard_clear_failed_commands
 
-  # Health check
+  # Health checks (no authentication required)
+  get "health" => "health#show", as: :health_check
   get "up" => "rails/health#show", as: :rails_health_check
 
   # Root path

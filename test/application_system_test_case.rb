@@ -3,14 +3,20 @@
 require "test_helper"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
-  # Use headless Chrome for CI environments
-  if ENV["CI"]
-    driven_by :selenium, using: :headless_chrome, screen_size: [1400, 900]
+  # Use headless Chrome for CI environments and for WSL/Linux environments without display
+  # In CI or when HEADLESS env var is set, use headless mode
+  if ENV["CI"] || ENV["HEADLESS"] || !ENV["DISPLAY"]
+    driven_by :selenium, using: :headless_chrome, screen_size: [1400, 900] do |options|
+      options.add_argument("--no-sandbox")
+      options.add_argument("--disable-dev-shm-usage")
+      options.add_argument("--disable-gpu")
+    end
   else
     driven_by :selenium, using: :chrome, screen_size: [1400, 900]
   end
 
   include Devise::Test::IntegrationHelpers
+  include FactoryBot::Syntax::Methods
 
   # Wait for page to fully load
   def wait_for_page_load
@@ -46,5 +52,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # Helper to check if element is visible
   def element_visible?(selector)
     page.has_selector?(selector, visible: true)
+  end
+
+  # Take screenshot on test failure for debugging
+  def after_teardown
+    super
+  rescue StandardError => e
+    take_screenshot if respond_to?(:take_screenshot)
+    raise e
   end
 end

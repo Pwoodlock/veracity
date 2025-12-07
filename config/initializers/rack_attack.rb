@@ -62,11 +62,20 @@ class Rack::Attack
     end
   end
 
+  # LOW: Throttle health check endpoint
+  # Limit: 60 requests per IP per minute (reasonable for monitoring)
+  # Prevents abuse while allowing legitimate health monitoring
+  throttle('health_check/ip', limit: 60, period: 1.minute) do |req|
+    if req.path == '/health' && req.get?
+      req.ip
+    end
+  end
+
   # LOW: General API rate limiting for authenticated users
   # Limit: 300 requests per user per 5 minutes (1 req/second average)
   throttle('api/user', limit: 300, period: 5.minutes) do |req|
     # Skip static assets and health checks
-    unless req.path.start_with?('/assets', '/up')
+    unless req.path.start_with?('/assets', '/up', '/health')
       req.env['rack.session']&.dig('warden.user.user.key')&.first&.first
     end
   end
@@ -102,7 +111,7 @@ class Rack::Attack
       </head>
       <body>
         <div class="container">
-          <h1>⚠️ Too Many Requests</h1>
+          <h1>Too Many Requests</h1>
           <p>You have exceeded the rate limit for this action.</p>
           <p>Please wait <span class="retry">#{(match_data[:period] - (now % match_data[:period])).to_i} seconds</span> before trying again.</p>
           <p><small>If you believe this is an error, please contact your administrator.</small></p>

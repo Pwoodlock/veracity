@@ -34,6 +34,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
+          # Node 24 is Active LTS as of late 2025
+          # Docusaurus requires Node.js >= 18
           node-version: '24'
           cache: npm
           cache-dependency-path: docs/package-lock.json
