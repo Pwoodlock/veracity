@@ -10,6 +10,9 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
 
     @server = create(:server, :online)
     @another_server = create(:server, :online)
+
+    # Mock Salt API to prevent real HTTP calls
+    mock_salt_api
   end
 
   # =============================================================================
@@ -95,14 +98,14 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
     reset!
     sign_in @operator
     delete server_path(@another_server)
-    assert_redirected_to root_path, "Operator should be redirected when attempting delete"
+    assert_redirected_to "/", "Operator should be redirected when attempting delete"
     assert_equal "You must be an admin to access this page.", flash[:alert]
 
     # Viewer cannot delete servers
     reset!
     sign_in @viewer
     delete server_path(@another_server)
-    assert_redirected_to root_path, "Viewer should be redirected when attempting delete"
+    assert_redirected_to "/", "Viewer should be redirected when attempting delete"
     assert_equal "You must be an admin to access this page.", flash[:alert]
   end
 
@@ -165,14 +168,14 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
     reset!
     sign_in @operator
     get users_path
-    assert_redirected_to root_path, "Operator should be redirected from user list"
+    assert_redirected_to "/", "Operator should be redirected from user list"
     assert_equal "You must be an admin to access this page.", flash[:alert]
 
     # Viewer cannot view user list
     reset!
     sign_in @viewer
     get users_path
-    assert_redirected_to root_path, "Viewer should be redirected from user list"
+    assert_redirected_to "/", "Viewer should be redirected from user list"
     assert_equal "You must be an admin to access this page.", flash[:alert]
   end
 
@@ -234,12 +237,12 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
     patch server_path(@server), params: {
       server: { hostname: "updated-hostname" }
     }
-    assert_redirected_to root_path, "Viewer should be redirected when attempting update"
+    assert_redirected_to "/", "Viewer should be redirected when attempting update"
     assert_equal "You must be an operator or admin to access this page.", flash[:alert]
 
     # Cannot delete servers (redirected with alert)
     delete server_path(@server)
-    assert_redirected_to root_path, "Viewer should be redirected when attempting delete"
+    assert_redirected_to "/", "Viewer should be redirected when attempting delete"
     assert_equal "You must be an admin to access this page.", flash[:alert]
   end
 
@@ -260,12 +263,12 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
 
     # Cannot access user management
     get users_path
-    assert_redirected_to root_path, "Viewer should be redirected from user management"
+    assert_redirected_to "/", "Viewer should be redirected from user management"
     assert_equal "You must be an admin to access this page.", flash[:alert]
 
     # Cannot access settings
     get settings_appearance_path
-    assert_redirected_to root_path, "Viewer should be redirected from settings"
+    assert_redirected_to "/", "Viewer should be redirected from settings"
     assert_equal "You must be an admin to access this page.", flash[:alert]
   end
 
@@ -344,14 +347,14 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
 
     # Attempt admin-only action
     delete server_path(@server)
-    assert_redirected_to root_path, "Unauthorized delete should redirect"
+    assert_redirected_to "/", "Unauthorized delete should redirect"
     assert_equal "You must be an admin to access this page.", flash[:alert]
 
     # Attempt operator-only action
     patch server_path(@server), params: {
       server: { hostname: "hacked" }
     }
-    assert_redirected_to root_path, "Unauthorized update should redirect"
+    assert_redirected_to "/", "Unauthorized update should redirect"
     assert_equal "You must be an operator or admin to access this page.", flash[:alert]
   end
 
@@ -366,12 +369,12 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
         role: "admin"
       }
     }
-    assert_redirected_to root_path, "Non-admin user creation should redirect"
+    assert_redirected_to "/", "Non-admin user creation should redirect"
     assert_equal "You must be an admin to access this page.", flash[:alert]
 
     # Cannot delete users
     delete user_path(@viewer)
-    assert_redirected_to root_path, "Non-admin user deletion should redirect"
+    assert_redirected_to "/", "Non-admin user deletion should redirect"
     assert_equal "You must be an admin to access this page.", flash[:alert]
   end
 
@@ -380,22 +383,22 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
 
     # Cannot access appearance settings
     get settings_appearance_path
-    assert_redirected_to root_path
-    assert_equal "You must be an admin to access this page.", flash[:alert]
+    assert_redirected_to "/"
+    assert_equal "Access denied. Admin privileges required.", flash[:alert]
 
     # Cannot access backup settings
     reset!
     sign_in @viewer
     get settings_backups_path
-    assert_redirected_to root_path
-    assert_equal "You must be an admin to access this page.", flash[:alert]
+    assert_redirected_to "/"
+    assert_equal "Access denied. Admin privileges required.", flash[:alert]
 
     # Cannot access maintenance settings
     reset!
     sign_in @viewer
     get settings_maintenance_path
-    assert_redirected_to root_path
-    assert_equal "You must be an admin to access this page.", flash[:alert]
+    assert_redirected_to "/"
+    assert_equal "Access denied. Admin privileges required.", flash[:alert]
   end
 
   # =============================================================================
@@ -426,7 +429,7 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
     patch server_path(@server), params: {
       server: { hostname: "should-fail" }
     }
-    assert_redirected_to root_path,
+    assert_redirected_to "/",
                         "Role downgrade should take effect immediately"
     assert_equal "You must be an operator or admin to access this page.", flash[:alert]
   end
@@ -472,15 +475,15 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
     patch group_path(group), params: {
       group: { name: "Hacked Group" }
     }
-    assert_redirected_to root_path
+    assert_redirected_to "/"
     assert_equal "You must be an operator or admin to access this page.", flash[:alert]
 
-    # Cannot delete groups (requires admin)
+    # Cannot delete groups (requires operator - uses require_operator! in controller)
     reset!
     sign_in @viewer
     delete group_path(group)
-    assert_redirected_to root_path
-    assert_equal "You must be an admin to access this page.", flash[:alert]
+    assert_redirected_to "/"
+    assert_equal "You must be an operator or admin to access this page.", flash[:alert]
   end
 
   test "authorization respects resource ownership for tasks" do

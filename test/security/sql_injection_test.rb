@@ -48,7 +48,7 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
       "' OR 1=1 --",                 # Boolean-based injection
       "1' AND '1'='1",              # Logical AND injection
       "; DELETE FROM servers WHERE '1'='1", # Command chaining
-      "' OR 'x'='x",                # Alternative boolean injection
+      "' OR 'x'='x"                 # Alternative boolean injection
     ]
 
     sql_injection_payloads.each do |payload|
@@ -91,7 +91,7 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
     injection_payloads = [
       "apache'; DROP TABLE cve_watchlists; --",
       "' OR 1=1 --",
-      "httpd' UNION SELECT password FROM users --",
+      "httpd' UNION SELECT password FROM users --"
     ]
 
     injection_payloads.each do |payload|
@@ -125,7 +125,7 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
       "1' OR '1'='1",
       "1; DROP TABLE groups; --",
       "1 UNION SELECT * FROM users",
-      "-1 OR 1=1",
+      "-1 OR 1=1"
     ]
 
     malicious_group_ids.each do |payload|
@@ -159,7 +159,7 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
       "hostname; DROP TABLE servers; --",
       "hostname, (SELECT password FROM users LIMIT 1)",
       "CASE WHEN (1=1) THEN hostname ELSE ip_address END",
-      "hostname' OR '1'='1",
+      "hostname' OR '1'='1"
     ]
 
     malicious_sort_values.each do |payload|
@@ -254,7 +254,7 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
     dangerous_inputs = [
       "1' OR '1'='1",
       "'; DROP TABLE servers; --",
-      "1 UNION SELECT * FROM users",
+      "1 UNION SELECT * FROM users"
     ]
 
     dangerous_inputs.each do |dangerous_input|
