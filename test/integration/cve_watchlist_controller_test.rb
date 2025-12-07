@@ -182,8 +182,10 @@ class CveWatchlistControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_response :success
-    assert_match "Failed to update watchlist", response.body
+    # On validation failure, Rails re-renders the edit form
+    # Check that the form contains validation error messages
+    assert_response :unprocessable_entity
+    assert_match "can't be blank", response.body
   end
 
   # =============================================================================
@@ -222,14 +224,14 @@ class CveWatchlistControllerTest < ActionDispatch::IntegrationTest
     watchlist = create(:cve_watchlist,
       :nginx,
       notification_enabled: true,
-      notification_threshold: "HIGH"
+      notification_threshold: "high"  # Must be lowercase
     )
 
     get cve_watchlist_path(watchlist)
     assert_response :success
     # Verify the watchlist has notification settings
     assert watchlist.notification_enabled
-    assert_equal "HIGH", watchlist.notification_threshold
+    assert_equal "high", watchlist.notification_threshold
   end
 
   test "admin can update notification threshold" do
@@ -239,14 +241,14 @@ class CveWatchlistControllerTest < ActionDispatch::IntegrationTest
     patch cve_watchlist_path(watchlist), params: {
       cve_watchlist: {
         notification_enabled: true,
-        notification_threshold: "CRITICAL"
+        notification_threshold: "critical"  # Must be lowercase
       }
     }
 
     assert_redirected_to cve_watchlist_path(watchlist)
     watchlist.reload
     assert watchlist.notification_enabled
-    assert_equal "CRITICAL", watchlist.notification_threshold
+    assert_equal "critical", watchlist.notification_threshold
   end
 
   # =============================================================================

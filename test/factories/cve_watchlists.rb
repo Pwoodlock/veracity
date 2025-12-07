@@ -6,6 +6,8 @@ FactoryBot.define do
     sequence(:product) { |n| "product#{n}" }
     frequency { "daily" }
     active { true }
+    notification_enabled { false }
+    notification_threshold { "high" }  # Must be lowercase: info, low, medium, high, critical
 
     trait :active do
       active { true }

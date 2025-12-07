@@ -34,3 +34,10 @@ Layout/EndAlignment:
 
 Layout/TrailingWhitespace:
   Enabled: false
+
+# Allow trailing commas in multi-line arrays (common Ruby style)
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/TrailingCommaInHashLiteral:
+  Enabled: false

@@ -101,6 +101,16 @@ class HealthControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'health endpoint is accessible without authentication' do
+    # Mock Redis to succeed
+    mock_redis = mock('redis')
+    mock_redis.stubs(:ping).returns('PONG')
+    mock_redis.stubs(:close)
+    Redis.stubs(:new).returns(mock_redis)
+
+    # Stub Salt API URL to nil (skip Salt check)
+    ENV.stubs(:fetch).with('SALT_API_URL', nil).returns(nil)
+    ENV.stubs(:fetch).with('REDIS_URL', 'redis://localhost:6379').returns('redis://localhost:6379')
+
     # This test verifies the endpoint does not require login
     # by not signing in before making the request
     get health_check_path
