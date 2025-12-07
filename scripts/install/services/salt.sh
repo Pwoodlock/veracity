@@ -260,9 +260,12 @@ file_roots:
     - /srv/salt/states
 
 # Pillar roots
+# Note: /srv/pillar/minions is included for minion-specific pillar files
+# The top.sls file is auto-managed by Veracity to include minion entries
 pillar_roots:
   base:
     - /srv/pillar
+    - /srv/pillar/minions
 
 # Accept new minions automatically (disable for production)
 auto_accept: False
@@ -336,9 +339,14 @@ create_salt_directories() {
   mkdir -p /var/log/salt
 
   # Create pillar top.sls to map pillar data to minions
+  # Note: Minion-specific entries are auto-managed by Veracity at runtime
   cat > /srv/pillar/top.sls << 'PILLAREOF'
 # Pillar Top File
-# Maps pillar data to minions
+# Auto-managed by Veracity - do not edit manually
+#
+# Common data applies to all minions
+# Minion-specific entries are added/removed automatically when deploying
+# integrations like NetBird via the Veracity UI
 
 base:
   '*':

@@ -721,6 +721,7 @@ class SaltService
 
     # Write pillar data for a specific minion
     # Creates a pillar file that only this minion can access
+    # Also updates top.sls to include the minion-specific pillar
     # @param minion_id [String] Target minion ID
     # @param pillar_name [String] Name for the pillar file (e.g., 'netbird')
     # @param data [Hash] Pillar data to write
@@ -742,8 +743,11 @@ class SaltService
       # Write the pillar file
       File.write(pillar_file, pillar_content)
 
-      # Set secure permissions (readable only by root/salt)
-      File.chmod(0600, pillar_file)
+      # Set permissions readable by salt-master (644, not 600)
+      File.chmod(0644, pillar_file)
+
+      # Update top.sls to include this minion's pillar
+      update_pillar_top_sls(minion_id, pillar_name)
 
       Rails.logger.info "Pillar file written: #{pillar_file}"
       { success: true, pillar_file: pillar_file }
@@ -753,6 +757,7 @@ class SaltService
     end
 
     # Delete pillar data for a specific minion
+    # Also updates top.sls to remove the minion-specific pillar entry
     # @param minion_id [String] Target minion ID
     # @param pillar_name [String] Name of the pillar file to delete
     # @return [Hash] Result with :success key
@@ -763,6 +768,9 @@ class SaltService
 
       # Delete file directly from filesystem
       FileUtils.rm_f(pillar_file)
+
+      # Remove entry from top.sls
+      remove_from_pillar_top_sls(minion_id, pillar_name)
 
       Rails.logger.info "Pillar file deleted: #{pillar_file}"
       { success: true }
@@ -1061,7 +1069,116 @@ class SaltService
       }
     end
 
+    # ===== Pillar Top.sls Management =====
+    # These methods manage the /srv/pillar/top.sls file to include/exclude
+    # minion-specific pillar files dynamically
+
+    PILLAR_TOP_FILE = '/srv/pillar/top.sls'.freeze
+
+    # Update top.sls to include a minion-specific pillar entry
+    # @param minion_id [String] The minion ID
+    # @param pillar_name [String] The pillar name (e.g., 'netbird')
+    def update_pillar_top_sls(minion_id, pillar_name)
+      pillar_entry = "minions.#{minion_id}.#{pillar_name}"
+      Rails.logger.info "Adding '#{pillar_entry}' to pillar top.sls"
+
+      # Read current top.sls or create default
+      content = if File.exist?(PILLAR_TOP_FILE)
+                  File.read(PILLAR_TOP_FILE)
+                else
+                  default_pillar_top_sls
+                end
+
+      # Parse YAML to work with it
+      top_data = YAML.safe_load(content) || {}
+      top_data['base'] ||= {}
+
+      # Add minion entry if not already present
+      minion_key = "'#{minion_id}'"
+      top_data['base'][minion_key] ||= []
+
+      unless top_data['base'][minion_key].include?(pillar_entry)
+        top_data['base'][minion_key] << pillar_entry
+        Rails.logger.info "Added pillar entry: #{pillar_entry}"
+      end
+
+      # Write back to file with proper YAML formatting
+      write_pillar_top_sls(top_data)
+    rescue StandardError => e
+      Rails.logger.error "Error updating pillar top.sls: #{e.message}"
+    end
+
+    # Remove a minion-specific pillar entry from top.sls
+    # @param minion_id [String] The minion ID
+    # @param pillar_name [String] The pillar name (e.g., 'netbird')
+    def remove_from_pillar_top_sls(minion_id, pillar_name)
+      pillar_entry = "minions.#{minion_id}.#{pillar_name}"
+      Rails.logger.info "Removing '#{pillar_entry}' from pillar top.sls"
+
+      return unless File.exist?(PILLAR_TOP_FILE)
+
+      content = File.read(PILLAR_TOP_FILE)
+      top_data = YAML.safe_load(content) || {}
+
+      return unless top_data['base']
+
+      minion_key = "'#{minion_id}'"
+      if top_data['base'][minion_key]
+        top_data['base'][minion_key].delete(pillar_entry)
+
+        # Remove minion entry entirely if no pillars left
+        if top_data['base'][minion_key].empty?
+          top_data['base'].delete(minion_key)
+          Rails.logger.info "Removed empty minion entry for: #{minion_id}"
+        end
+
+        write_pillar_top_sls(top_data)
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error removing from pillar top.sls: #{e.message}"
+    end
+
     private
+
+    # Write pillar top.sls with proper formatting
+    # @param top_data [Hash] The pillar top data structure
+    def write_pillar_top_sls(top_data)
+      # Build YAML content manually for better formatting
+      lines = ["# Pillar Top File", "# Auto-managed by Veracity - do not edit manually", ""]
+      lines << "base:"
+
+      # Always include common first under '*'
+      lines << "  '*':"
+      lines << "    - common"
+
+      # Add minion-specific entries
+      top_data['base']&.each do |minion_key, pillars|
+        next if minion_key == '*' # Skip wildcard, already handled
+
+        lines << "  #{minion_key}:"
+        pillars.each do |pillar|
+          lines << "    - #{pillar}"
+        end
+      end
+
+      content = lines.join("\n") + "\n"
+      File.write(PILLAR_TOP_FILE, content)
+      File.chmod(0644, PILLAR_TOP_FILE)
+      Rails.logger.info "Pillar top.sls updated"
+    end
+
+    # Generate default pillar top.sls content
+    # @return [String] Default top.sls content
+    def default_pillar_top_sls
+      <<~YAML
+        # Pillar Top File
+        # Auto-managed by Veracity - do not edit manually
+
+        base:
+          '*':
+            - common
+      YAML
+    end
 
     # ===== THREAD-SAFE CACHE OPERATIONS =====
     # These private methods handle all interactions with Rails.cache
