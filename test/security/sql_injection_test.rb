@@ -56,24 +56,19 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
       get servers_path, params: { search: payload }
 
       # Verify response is successful (not a database error)
-      assert_response :success,
-                      "Search with SQL injection payload should not cause error: #{payload}"
+      assert_response :success, "Search with SQL injection payload should not cause error: #{payload}"
 
       # Verify no servers are returned (malicious query shouldn't match anything)
       # The payload should be treated as a literal search string
-      assert_select '.server-card', count: 0,
-                    "SQL injection payload should not return results: #{payload}"
+      assert_select '.server-card', count: 0
 
       # Most importantly: verify our test servers still exist
-      assert Server.exists?(@server1.id),
-             "Server 1 should still exist after injection attempt: #{payload}"
-      assert Server.exists?(@server2.id),
-             "Server 2 should still exist after injection attempt: #{payload}"
+      assert Server.exists?(@server1.id), "Server 1 should still exist after injection attempt: #{payload}"
+      assert Server.exists?(@server2.id), "Server 2 should still exist after injection attempt: #{payload}"
     end
 
     # Verify database integrity - count should be unchanged
-    assert_equal 2, Server.count,
-                 'Server count should remain 2 after all injection attempts'
+    assert_equal 2, Server.count, 'Server count should remain 2 after all injection attempts'
   end
 
   #
@@ -103,17 +98,14 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
       # Search by vendor with injection payload
       get cve_watchlists_path, params: { vendor: payload }
 
-      assert_response :success,
-                      "CVE search should handle injection safely: #{payload}"
+      assert_response :success, "CVE search should handle injection safely: #{payload}"
 
       # Verify watchlist still exists
-      assert CveWatchlist.exists?(watchlist.id),
-             "Watchlist should still exist after injection attempt: #{payload}"
+      assert CveWatchlist.exists?(watchlist.id), "Watchlist should still exist after injection attempt: #{payload}"
     end
 
     # Verify table integrity
-    assert_equal 1, CveWatchlist.count,
-                 'CVE watchlist count should be unchanged after injection attempts'
+    assert_equal 1, CveWatchlist.count, 'CVE watchlist count should be unchanged after injection attempts'
   end
 
   #
@@ -141,14 +133,11 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
       get servers_path, params: { group_id: payload }
 
       # Should not crash - either returns no results or raises ActiveRecord::RecordNotFound
-      assert_response :success,
-                      "Group filter should handle injection safely: #{payload}"
+      assert_response :success, "Group filter should handle injection safely: #{payload}"
 
       # Verify group and server still exist
-      assert Group.exists?(group.id),
-             "Group should still exist after injection attempt: #{payload}"
-      assert Server.exists?(server_in_group.id),
-             "Server should still exist after injection attempt: #{payload}"
+      assert Group.exists?(group.id), "Group should still exist after injection attempt: #{payload}"
+      assert Server.exists?(server_in_group.id), "Server should still exist after injection attempt: #{payload}"
     end
   end
 
@@ -180,12 +169,10 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
       get servers_path, params: { sort: payload }
 
       # Should either ignore invalid sort or handle safely
-      assert_response :success,
-                      "Sort parameter should handle injection safely: #{payload}"
+      assert_response :success, "Sort parameter should handle injection safely: #{payload}"
 
       # Verify servers still exist
-      assert_operator Server.count, :>=, 2,
-                      "Servers should still exist after sort injection attempt: #{payload}"
+      assert_operator Server.count, :>=, 2, "Servers should still exist after sort injection attempt: #{payload}"
     end
   end
 
@@ -208,22 +195,18 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
     )
 
     # Should return no results (searching for literal injection string)
-    assert_equal 0, servers.count,
-                 'Parameterized query should treat injection as literal text'
+    assert_equal 0, servers.count, 'Parameterized query should treat injection as literal text'
 
     # Verify our test data is still intact
-    assert_equal 2, Server.count,
-                 'Original servers should still exist'
+    assert_equal 2, Server.count, 'Original servers should still exist'
 
     # Now test with legitimate search
     legitimate_servers = Server.where(
       "hostname ILIKE ? OR ip_address ILIKE ?",
       "%web%", "%192.168.1.10%"
     )
-    assert_equal 1, legitimate_servers.count,
-                 'Legitimate search should work correctly'
-    assert_equal @server1.id, legitimate_servers.first.id,
-                 'Should find the web server'
+    assert_equal 1, legitimate_servers.count, 'Legitimate search should work correctly'
+    assert_equal @server1.id, legitimate_servers.first.id, 'Should find the web server'
   end
 
   #
@@ -243,15 +226,12 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
     safe_query = Server.where("hostname = ?", unsafe_search)
 
     # The parameterized query should return no results (no server has that exact hostname)
-    assert_equal 0, safe_query.count,
-                 'Parameterized query should safely handle injection attempt'
+    assert_equal 0, safe_query.count, 'Parameterized query should safely handle injection attempt'
 
     # Verify the SQL is properly escaped
     sql = safe_query.to_sql
-    assert_includes sql, unsafe_search,
-                    'SQL should include the literal search term (escaped)'
-    refute_includes sql, "' OR '1'='1",
-                    'SQL should not include unescaped injection payload'
+    assert_includes sql, unsafe_search, 'SQL should include the literal search term (escaped)'
+    refute_includes sql, "' OR '1'='1", 'SQL should not include unescaped injection payload'
   end
 
   #
@@ -287,8 +267,7 @@ class SqlInjectionTest < ActionDispatch::IntegrationTest
       assert_response :success, "Should handle dangerous search safely"
 
       # Verify no data was modified
-      assert_equal 2, Server.count,
-                   "Server count should remain constant after dangerous input: #{dangerous_input}"
+      assert_equal 2, Server.count, "Server count should remain constant after dangerous input: #{dangerous_input}"
     end
   end
 end
