@@ -3,6 +3,15 @@
 require "test_helper"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
+  # Allow Selenium WebDriver connections (localhost to chromedriver)
+  # WebMock blocks these by default which breaks system tests
+  setup do
+    WebMock.allow_net_connect!(allow_localhost: true)
+  end
+
+  teardown do
+    WebMock.disable_net_connect!(allow_localhost: true)
+  end
   # Use headless Chrome for CI environments and for WSL/Linux environments without display
   # In CI or when HEADLESS env var is set, use headless mode
   if ENV["CI"] || ENV["HEADLESS"] || !ENV["DISPLAY"]
