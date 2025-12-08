@@ -110,7 +110,7 @@ FactoryBot.define do
     active { true }
 
     trait :updates do
-      name { "System Updates" }
+      sequence(:name) { |n| "System Updates #{n}" }
       command_template { "pkg.upgrade" }
       category { "updates" }
       description { "Run system package updates" }

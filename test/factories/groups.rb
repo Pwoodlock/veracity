@@ -8,22 +8,22 @@ FactoryBot.define do
     servers_count { 0 }
 
     trait :production do
-      name { "Production" }
-      slug { "production" }
+      sequence(:name) { |n| "Production #{n}" }
+      sequence(:slug) { |n| "production-#{n}" }
       description { "Production servers" }
       color { "#EF4444" }
     end
 
     trait :staging do
-      name { "Staging" }
-      slug { "staging" }
+      sequence(:name) { |n| "Staging #{n}" }
+      sequence(:slug) { |n| "staging-#{n}" }
       description { "Staging servers" }
       color { "#F59E0B" }
     end
 
     trait :development do
-      name { "Development" }
-      slug { "development" }
+      sequence(:name) { |n| "Development #{n}" }
+      sequence(:slug) { |n| "development-#{n}" }
       description { "Development servers" }
       color { "#10B981" }
     end
