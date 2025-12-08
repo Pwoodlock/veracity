@@ -1,0 +1,33 @@
+# Assignment Learning History
+# This file is automatically updated when you correct or confirm auto-assignments
+# The system learns from these patterns to improve future assignments
+
+history: []
+  # Example entry structure:
+  # - task_pattern: "CI workflow fixes"
+  #   keywords: [ci, workflow, github, actions, pipeline]
+  #   complexity: medium
+  #   auto_assigned: implementer
+  #   user_corrected: deployment-engineer
+  #   timestamp: 2025-12-08T10:30:00Z
+  #
+  # - task_pattern: "Frontend component with Tailwind"
+  #   keywords: [component, tailwind, responsive, button]
+  #   complexity: simple
+  #   auto_assigned: frontend-developer
+  #   user_confirmed: frontend-developer
+  #   confidence_was: 0.92
+  #   timestamp: 2025-12-08T11:15:00Z
+
+# Learning statistics
+stats:
+  total_assignments: 0
+  auto_confirmed: 0
+  user_corrected: 0
+  accuracy: 0.0
+  last_updated: null
+
+# Configuration
+# These values are managed by the auto-assignment service
+version: 1.0
+max_history_entries: 100  # Keep last 100 assignments

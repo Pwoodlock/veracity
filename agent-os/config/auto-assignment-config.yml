@@ -1,0 +1,272 @@
+# Auto-Assignment Configuration
+# Controls intelligent agent assignment and learning behavior
+
+# Global settings
+enabled: true                    # Enable/disable auto-assignment system
+confidence_threshold: 0.7        # Minimum confidence (0-1) before prompting user
+learning_enabled: true           # Track and learn from user corrections
+
+# Task type keywords for classification
+# The system scans task names/descriptions for these keywords to determine type
+task_keywords:
+  frontend:
+    - component
+    - button
+    - form
+    - modal
+    - layout
+    - responsive
+    - react
+    - tailwind
+    - css
+    - ui
+    - view
+    - jsx
+    - tsx
+    - styling
+    - theme
+    - daisy
+    - daisyui
+    - frontend
+
+  backend:
+    - endpoint
+    - controller
+    - route
+    - api
+    - service
+    - model
+    - serializer
+    - json
+    - rest
+    - rails
+    - ruby
+    - server
+    - backend
+    - logic
+    - business logic
+
+  database:
+    - migration
+    - schema
+    - table
+    - index
+    - query
+    - relationship
+    - association
+    - sql
+    - activerecord
+    - postgres
+    - mysql
+    - database
+    - db
+    - column
+    - foreign key
+
+  testing:
+    - test
+    - spec
+    - unit
+    - integration
+    - system
+    - coverage
+    - assertion
+    - rspec
+    - jest
+    - fixture
+    - factory
+    - mock
+    - stub
+    - expect
+    - testing
+
+  security:
+    - auth
+    - csrf
+    - injection
+    - encryption
+    - validation
+    - sanitize
+    - rate-limit
+    - xss
+    - sql injection
+    - authentication
+    - authorization
+    - security
+    - secure
+    - password
+    - token
+    - jwt
+
+  deployment:
+    - ci/cd
+    - ci
+    - cd
+    - docker
+    - kubernetes
+    - k8s
+    - pipeline
+    - github actions
+    - workflow
+    - deploy
+    - deployment
+    - release
+    - staging
+    - production
+    - infrastructure
+    - devops
+    - caddy
+    - nginx
+
+  ai-ml:
+    - llm
+    - rag
+    - embedding
+    - prompt
+    - agent
+    - vector
+    - openai
+    - anthropic
+    - gpt
+    - claude
+    - ai
+    - ml
+    - machine learning
+    - artificial intelligence
+    - neural
+    - nlp
+
+# Agent capability definitions
+# Maps each agent to their primary/secondary capabilities
+agent_capabilities:
+  frontend-developer:
+    primary: [frontend]
+    secondary: [testing]
+    model: sonnet
+
+  database-architect:
+    primary: [database]
+    secondary: [backend]
+    model: opus
+
+  ai-engineer:
+    primary: [ai-ml]
+    secondary: [backend]
+    model: opus
+
+  code-reviewer:
+    primary: [security]
+    secondary: [testing]
+    model: sonnet
+
+  deployment-engineer:
+    primary: [deployment]
+    secondary: []
+    model: sonnet
+
+  javascript-pro:
+    primary: [frontend]
+    secondary: [backend, testing]
+    model: sonnet
+
+  python-pro:
+    primary: [backend]
+    secondary: [ai-ml, testing]
+    model: sonnet
+
+  Daisy-UI-Agent:
+    primary: [frontend]
+    secondary: []
+    model: opus
+
+  implementer:
+    primary: [backend]
+    secondary: [frontend, testing]
+    model: inherit
+    fallback: true  # Use when no better match found
+
+# Standards mapping
+# Which standards each agent should follow
+standards_mapping:
+  frontend-developer:
+    - global/*
+    - frontend/*
+
+  database-architect:
+    - global/*
+    - backend/models.md
+    - backend/migrations.md
+    - backend/queries.md
+
+  ai-engineer:
+    - global/*
+    - backend/api.md
+
+  code-reviewer:
+    - all
+
+  deployment-engineer:
+    - global/*
+    - global/conventions.md
+
+  javascript-pro:
+    - global/*
+    - frontend/*
+    - backend/api.md
+
+  python-pro:
+    - global/*
+    - backend/*
+
+  Daisy-UI-Agent:
+    - global/*
+    - frontend/*
+
+  implementer:
+    - global/*
+    - backend/*
+    - frontend/*
+    - testing/*
+
+# Scoring weights
+scoring:
+  primary_keyword_match: 10      # Points for primary capability keyword match
+  secondary_keyword_match: 5     # Points for secondary capability keyword match
+  complexity_bonus: 3            # Extra points for opus agents on complex tasks
+  learning_correction_bonus: 15  # Bonus when user corrected this pattern before
+  learning_similar_bonus: 10     # Bonus for similar manually-assigned tasks
+  learning_confirmation_bonus: 8 # Bonus when user confirmed low-confidence
+
+# Fallback behavior when confidence < threshold
+# Options: prompt, use_implementer, use_orchestrate
+low_confidence_action: prompt
+
+# Allow manual override
+allow_override: true
+
+# Learning system settings
+learning:
+  enabled: true
+  history_file: agent-os/data/assignment-history.yml
+  max_history: 100              # Keep last 100 assignments
+  similarity_threshold: 0.8     # Pattern similarity threshold (0-1)
+  min_keyword_overlap: 0.8      # Minimum keyword overlap for pattern match
+
+# Confidence level indicators
+confidence_levels:
+  high:
+    threshold: 0.9
+    indicator: "✅"
+  medium:
+    threshold: 0.7
+    indicator: ""
+  low:
+    threshold: 0.0
+    indicator: "⚠️"
+
+# Display settings
+display:
+  show_confidence_percentage: true
+  show_learning_indicators: true
+  show_alternative_agents: false    # Show runner-up agents in output
+  show_matched_keywords: false      # Show which keywords matched
