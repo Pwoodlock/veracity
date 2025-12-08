@@ -115,10 +115,21 @@ jobs:
 
       - name: Run tests
         run: |
-          # Run only model and controller tests (stable tests that pass in CI)
-          # Integration and security tests need refactoring for CI environment
-          # TODO: Fix integration tests to work properly in parallel CI
-          bundle exec rails test test/models/**/*_test.rb test/controllers/**/*_test.rb
+          # Run model, controller, integration, and security tests
+          # Excluding Salt integration tests that require live Salt API
+          bundle exec rails test \
+            test/models/**/*_test.rb \
+            test/controllers/**/*_test.rb \
+            test/integration/server_controller_test.rb \
+            test/integration/task_controller_test.rb \
+            test/integration/cve_watchlist_controller_test.rb \
+            test/security/authorization_test.rb \
+            test/security/csrf_protection_test.rb \
+            test/security/sql_injection_test.rb \
+            test/security/command_injection_test.rb \
+            test/security/session_security_test.rb \
+            test/security/encryption_test.rb \
+            test/security/rate_limiting_test.rb
 
       - name: Check models load correctly
         run: |
