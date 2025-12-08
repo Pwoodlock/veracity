@@ -6,6 +6,9 @@ class ServersControllerTest < ActionDispatch::IntegrationTest
   setup do
     @admin = users(:admin)
     @server = servers(:online_server)
+
+    # Mock Salt API to prevent real HTTP calls during tests
+    mock_salt_api
   end
 
   test "should redirect to login when not authenticated" do
