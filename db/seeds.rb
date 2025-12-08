@@ -213,3 +213,10 @@ task_templates.each do |template_attrs|
 end
 
 puts "Created #{TaskTemplate.count} task templates"
+
+# ===========================================
+# Salt State Templates
+# ===========================================
+
+puts "\nSeeding Salt State Templates..."
+require Rails.root.join('db', 'seeds', 'salt_templates.rb')

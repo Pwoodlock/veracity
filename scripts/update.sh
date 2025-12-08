@@ -191,6 +191,16 @@ run_migrations() {
   success "Database migrations complete"
 }
 
+# Seed Salt State templates
+seed_salt_templates() {
+  info "Refreshing Salt State templates..."
+
+  cd "$APP_DIR"
+  sudo -u "$DEPLOY_USER" bash -c "export PATH=/home/${DEPLOY_USER}/.rbenv/shims:\$PATH && RAILS_ENV=production bundle exec rails db:seed:salt_templates" || warning "Salt template seeding had errors (check logs)"
+
+  success "Salt templates refreshed"
+}
+
 # Precompile assets
 precompile_assets() {
   info "Precompiling assets (this may take a few minutes)..."
@@ -278,6 +288,7 @@ main() {
   update_dependencies
   update_python_venv
   run_migrations
+  seed_salt_templates
   precompile_assets
   start_services
   health_check
