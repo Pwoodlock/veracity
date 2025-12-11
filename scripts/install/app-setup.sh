@@ -183,7 +183,7 @@ fi)
 VULNERABILITY_LOOKUP_ENABLED=${CVE_ENABLED:-true}
 VULNERABILITY_LOOKUP_URL=${CVE_URL:-https://vulnerability.circl.lu}
 VULNERABILITY_LOOKUP_SCAN_SCHEDULE=${CVE_SCHEDULE:-0 2 * * *}
-VULNERABILITY_LOOKUP_PYTHON_PATH=${VULNERABILITY_LOOKUP_PYTHON_PATH:-/opt/veracity/app/bin/cve_python}
+VULNERABILITY_LOOKUP_PYTHON_PATH=${VULNERABILITY_LOOKUP_PYTHON_PATH:-/opt/veracity/app/integrations_venv/bin/python}
 VULNERABILITY_LOOKUP_TIMEOUT=60
 
 # ============================================================================
