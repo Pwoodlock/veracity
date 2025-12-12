@@ -7,11 +7,12 @@ class RemoveDuplicateTaskTemplates < ActiveRecord::Migration[8.1]
 
     execute <<-SQL
       -- Keep only the first (oldest) instance of each unique command_template
+      -- Using DISTINCT ON which works with UUID columns in PostgreSQL
       DELETE FROM task_templates
       WHERE id NOT IN (
-        SELECT MIN(id)
+        SELECT DISTINCT ON (command_template) id
         FROM task_templates
-        GROUP BY command_template
+        ORDER BY command_template, created_at
       );
     SQL
 
