@@ -55,11 +55,13 @@ module Admin
         category: params[:category] || 'other',
         content: default_content_for_type(params[:type] || 'state')
       )
+      load_api_keys
     end
 
     # GET /admin/salt_states/:id/edit
     def edit
       @yaml_error = @salt_state.yaml_error
+      load_api_keys
     end
 
     # POST /admin/salt_states
@@ -256,6 +258,12 @@ module Admin
       else
         "# Salt configuration file\n"
       end
+    end
+
+    def load_api_keys
+      # Load available API keys for cloud provider selection
+      @hetzner_api_keys = HetznerApiKey.enabled.order(:name)
+      @proxmox_api_keys = ProxmoxApiKey.order(:name) rescue []
     end
   end
 end

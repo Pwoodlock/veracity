@@ -203,8 +203,9 @@ task_templates = [
 ]
 
 task_templates.each do |template_attrs|
-  TaskTemplate.find_or_create_by!(name: template_attrs[:name]) do |template|
-    template.command_template = template_attrs[:command_template]
+  # Use command_template as the unique key to prevent duplicates
+  TaskTemplate.find_or_create_by!(command_template: template_attrs[:command_template]) do |template|
+    template.name = template_attrs[:name]
     template.description = template_attrs[:description]
     template.category = template_attrs[:category]
     template.default_parameters = template_attrs[:default_parameters] || {}

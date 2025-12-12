@@ -28,11 +28,28 @@ class SaltEditorService
     end
 
     # Validate YAML content
+    # Note: Salt state files use Jinja2 templating, which is not valid YAML
+    # We check if content contains Jinja2 syntax and provide appropriate validation
     def validate_yaml(content)
+      # Check if content contains Jinja2 templating syntax
+      if contains_jinja2?(content)
+        return { valid: true, is_jinja2_template: true, message: 'Valid Jinja2 template' }
+      end
+
+      # Validate as pure YAML
       YAML.safe_load(content, permitted_classes: [Symbol, Date, Time])
-      { valid: true }
+      { valid: true, is_jinja2_template: false }
     rescue Psych::SyntaxError => e
-      { valid: false, error: e.message, line: e.line, column: e.column }
+      { valid: false, error: e.message, line: e.line, column: e.column, is_jinja2_template: false }
+    end
+
+    # Check if content contains Jinja2 templating syntax
+    def contains_jinja2?(content)
+      # Common Jinja2 patterns in Salt states:
+      # {% ... %} - statements (if, for, set, etc.)
+      # {{ ... }} - expressions/variables
+      # {# ... #} - comments
+      content.match?(/\{%.*?%\}|\{\{.*?\}\}|\{#.*?#\}/m)
     end
 
     # Apply a state to target minions

@@ -127,6 +127,63 @@
         </div>
       </div>
 
+      <!-- Cloud Configuration (for cloud profiles/providers) -->
+      <div id="cloud_config_panel" class="card bg-base-100 shadow-sm" style="display: none;">
+        <div class="card-body">
+          <h3 class="font-semibold text-base-content mb-3 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+            </svg>
+            Cloud Provider
+          </h3>
+
+          <% if @hetzner_api_keys&.any? %>
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Hetzner API Key</span>
+              </label>
+              <select id="hetzner_api_key_selector" class="select select-bordered select-sm w-full">
+                <option value="">Select a Hetzner API key...</option>
+                <% @hetzner_api_keys.each do |key| %>
+                  <option value="<%= key.name.downcase.gsub(/[^a-z0-9_-]/, '_') %>" data-name="<%= key.name %>">
+                    <%= key.name %> (<%= key.formatted_token %>)
+                  </option>
+                <% end %>
+              </select>
+              <label class="label">
+                <span class="label-text-alt text-base-content/60">
+                  Provider name: <code class="text-xs" id="provider_name_display">hetzner-cloud</code>
+                </span>
+                <span class="label-text-alt">
+                  <%= link_to "Manage API Keys →", settings_hetzner_api_keys_path, class: "link link-primary text-xs", target: "_blank" %>
+                </span>
+              </label>
+            </div>
+
+            <div class="mt-3">
+              <button type="button" onclick="insertHetznerProvider()" class="btn btn-sm btn-primary gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Insert Provider Reference
+              </button>
+            </div>
+          <% else %>
+            <div class="alert alert-warning">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h4 class="font-bold">No Hetzner API Keys</h4>
+                <p class="text-sm">
+                  <%= link_to "Add a Hetzner API key", settings_hetzner_api_keys_path, class: "link", target: "_blank" %> to use cloud profiles.
+                </p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
       <!-- Quick Templates -->
       <% if salt_state.new_record? %>
         <div class="card bg-base-100 shadow-sm">
@@ -268,15 +325,29 @@
       .then(response => response.json())
       .then(data => {
         if (data.valid) {
-          statusEl.innerHTML = `
-          <span class="badge badge-success badge-sm gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            Valid YAML
-          </span>`;
-          messagesEl.classList.add('hidden');
+          if (data.is_jinja2_template) {
+            // Jinja2 template (valid for Salt, rendered before YAML parsing)
+            statusEl.innerHTML = `
+            <span class="badge badge-info badge-sm gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Jinja2 Template
+            </span>`;
+            messagesEl.classList.add('hidden');
+          } else {
+            // Pure YAML (valid)
+            statusEl.innerHTML = `
+            <span class="badge badge-success badge-sm gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Valid YAML
+            </span>`;
+            messagesEl.classList.add('hidden');
+          }
         } else {
+          // Invalid YAML
           statusEl.innerHTML = `
           <span class="badge badge-error badge-sm gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -339,7 +410,10 @@ my_user:
 
   // Update file path preview based on name and type
   document.querySelector('input[name="salt_state[name]"]')?.addEventListener('input', updateFilePathPreview);
-  document.getElementById('state_type_select')?.addEventListener('change', updateFilePathPreview);
+  document.getElementById('state_type_select')?.addEventListener('change', function() {
+    updateFilePathPreview();
+    updateCloudConfigVisibility();
+  });
 
   function updateFilePathPreview() {
     const name = document.querySelector('input[name="salt_state[name]"]').value || '...';
@@ -371,4 +445,80 @@ my_user:
 
     document.getElementById('file-path-preview').textContent = path;
   }
+
+  // Show/hide cloud configuration panel based on state type
+  function updateCloudConfigVisibility() {
+    const type = document.getElementById('state_type_select')?.value;
+    const cloudPanel = document.getElementById('cloud_config_panel');
+
+    if (cloudPanel) {
+      if (type === 'cloud_profile' || type === 'cloud_provider') {
+        cloudPanel.style.display = 'block';
+      } else {
+        cloudPanel.style.display = 'none';
+      }
+    }
+  }
+
+  // Update provider name display when API key is selected
+  const hetznerSelector = document.getElementById('hetzner_api_key_selector');
+  if (hetznerSelector) {
+    hetznerSelector.addEventListener('change', function() {
+      const providerName = this.value || 'hetzner-cloud';
+      const displayEl = document.getElementById('provider_name_display');
+      if (displayEl) {
+        displayEl.textContent = providerName;
+      }
+    });
+  }
+
+  // Insert Hetzner provider reference into editor
+  function insertHetznerProvider() {
+    const selector = document.getElementById('hetzner_api_key_selector');
+    if (!selector || !selector.value) {
+      alert('Please select a Hetzner API key first');
+      return;
+    }
+
+    const providerName = selector.value;
+    const apiKeyName = selector.options[selector.selectedIndex].getAttribute('data-name');
+    const type = document.getElementById('state_type_select').value;
+
+    let snippet = '';
+
+    if (type === 'cloud_profile') {
+      snippet = `# Hetzner Cloud Profile (using API key: ${apiKeyName})
+my-server-profile:
+  provider: ${providerName}
+  size: cx21          # cx11, cx21, cx31, cx41, etc.
+  image: ubuntu-22.04
+  location: fsn1      # fsn1 (Falkenstein), nbg1 (Nuremberg), hel1 (Helsinki)
+  ssh_username: root
+  minion:
+    master: {{ pillar.get('salt:master_ip', 'salt.example.com') }}`;
+    } else if (type === 'cloud_provider') {
+      snippet = `# Hetzner Cloud Provider Configuration
+# API key: ${apiKeyName}
+${providerName}:
+  driver: hetzner
+  # API key is automatically configured from Settings → Hetzner API Keys`;
+    } else {
+      snippet = `provider: ${providerName}`;
+    }
+
+    if (editor) {
+      const position = editor.getPosition();
+      editor.executeEdits('', [{
+        range: new monaco.Range(position.lineNumber, 1, position.lineNumber, 1),
+        text: snippet + '\n\n'
+      }]);
+      editor.setPosition({ lineNumber: position.lineNumber + 1, column: 1 });
+      editor.focus();
+    }
+  }
+
+  // Initialize cloud config visibility on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCloudConfigVisibility();
+  });
 </script>

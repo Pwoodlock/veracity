@@ -83,9 +83,20 @@ class SaltState < ApplicationRecord
     end
   end
 
+  # Check if content contains Jinja2 templating syntax
+  def contains_jinja2?
+    # Common Jinja2 patterns in Salt states:
+    # {% ... %} - statements (if, for, set, etc.)
+    # {{ ... }} - expressions/variables
+    # {# ... #} - comments
+    content.present? && content.match?(/\{%.*?%\}|\{\{.*?\}\}|\{#.*?#\}/m)
+  end
+
   # Validate YAML syntax
+  # Note: Salt state files often use Jinja2 templating, which is not valid YAML
   def valid_yaml?
     return true if cloud_profile? || cloud_provider? # These may not be pure YAML
+    return true if contains_jinja2? # Jinja2 templates are valid for Salt (rendered before YAML parsing)
 
     YAML.safe_load(content, permitted_classes: [Symbol, Date, Time])
     true
@@ -96,11 +107,17 @@ class SaltState < ApplicationRecord
   # Get YAML validation error if any
   def yaml_error
     return nil if cloud_profile? || cloud_provider?
+    return nil if contains_jinja2? # Jinja2 templates are rendered before YAML parsing in Salt
 
     YAML.safe_load(content, permitted_classes: [Symbol, Date, Time])
     nil
   rescue Psych::SyntaxError => e
     { line: e.line, column: e.column, message: e.message }
+  end
+
+  # Check if this is a Jinja2 template
+  def jinja2_template?
+    contains_jinja2?
   end
 
   # Mark as deployed
