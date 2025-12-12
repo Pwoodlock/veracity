@@ -27,6 +27,14 @@ agent-os/
 agentos/
 .agentos/
 
+# BMAD (Better Multi-Agent Development) - agent-os replacement
+bmad/
+.bmad/
+BMAD/
+.BMAD/
+*bmad*
+*BMAD*
+
 # MCP (Model Context Protocol) config files
 mcp.json
 MCP.json
