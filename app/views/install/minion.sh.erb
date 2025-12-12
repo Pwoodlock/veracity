@@ -521,30 +521,51 @@ fi
 # Always continue - don't fail on service issues
 echo -e "${GREEN}✓${NC} Service start initiated"
 
-# Debian-specific fix: Restart service to ensure proper master connection
-if [ "$OS_FAMILY" = "debian" ]; then
-  echo ""
-  echo -e "${YELLOW}🔄 Debian-based system detected - applying connection fix...${NC}"
-  echo -e "${YELLOW}   Performing additional restart for reliable master connection...${NC}"
-  sleep 3  # Give initial start time to settle
-  timeout 10 systemctl restart salt-minion 2>/dev/null || true
-  sleep 2  # Wait for restart to complete
-  echo -e "${GREEN}✓${NC} Connection fix applied - minion should now appear on dashboard"
+# Universal fix: Restart service to ensure proper master connection
+# This applies to ALL OS families to ensure the minion properly connects
+# and transmits its key to the master on first boot
+echo ""
+echo -e "${YELLOW}🔄 Applying connection fix for reliable master communication...${NC}"
+echo -e "${YELLOW}   Performing service restart to ensure key is transmitted to master...${NC}"
+sleep 3  # Give initial start time to settle
+timeout 10 systemctl restart salt-minion 2>/dev/null || true
+sleep 3  # Wait for restart and master connection to complete
+
+# Verify service is actually running
+if timeout 5 systemctl is-active --quiet salt-minion 2>/dev/null; then
+  echo -e "${GREEN}✓${NC} Salt minion service is running"
+else
+  echo -e "${YELLOW}⚠${NC}  Service may still be starting (this is often normal)"
 fi
+
+echo -e "${GREEN}✓${NC} Connection fix applied - minion should now appear on dashboard"
 
 # Get minion key fingerprint
 echo ""
 echo -e "${BLUE}[7/7]${NC} Getting minion key fingerprint..."
 
-# Wait a moment for key to be generated
-sleep 2
-
+# Verify local minion key exists
 if [ -f /etc/salt/pki/minion/minion.pub ]; then
-  FINGERPRINT=$(salt-call --local key.finger --out=txt | awk '{print $2}')
-  echo -e "${GREEN}✓${NC} Key fingerprint retrieved"
+  FINGERPRINT=$(salt-call --local key.finger --out=txt 2>/dev/null | awk '{print $2}')
+
+  if [ -n "$FINGERPRINT" ]; then
+    echo -e "${GREEN}✓${NC} Key fingerprint retrieved: ${FINGERPRINT:0:20}..."
+  else
+    echo -e "${YELLOW}⚠${NC}  Could not retrieve fingerprint (salt-call may be initializing)"
+    FINGERPRINT="<run: salt-call --local key.finger>"
+  fi
 else
-  echo -e "${YELLOW}⚠${NC}  Key not found yet. It may take a moment to generate."
-  FINGERPRINT="<pending>"
+  echo -e "${YELLOW}⚠${NC}  Key not generated yet. Waiting..."
+  sleep 2
+
+  # Retry once
+  if [ -f /etc/salt/pki/minion/minion.pub ]; then
+    FINGERPRINT=$(salt-call --local key.finger --out=txt 2>/dev/null | awk '{print $2}')
+    echo -e "${GREEN}✓${NC} Key fingerprint retrieved"
+  else
+    echo -e "${YELLOW}⚠${NC}  Key generation delayed. Run: salt-call --local key.finger"
+    FINGERPRINT="<pending>"
+  fi
 fi
 
 # Installation complete
@@ -593,7 +614,5 @@ echo -e "${BLUE}Logs & Troubleshooting:${NC}"
 echo -e "  • Minion logs: /var/log/salt/minion"
 echo -e "  • View logs:   sudo tail -f /var/log/salt/minion"
 echo -e "  • Service:     sudo systemctl status salt-minion"
-if [ "$OS_FAMILY" != "debian" ]; then
-  echo -e "  • If key doesn't appear: sudo systemctl restart salt-minion"
-fi
+echo -e "  • Reconnect:   sudo systemctl restart salt-minion"
 echo ""
