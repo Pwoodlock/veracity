@@ -421,9 +421,11 @@ NETBIRDEOF
   # Pillar files need to be readable by salt-master (644, not 600)
   chmod 644 /srv/pillar/*.sls
 
-  # Allow deploy user to write minion-specific pillar files
+  # Allow deploy user to write minion-specific pillar files and update top.sls
   chown deploy:deploy /srv/pillar/minions
   chmod 755 /srv/pillar/minions
+  chown deploy:deploy /srv/pillar/top.sls
+  chmod 644 /srv/pillar/top.sls
 
   success "Salt directories and state files created"
 }
