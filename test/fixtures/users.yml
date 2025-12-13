@@ -1,10 +1,13 @@
 # Test users for authentication and authorization tests
+# All users have 2FA enabled (otp_required_for_login: true) as required by the application
 
 admin:
   email: admin@test.com
   encrypted_password: <%= Devise::Encryptor.digest(User, 'password123!') %>
   role: admin
   name: Admin User
+  otp_required_for_login: true
+  otp_secret: <%= ROTP::Base32.random %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -13,6 +16,8 @@ regular_user:
   encrypted_password: <%= Devise::Encryptor.digest(User, 'password123!') %>
   role: viewer
   name: Regular User
+  otp_required_for_login: true
+  otp_secret: <%= ROTP::Base32.random %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -21,5 +26,7 @@ editor_user:
   encrypted_password: <%= Devise::Encryptor.digest(User, 'password123!') %>
   role: editor
   name: Editor User
+  otp_required_for_login: true
+  otp_secret: <%= ROTP::Base32.random %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
