@@ -15,7 +15,7 @@
       class="tab"
       aria-label="Pending"
       id="tab-pending"
-      <%= 'checked="checked"' unless params[:tab] || location.hash == '#pending' %>
+      <%= 'checked="checked"' unless params[:tab] %>
     />
     <div role="tabpanel" class="tab-content bg-base-200 border-base-content/10 p-6">
       <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -37,7 +37,7 @@
       class="tab"
       aria-label="Accepted"
       id="tab-accepted"
-      <%= 'checked="checked"' if params[:tab] == 'accepted' || location.hash == '#accepted' %>
+      <%= 'checked="checked"' if params[:tab] == 'accepted' %>
     />
     <div role="tabpanel" class="tab-content bg-base-200 border-base-content/10 p-6">
       <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -59,7 +59,7 @@
       class="tab"
       aria-label="Rejected"
       id="tab-rejected"
-      <%= 'checked="checked"' if params[:tab] == 'rejected' || location.hash == '#rejected' %>
+      <%= 'checked="checked"' if params[:tab] == 'rejected' %>
     />
     <div role="tabpanel" class="tab-content bg-base-200 border-base-content/10 p-6">
       <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -81,7 +81,7 @@
       class="tab"
       aria-label="Denied"
       id="tab-denied"
-      <%= 'checked="checked"' if params[:tab] == 'denied' || location.hash == '#denied' %>
+      <%= 'checked="checked"' if params[:tab] == 'denied' %>
     />
     <div role="tabpanel" class="tab-content bg-base-200 border-base-content/10 p-6">
       <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
