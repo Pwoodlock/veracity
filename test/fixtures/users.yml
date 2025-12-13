@@ -1,5 +1,6 @@
 # Test users for authentication and authorization tests
 # All users have 2FA enabled (otp_required_for_login: true) as required by the application
+# Note: encrypted_otp_secret/iv are not set since we use sign_in helper that bypasses OTP verification
 
 admin:
   email: admin@test.com
@@ -7,7 +8,6 @@ admin:
   role: admin
   name: Admin User
   otp_required_for_login: true
-  otp_secret: <%= ROTP::Base32.random %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -17,7 +17,6 @@ regular_user:
   role: viewer
   name: Regular User
   otp_required_for_login: true
-  otp_secret: <%= ROTP::Base32.random %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
 
@@ -27,6 +26,5 @@ editor_user:
   role: editor
   name: Editor User
   otp_required_for_login: true
-  otp_secret: <%= ROTP::Base32.random %>
   created_at: <%= Time.current %>
   updated_at: <%= Time.current %>
