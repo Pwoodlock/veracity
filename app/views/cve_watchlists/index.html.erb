@@ -103,7 +103,7 @@
                   <%= link_to 'Edit', edit_cve_watchlist_path(watchlist), class: "text-info hover:text-info-content" %>
                   <%= button_to 'Test', test_cve_watchlist_path(watchlist), method: :post, class: "text-success hover:text-success" %>
                   <%= button_to 'Delete', cve_watchlist_path(watchlist), method: :delete,
-                      data: { confirm: 'Are you sure?' }, class: "text-error hover:text-error" %>
+                      data: { turbo_confirm: 'Are you sure?' }, class: "text-error hover:text-error" %>
                 </td>
               </tr>
             <% end %>

@@ -68,7 +68,7 @@
         <div class="mt-4">
           <%= button_to "Run Backup Now", run_now_settings_backups_path, method: :post,
               class: "px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors",
-              data: { confirm: "Start a backup now?" } %>
+              data: { turbo_confirm: "Start a backup now?" } %>
         </div>
       <% end %>
     </div>

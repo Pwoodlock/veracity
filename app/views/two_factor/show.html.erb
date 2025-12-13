@@ -59,7 +59,7 @@
                 Backup codes can be used if you lose access to your authenticator app
               </p>
               <%= button_to "Disable 2FA", two_factor_path, method: :delete,
-                  data: { confirm: "Are you sure? This will make your account less secure." },
+                  data: { turbo_confirm: "Are you sure? This will make your account less secure." },
                   class: "btn btn-error" %>
             </div>
           </div>

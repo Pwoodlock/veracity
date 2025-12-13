@@ -111,7 +111,7 @@
                 <div class="flex justify-end gap-4 items-center">
                   <%= link_to "View", server_path(server), class: "text-primary hover:text-primary/80 font-medium" %>
                   <%= link_to "Edit", edit_server_path(server), class: "text-success hover:text-success font-medium" %>
-                  <%= button_to "Delete", server_path(server), method: :delete, data: { confirm: "Delete #{server.hostname}?" }, class: "text-error hover:text-error font-medium", form_class: "inline-block" %>
+                  <%= button_to "Delete", server_path(server), method: :delete, data: { turbo_confirm: "Delete #{server.hostname}?" }, class: "text-error hover:text-error font-medium", form_class: "inline-block" %>
                 </div>
               </td>
             </tr>

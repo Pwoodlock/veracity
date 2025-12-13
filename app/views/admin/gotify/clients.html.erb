@@ -64,7 +64,7 @@
                 </td>
                 <td class="px-6 py-4 text-right">
                   <%= button_to "Revoke", admin_gotify_revoke_client_path(id: client['id']), method: :delete,
-                      data: { confirm: "Revoke client token '#{client['name']}'?" },
+                      data: { turbo_confirm: "Revoke client token '#{client['name']}'?" },
                       class: "text-error hover:text-error text-sm" %>
                 </td>
               </tr>

@@ -33,7 +33,7 @@
           type="submit"
           class="btn btn-error btn-sm"
           data-bulk-select-target="deleteButton"
-          data-confirm="Delete selected keys? This cannot be undone."
+          data-turbo-confirm="Delete selected keys? This cannot be undone."
           disabled
         >
           Delete Selected
@@ -83,11 +83,12 @@
                       params: { minion_id: key[:minion_id], key_type: key_type },
                       class: "btn btn-ghost btn-xs text-error",
                       data: {
-                        confirm: key_type == 'accepted' ?
+                        turbo_confirm: key_type == 'accepted' ?
                           "⚠️ This server is managed. Deleting will disconnect it. Continue?" :
                           "Delete this key? This cannot be undone."
                       },
-                      disabled: (key_type == 'accepted' && !is_admin)
+                      disabled: (key_type == 'accepted' && !is_admin),
+                      title: (key_type == 'accepted' && !is_admin) ? "Admin permission required to delete accepted keys" : nil
                   %>
                 <% end %>
               </div>

@@ -27,7 +27,7 @@
           Edit Server
         <% end %>
 
-        <%= button_to sync_server_path(@server), method: :post, class: "btn btn-success", data: { confirm: "Sync server data from Salt?" } do %>
+        <%= button_to sync_server_path(@server), method: :post, class: "btn btn-success", data: { turbo_confirm: "Sync server data from Salt?" } do %>
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
@@ -43,7 +43,7 @@
           <% end %>
         <% end %>
 
-        <%= button_to server_path(@server), method: :delete, class: "btn btn-error", data: { confirm: "Are you sure you want to delete #{@server.hostname}? This action cannot be undone." } do %>
+        <%= button_to server_path(@server), method: :delete, class: "btn btn-error", data: { turbo_confirm: "Are you sure you want to delete #{@server.hostname}? This action cannot be undone." } do %>
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
           </svg>
@@ -226,7 +226,7 @@
               Start Server
             <% end %>
 
-            <%= button_to stop_hetzner_server_path(@server), method: :post, class: "btn btn-warning", disabled: @server.hetzner_power_state == 'off', data: { confirm: "Are you sure you want to stop #{@server.hostname}? The server will be gracefully shut down." } do %>
+            <%= button_to stop_hetzner_server_path(@server), method: :post, class: "btn btn-warning", disabled: @server.hetzner_power_state == 'off', data: { turbo_confirm: "Are you sure you want to stop #{@server.hostname}? The server will be gracefully shut down." } do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
@@ -234,7 +234,7 @@
               Stop Server
             <% end %>
 
-            <%= button_to reboot_hetzner_server_path(@server), method: :post, class: "btn btn-warning", disabled: @server.hetzner_power_state != 'running', data: { confirm: "Are you sure you want to reboot #{@server.hostname}? The server will restart immediately." } do %>
+            <%= button_to reboot_hetzner_server_path(@server), method: :post, class: "btn btn-warning", disabled: @server.hetzner_power_state != 'running', data: { turbo_confirm: "Are you sure you want to reboot #{@server.hostname}? The server will restart immediately." } do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>
@@ -260,7 +260,7 @@
                 View Snapshots
               <% end %>
 
-              <%= button_to create_hetzner_snapshot_server_path(@server), method: :post, class: "btn btn-secondary", data: { confirm: "Create a manual snapshot of #{@server.hostname}? This will take a few minutes to complete." } do %>
+              <%= button_to create_hetzner_snapshot_server_path(@server), method: :post, class: "btn btn-secondary", data: { turbo_confirm: "Create a manual snapshot of #{@server.hostname}? This will take a few minutes to complete." } do %>
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -328,14 +328,14 @@
               Start
             <% end %>
 
-            <%= button_to shutdown_proxmox_server_path(@server), method: :post, class: "btn btn-warning", disabled: !@server.online?, data: { confirm: "Gracefully shutdown #{@server.hostname}? The OS will be signaled to shut down properly." } do %>
+            <%= button_to shutdown_proxmox_server_path(@server), method: :post, class: "btn btn-warning", disabled: !@server.online?, data: { turbo_confirm: "Gracefully shutdown #{@server.hostname}? The OS will be signaled to shut down properly." } do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
               Shutdown (Graceful)
             <% end %>
 
-            <%= button_to stop_proxmox_server_path(@server), method: :post, class: "btn btn-error", disabled: !@server.online?, data: { confirm: "Force stop #{@server.hostname}? This immediately powers off the VM/LXC without graceful shutdown!" } do %>
+            <%= button_to stop_proxmox_server_path(@server), method: :post, class: "btn btn-error", disabled: !@server.online?, data: { turbo_confirm: "Force stop #{@server.hostname}? This immediately powers off the VM/LXC without graceful shutdown!" } do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
@@ -343,7 +343,7 @@
               Stop (Force)
             <% end %>
 
-            <%= button_to reboot_proxmox_server_path(@server), method: :post, class: "btn btn-warning", disabled: !@server.online?, data: { confirm: "Reboot #{@server.hostname}? The VM/LXC will restart immediately." } do %>
+            <%= button_to reboot_proxmox_server_path(@server), method: :post, class: "btn btn-warning", disabled: !@server.online?, data: { turbo_confirm: "Reboot #{@server.hostname}? The VM/LXC will restart immediately." } do %>
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>

@@ -12,7 +12,7 @@
         <div class="flex gap-2">
           <%= button_to "Clear All", dashboard_clear_failed_commands_path, method: :delete,
               class: "btn btn-error btn-sm",
-              data: { confirm: "Are you sure? This will delete all failed commands from the last 7 days." } %>
+              data: { turbo_confirm: "Are you sure? This will delete all failed commands from the last 7 days." } %>
           <%= link_to "View All →", commands_path(status: 'failed'), class: "btn btn-ghost btn-sm" %>
         </div>
       </div>

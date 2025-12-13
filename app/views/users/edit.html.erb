@@ -25,7 +25,7 @@
             <p class="text-sm text-base-content/80">2FA is currently <span class="font-medium text-success">enabled</span> for this user</p>
           </div>
           <%= button_to "Disable 2FA", toggle_otp_user_path(@user), method: :post,
-              data: { confirm: "Are you sure you want to disable 2FA for #{@user.email}?" },
+              data: { turbo_confirm: "Are you sure you want to disable 2FA for #{@user.email}?" },
               class: "btn btn-error" %>
         </div>
       </div>

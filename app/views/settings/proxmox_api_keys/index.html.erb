@@ -227,7 +227,7 @@
                     <%= button_to "Delete", settings_proxmox_api_key_path(api_key),
                         method: :delete,
                         class: "btn btn-error btn-sm",
-                        data: { confirm: "Are you sure? This will remove the API key. Servers using this key will lose Proxmox control." } %>
+                        data: { turbo_confirm: "Are you sure? This will remove the API key. Servers using this key will lose Proxmox control." } %>
                   </div>
                 </div>
               </div>

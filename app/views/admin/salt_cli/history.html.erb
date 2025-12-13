@@ -20,7 +20,7 @@
           </svg>
           Back to CLI
         <% end %>
-        <%= button_to admin_salt_cli_clear_history_path, method: :delete, class: "btn btn-sm btn-error btn-outline gap-2", data: { confirm: "Are you sure you want to clear all command history?" } do %>
+        <%= button_to admin_salt_cli_clear_history_path, method: :delete, class: "btn btn-sm btn-error btn-outline gap-2", data: { turbo_confirm: "Are you sure you want to clear all command history?" } do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
@@ -131,7 +131,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </button>
-                        <%= button_to admin_salt_cli_command_path(cmd), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { confirm: "Delete this command?" } do %>
+                        <%= button_to admin_salt_cli_command_path(cmd), method: :delete, class: "btn btn-ghost btn-xs text-error", data: { turbo_confirm: "Delete this command?" } do %>
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>

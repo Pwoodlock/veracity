@@ -68,7 +68,7 @@
                           class="text-primary hover:text-primary-focus">Edit</button>
                   <% unless user['name'] == 'admin' %>
                     <%= button_to "Delete", admin_gotify_delete_user_path(id: user['id']), method: :delete,
-                        data: { confirm: "Delete user '#{user['name']}'?" },
+                        data: { turbo_confirm: "Delete user '#{user['name']}'?" },
                         class: "text-error hover:text-error" %>
                   <% end %>
                 </td>

@@ -74,7 +74,7 @@
                   method: :delete,
                   class: "btn btn-error #{@failed_commands_count.zero? ? 'btn-disabled' : ''}",
                   disabled: @failed_commands_count.zero?,
-                  data: { confirm: "Are you sure? This will permanently delete #{@failed_commands_count} failed commands from the last 7 days." } %>
+                  data: { turbo_confirm: "Are you sure? This will permanently delete #{@failed_commands_count} failed commands from the last 7 days." } %>
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@
                   method: :delete,
                   class: "btn btn-warning #{@old_commands_count.zero? ? 'btn-disabled' : ''}",
                   disabled: @old_commands_count.zero?,
-                  data: { confirm: "Are you sure? This will permanently delete #{@old_commands_count} commands older than 30 days. This cannot be undone!" } %>
+                  data: { turbo_confirm: "Are you sure? This will permanently delete #{@old_commands_count} commands older than 30 days. This cannot be undone!" } %>
             </div>
           </div>
         </div>
@@ -128,7 +128,7 @@
                   method: :delete,
                   class: "btn btn-error #{@failed_task_runs_count.zero? ? 'btn-disabled' : ''}",
                   disabled: @failed_task_runs_count.zero?,
-                  data: { confirm: "Are you sure? This will permanently delete #{@failed_task_runs_count} failed task runs from the last 7 days." } %>
+                  data: { turbo_confirm: "Are you sure? This will permanently delete #{@failed_task_runs_count} failed task runs from the last 7 days." } %>
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@
                   method: :delete,
                   class: "btn btn-warning #{@old_task_runs_count.zero? ? 'btn-disabled' : ''}",
                   disabled: @old_task_runs_count.zero?,
-                  data: { confirm: "Are you sure? This will permanently delete #{@old_task_runs_count} task runs older than 30 days. This cannot be undone!" } %>
+                  data: { turbo_confirm: "Are you sure? This will permanently delete #{@old_task_runs_count} task runs older than 30 days. This cannot be undone!" } %>
             </div>
           </div>
         </div>

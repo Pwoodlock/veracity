@@ -206,7 +206,7 @@
 
   <script>
     function copyToClipboard() {
-      const command = "curl <%= @install_url %> | sudo bash";
+      const command = "curl <%= j(@install_url) %> | sudo bash";
       const button = document.getElementById('copyButton');
 
       // Copy to clipboard

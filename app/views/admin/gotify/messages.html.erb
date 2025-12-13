@@ -83,7 +83,7 @@
                 </div>
                 <div class="ml-4">
                   <%= button_to "Delete", admin_gotify_delete_message_path(id: message['id']), method: :delete,
-                      data: { confirm: 'Delete this message?' },
+                      data: { turbo_confirm: 'Delete this message?' },
                       class: "text-error hover:text-error text-sm" %>
                 </div>
               </div>

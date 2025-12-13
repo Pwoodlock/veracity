@@ -85,7 +85,7 @@
                   <button onclick="editApplication(<%= app['id'] %>, '<%= app['name'] %>', '<%= app['description'] %>', <%= app['defaultPriority'] %>)"
                           class="text-primary hover:text-primary-focus">Edit</button>
                   <%= button_to "Delete", admin_gotify_delete_application_path(id: app['id']), method: :delete,
-                      data: { confirm: "Delete application '#{app['name']}'? This cannot be undone." },
+                      data: { turbo_confirm: "Delete application '#{app['name']}'? This cannot be undone." },
                       class: "text-error hover:text-error" %>
                 </td>
               </tr>

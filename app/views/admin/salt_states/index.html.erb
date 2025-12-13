@@ -174,7 +174,7 @@
                   Edit
                 <% end %>
                 <% if salt_state.is_active? %>
-                  <%= button_to undeploy_admin_salt_state_path(salt_state), method: :post, class: "btn btn-xs btn-warning", data: { confirm: "Remove this state from the Salt master?" } do %>
+                  <%= button_to undeploy_admin_salt_state_path(salt_state), method: :post, class: "btn btn-xs btn-warning", data: { turbo_confirm: "Remove this state from the Salt master?" } do %>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                     </svg>

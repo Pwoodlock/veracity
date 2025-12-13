@@ -181,7 +181,7 @@
                     <%= button_to "Delete", settings_hetzner_api_key_path(api_key),
                         method: :delete,
                         class: "btn btn-error btn-sm",
-                        data: { confirm: "Are you sure? This will also remove the key from Salt configuration." } %>
+                        data: { turbo_confirm: "Are you sure? This will also remove the key from Salt configuration." } %>
                   </div>
                 </div>
               </div>
