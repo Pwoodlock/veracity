@@ -276,6 +276,10 @@ module Admin
       @gotify_enabled = SystemSetting.get_with_source("gotify_enabled", false)
       @gotify_ssl_verify = SystemSetting.get_with_source("gotify_ssl_verify", true)
 
+      # Notification toggles
+      @notify_on_auto_accept = SystemSetting.get("notify_on_auto_accept", true)
+      @notify_on_manual_minion_add = SystemSetting.get("notify_on_manual_minion_add", false)
+
       # Test current connection
       @connection_test = test_connection_internal
     end
@@ -318,6 +322,13 @@ module Admin
         # Update SSL verification
         ssl_verify = params[:gotify_ssl_verify] == '1' || params[:gotify_ssl_verify] == 'true'
         SystemSetting.set('gotify_ssl_verify', ssl_verify, 'boolean')
+
+        # Update notification toggles
+        notify_auto_accept = params[:notify_on_auto_accept] == '1' || params[:notify_on_auto_accept] == 'true'
+        SystemSetting.set('notify_on_auto_accept', notify_auto_accept, 'boolean')
+
+        notify_manual_add = params[:notify_on_manual_minion_add] == '1' || params[:notify_on_manual_minion_add] == 'true'
+        SystemSetting.set('notify_on_manual_minion_add', notify_manual_add, 'boolean')
 
         # Test connection with new settings
         @gotify = GotifyApiService.new

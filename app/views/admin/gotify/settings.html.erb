@@ -54,7 +54,7 @@
     </div>
 
     <!-- Current Configuration (Read-only) -->
-    <div class="bg-base-200 rounded-lg shadow p-6">
+    <div class="bg-base-200 rounded-lg shadow p-6 mb-6">
       <h2 class="text-lg font-semibold text-base-content mb-4">Current Configuration</h2>
       <p class="text-sm text-base-content/60 mb-4">
         Gotify settings are configured during installation via environment variables.
@@ -82,6 +82,46 @@
           </span>
         </div>
       </div>
+    </div>
+
+    <!-- Notification Preferences -->
+    <div class="bg-base-200 rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold text-base-content mb-4">🔔 Notification Preferences</h2>
+      <p class="text-sm text-base-content/60 mb-4">
+        Control which events trigger Gotify push notifications.
+      </p>
+
+      <%= form_with url: admin_gotify_update_settings_path, method: :post, class: "space-y-4" do |f| %>
+        <!-- Auto-Accept Notifications -->
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-4">
+            <%= check_box_tag :notify_on_auto_accept, '1', @notify_on_auto_accept, class: "toggle toggle-success" %>
+            <div>
+              <span class="label-text font-semibold">Notify on Auto-Accepted Minions</span>
+              <p class="text-xs text-base-content/60 mt-1">
+                Receive notifications when minion keys are automatically accepted via the auto-accept feature.
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Manual Add Notifications -->
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-4">
+            <%= check_box_tag :notify_on_manual_minion_add, '1', @notify_on_manual_minion_add, class: "toggle toggle-success" %>
+            <div>
+              <span class="label-text font-semibold">Notify on Manually Added Minions</span>
+              <p class="text-xs text-base-content/60 mt-1">
+                Receive notifications when minion keys are manually accepted by an admin.
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <div class="form-control mt-6">
+          <%= f.submit "Save Notification Preferences", class: "btn btn-primary" %>
+        </div>
+      <% end %>
     </div>
 
   </div>

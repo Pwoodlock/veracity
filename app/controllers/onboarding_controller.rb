@@ -4,13 +4,14 @@ class OnboardingController < ApplicationController
   # SECURITY: Authorization checks for minion key management
   # Viewers: Can view onboarding page (index, install)
   # Operators & Admins: Can accept/reject minion keys
-  # Admins only: Can cleanup orphaned keys
+  # Admins only: Can delete accepted keys, cleanup orphaned keys, manage auto-acceptance
   before_action :require_operator!, only: [:accept_key, :reject_key, :bulk_accept_keys, :bulk_reject_keys, :refresh]
-  before_action :require_admin!, only: [:cleanup_orphaned_keys]
+  before_action :require_admin!, only: [:delete_key, :bulk_delete_keys, :cleanup_orphaned_keys, :toggle_auto_accept, :add_fingerprint, :remove_fingerprint]
 
   # Show pending minion keys and accept form
   def index
-    load_pending_keys
+    load_all_keys
+    load_auto_acceptance_settings
   end
 
   # Show install script page
@@ -47,6 +48,14 @@ class OnboardingController < ApplicationController
           sleep 1.5  # Reduced from 2 seconds
           register_accepted_minions([minion_id])
         end
+
+        # Send notification if enabled
+        if SystemSetting.get('notify_on_manual_minion_add', false)
+          send_manual_accept_notification(minion_id)
+        end
+
+        # Audit log
+        Rails.logger.info "[MANUAL-ACCEPT] User #{current_user.email} accepted key: #{minion_id}"
       else
         flash[:error] = "Failed to accept key: #{result[:message]}"
       end
@@ -189,6 +198,94 @@ class OnboardingController < ApplicationController
     redirect_to onboarding_path
   end
 
+  # Delete a single key (any type)
+  def delete_key
+    minion_id = params[:minion_id]
+    key_type = params[:key_type]
+
+    if minion_id.blank?
+      flash[:error] = "Minion ID is required"
+      redirect_to onboarding_path
+      return
+    end
+
+    Rails.logger.warn "[ADMIN-DELETE] User #{current_user.email} deleting #{key_type} key: #{minion_id}"
+
+    begin
+      result = SaltService.delete_key(minion_id)
+
+      if result && result['return']
+        # If it's an accepted key, also delete the Server record
+        if key_type == 'accepted'
+          server = Server.find_by(minion_id: minion_id)
+          if server
+            server.destroy
+            Rails.logger.info "Deleted associated Server record for #{minion_id}"
+          end
+        end
+
+        flash[:success] = "Deleted key: #{minion_id}"
+      else
+        flash[:error] = "Failed to delete key: #{minion_id}"
+      end
+    rescue StandardError => e
+      Rails.logger.error "Error deleting key: #{e.message}"
+      flash[:error] = "Error deleting key: #{e.message}"
+    end
+
+    redirect_to onboarding_path
+  end
+
+  # Bulk delete keys
+  def bulk_delete_keys
+    minion_ids = params[:minion_ids] || []
+    key_type = params[:key_type]
+
+    if minion_ids.empty?
+      flash[:error] = "No keys selected"
+      redirect_to onboarding_path
+      return
+    end
+
+    Rails.logger.warn "[ADMIN-BULK-DELETE] User #{current_user.email} deleting #{minion_ids.size} #{key_type} keys"
+
+    deleted = []
+    failed = []
+
+    minion_ids.each do |minion_id|
+      begin
+        result = SaltService.delete_key(minion_id)
+
+        if result && result['return']
+          deleted << minion_id
+
+          # Delete associated Server record for accepted keys
+          if key_type == 'accepted'
+            server = Server.find_by(minion_id: minion_id)
+            server&.destroy
+          end
+
+          Rails.logger.info "[ADMIN-DELETE] Deleted #{key_type} key: #{minion_id}"
+        else
+          failed << { minion_id: minion_id, error: "API returned false" }
+        end
+      rescue StandardError => e
+        Rails.logger.error "Error deleting #{minion_id}: #{e.message}"
+        failed << { minion_id: minion_id, error: e.message }
+      end
+    end
+
+    if failed.empty?
+      flash[:success] = "Deleted #{deleted.size} #{key_type} key(s)"
+    elsif deleted.any?
+      flash[:warning] = "Deleted #{deleted.size} key(s), but #{failed.size} failed"
+    else
+      flash[:error] = "Failed to delete all keys"
+    end
+
+    redirect_to onboarding_path
+  end
+
   # Clean up orphaned pending keys (keys without associated servers)
   def cleanup_orphaned_keys
     Rails.logger.info "User #{current_user.email} cleaning up orphaned keys"
@@ -213,7 +310,7 @@ class OnboardingController < ApplicationController
     redirect_to onboarding_path
   end
 
-  # Refresh the pending keys list
+  # Refresh the pending keys list (legacy)
   def refresh
     load_pending_keys
     respond_to do |format|
@@ -226,6 +323,93 @@ class OnboardingController < ApplicationController
       end
       format.html { redirect_to onboarding_path }
     end
+  end
+
+  # Refresh all keys (for auto-refresh)
+  def refresh_keys
+    load_all_keys
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "all-keys-tabs",
+          partial: "onboarding/all_keys_tabs",
+          locals: { all_keys: @all_keys }
+        )
+      end
+      format.html { redirect_to onboarding_path }
+    end
+  end
+
+  # Toggle auto-accept mode
+  def toggle_auto_accept
+    enabled = params[:enabled] == '1' || params[:enabled] == 'on'
+    SystemSetting.set('auto_accept_keys_enabled', enabled)
+
+    if enabled
+      flash[:success] = "Auto-accept mode enabled. Whitelisted keys will be accepted automatically."
+      Rails.logger.info "[AUTO-ACCEPT] User #{current_user.email} enabled auto-accept mode"
+    else
+      flash[:notice] = "Auto-accept mode disabled."
+      Rails.logger.info "[AUTO-ACCEPT] User #{current_user.email} disabled auto-accept mode"
+    end
+
+    redirect_to onboarding_path
+  end
+
+  # Add fingerprint to whitelist
+  def add_fingerprint
+    fingerprint = params[:fingerprint]&.strip
+
+    if fingerprint.blank?
+      flash[:error] = "Fingerprint cannot be blank"
+      redirect_to onboarding_path
+      return
+    end
+
+    # Validate fingerprint format (SHA256: XX:XX:XX:... 64 hex chars = 32 pairs)
+    unless fingerprint.match?(/^([0-9a-fA-F]{2}:){15,63}[0-9a-fA-F]{2}$/)
+      flash[:error] = "Invalid fingerprint format. Expected: a1:b2:c3:d4:..."
+      redirect_to onboarding_path
+      return
+    end
+
+    whitelist_json = SystemSetting.get('auto_accept_fingerprint_whitelist', '[]')
+    whitelist = JSON.parse(whitelist_json) rescue []
+
+    if whitelist.include?(fingerprint)
+      flash[:warning] = "Fingerprint already in whitelist"
+    else
+      whitelist << fingerprint
+      SystemSetting.set('auto_accept_fingerprint_whitelist', whitelist.to_json)
+      flash[:success] = "Fingerprint added to whitelist"
+      Rails.logger.info "[AUTO-ACCEPT] User #{current_user.email} added fingerprint to whitelist: #{fingerprint}"
+    end
+
+    redirect_to onboarding_path
+  end
+
+  # Remove fingerprint from whitelist
+  def remove_fingerprint
+    fingerprint = params[:fingerprint]
+
+    if fingerprint.blank?
+      flash[:error] = "Fingerprint cannot be blank"
+      redirect_to onboarding_path
+      return
+    end
+
+    whitelist_json = SystemSetting.get('auto_accept_fingerprint_whitelist', '[]')
+    whitelist = JSON.parse(whitelist_json) rescue []
+
+    if whitelist.delete(fingerprint)
+      SystemSetting.set('auto_accept_fingerprint_whitelist', whitelist.to_json)
+      flash[:success] = "Fingerprint removed from whitelist"
+      Rails.logger.info "[AUTO-ACCEPT] User #{current_user.email} removed fingerprint from whitelist: #{fingerprint}"
+    else
+      flash[:error] = "Fingerprint not found in whitelist"
+    end
+
+    redirect_to onboarding_path
   end
 
   private
@@ -241,6 +425,40 @@ class OnboardingController < ApplicationController
       Rails.logger.error "Failed to fetch pending keys: #{e.message}"
       flash.now[:error] = "Error fetching pending keys: #{e.message}"
       @pending_keys = []
+    end
+  end
+
+  def load_all_keys
+    begin
+      @all_keys = SaltService.list_all_keys
+    rescue SaltService::ConnectionError => e
+      Rails.logger.error "Salt API connection error: #{e.message}"
+      flash.now[:error] = "Cannot connect to Salt Master: #{e.message}"
+      @all_keys = { pending: [], accepted: [], rejected: [], denied: [] }
+    rescue StandardError => e
+      Rails.logger.error "Failed to fetch keys: #{e.message}"
+      flash.now[:error] = "Error fetching keys: #{e.message}"
+      @all_keys = { pending: [], accepted: [], rejected: [], denied: [] }
+    end
+  end
+
+  def load_auto_acceptance_settings
+    @auto_accept_enabled = SystemSetting.get('auto_accept_keys_enabled', false)
+    whitelist_json = SystemSetting.get('auto_accept_fingerprint_whitelist', '[]')
+    @fingerprint_whitelist = JSON.parse(whitelist_json) rescue []
+  end
+
+  # Send Gotify notification for manually accepted key
+  def send_manual_accept_notification(minion_id)
+    begin
+      GotifyNotificationService.send_notification(
+        title: 'Minion Key Manually Accepted',
+        message: "✅ Minion manually accepted: #{minion_id}",
+        priority: 5,
+        notification_type: 'minion_manual_added'
+      )
+    rescue StandardError => e
+      Rails.logger.error "[MANUAL-ACCEPT] Failed to send notification: #{e.message}"
     end
   end
 

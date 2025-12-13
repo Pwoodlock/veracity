@@ -35,6 +35,16 @@ cve_scan:
   description: "Scan all active CVE watchlists for new vulnerabilities"
   active_job: true
 
+# Auto-accept minion keys based on fingerprint whitelist
+# Runs every 30 seconds when auto-accept mode is enabled
+# The job checks the auto_accept_keys_enabled setting and returns early if disabled
+auto_accept_keys:
+  cron: "*/30 * * * * *"  # Every 30 seconds (extended cron with seconds)
+  class: "AutoAcceptMinionKeysJob"
+  queue: default
+  description: "Automatically accept pending minion keys with whitelisted fingerprints"
+  active_job: true
+
 # Note: The extended cron format (with seconds) is supported by sidekiq-cron
 # Format: second minute hour day month weekday
 # Examples:

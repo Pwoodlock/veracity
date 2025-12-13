@@ -23,19 +23,24 @@
       </div>
     <% end %>
 
+    <!-- Auto-Accept Mode Banner (Admin Only) -->
+    <% if current_user&.admin? %>
+      <% if @auto_accept_enabled %>
+        <div class="alert alert-warning mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <div>
+            <h3 class="font-bold">Auto-Acceptance is ACTIVE</h3>
+            <div class="text-sm">Pending keys matching the whitelist (<%= @fingerprint_whitelist.size %> fingerprints) will be accepted automatically every 30 seconds.</div>
+          </div>
+          <button class="btn btn-sm" onclick="auto_accept_modal.showModal()">Manage</button>
+        </div>
+      <% end %>
+    <% end %>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-      <!-- Pending Minion Keys -->
-      <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
-        <div class="px-6 py-4 border-b border-base-content/10 flex justify-between items-center">
-          <h2 class="text-lg font-semibold text-base-content">Pending Minion Keys</h2>
-          <%= button_to "Refresh", refresh_onboarding_path, method: :post, class: "btn btn-primary btn-sm" %>
-        </div>
-
-        <div id="pending-keys">
-          <%= render partial: "onboarding/pending_keys", locals: { pending_keys: @pending_keys } %>
-        </div>
-      </div>
+      <!-- All Minion Keys (Tabbed Interface) -->
+      <%= render partial: "onboarding/all_keys_tabs", locals: { all_keys: @all_keys } %>
 
       <!-- Installation Instructions -->
       <div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
@@ -46,8 +51,20 @@
           <div>
             <h3 class="font-medium text-base-content mb-2">Step 1: Install Salt Minion</h3>
             <p class="text-sm text-base-content/80 mb-2">Run this command on your new server:</p>
-            <div class="bg-base-300 text-success p-3 rounded font-mono text-sm overflow-x-auto">
-              curl -sSL <%= root_url %>install-minion.sh | sudo bash
+            <div class="relative" data-controller="clipboard">
+              <div class="bg-base-300 text-success p-3 pr-12 rounded font-mono text-sm overflow-x-auto" data-clipboard-target="source">curl -sSL <%= root_url %>install-minion.sh | sudo bash</div>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm absolute top-2 right-2"
+                data-clipboard-target="button"
+                data-action="click->clipboard#copy"
+                title="Copy to clipboard">
+                <span data-clipboard-target="icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                  </svg>
+                </span>
+              </button>
             </div>
           </div>
 
@@ -69,6 +86,94 @@
       </div>
 
     </div>
+
+    <!-- Auto-Accept Management Modal (Admin Only) -->
+    <% if current_user&.admin? %>
+      <dialog id="auto_accept_modal" class="modal">
+        <div class="modal-box w-11/12 max-w-3xl">
+          <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+          </form>
+          <h3 class="font-bold text-lg mb-4">Auto-Accept Mode Management</h3>
+
+          <!-- Toggle Auto-Accept -->
+          <%= form_with url: toggle_auto_accept_onboarding_path, method: :post, class: "mb-6" do |f| %>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-4">
+                <input
+                  type="checkbox"
+                  class="toggle toggle-success"
+                  name="enabled"
+                  <%= 'checked' if @auto_accept_enabled %>
+                  onchange="this.form.submit()"
+                />
+                <div>
+                  <span class="label-text font-semibold">Enable Auto-Accept Mode</span>
+                  <p class="text-sm text-base-content/60 mt-1">
+                    When enabled, pending minion keys with whitelisted fingerprints will be automatically accepted every 30 seconds.
+                  </p>
+                </div>
+              </label>
+            </div>
+          <% end %>
+
+          <div class="divider"></div>
+
+          <!-- Fingerprint Whitelist -->
+          <h4 class="font-semibold mb-3">Fingerprint Whitelist (<%= @fingerprint_whitelist.size %>)</h4>
+
+          <% if @fingerprint_whitelist.empty? %>
+            <div class="alert alert-info mb-4">
+              <p>No fingerprints in whitelist. Add fingerprints from pending keys to enable auto-acceptance.</p>
+            </div>
+          <% else %>
+            <div class="overflow-x-auto mb-4 max-h-64 overflow-y-auto">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Fingerprint</th>
+                    <th class="w-20">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @fingerprint_whitelist.each do |fingerprint| %>
+                    <tr>
+                      <td><code class="text-xs"><%= fingerprint %></code></td>
+                      <td>
+                        <%= button_to "Remove",
+                            remove_fingerprint_onboarding_path,
+                            method: :post,
+                            params: { fingerprint: fingerprint },
+                            class: "btn btn-ghost btn-xs text-error",
+                            data: { confirm: "Remove this fingerprint from whitelist?" }
+                        %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+
+          <!-- Add Fingerprint Form -->
+          <%= form_with url: add_fingerprint_onboarding_path, method: :post, class: "flex gap-2" do |f| %>
+            <%= f.text_field :fingerprint,
+                placeholder: "a1:b2:c3:d4:e5:f6:...",
+                class: "input input-bordered flex-1 font-mono text-sm",
+                required: true,
+                pattern: "^([0-9a-fA-F]{2}:){15,63}[0-9a-fA-F]{2}$"
+            %>
+            <%= f.submit "Add to Whitelist", class: "btn btn-primary" %>
+          <% end %>
+          <p class="text-xs text-base-content/60 mt-2">
+            Enter SHA256 fingerprint (format: XX:XX:XX:...)
+          </p>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    <% end %>
 
   </div>
 <% end %>

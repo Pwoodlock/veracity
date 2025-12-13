@@ -1,0 +1,146 @@
+<%
+  # Local variables:
+  # - keys: Array of key hashes with :minion_id, :fingerprint, :status, :server (for accepted)
+  # - key_type: String ('pending', 'accepted', 'rejected', 'denied')
+  # - current_user: Current logged in user
+
+  is_admin = current_user&.admin?
+  can_delete_accepted = is_admin && key_type == 'accepted'
+%>
+
+<% if keys.empty? %>
+  <div class="text-center py-8 text-base-content/60">
+    <p>No <%= key_type %> keys</p>
+  </div>
+<% else %>
+  <!-- Bulk Actions -->
+  <div class="mb-4 flex items-center gap-3">
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input
+        type="checkbox"
+        class="checkbox checkbox-sm"
+        id="select-all-<%= key_type %>"
+        data-action="change->bulk-select#toggleAll"
+        data-bulk-select-target="selectAll"
+      />
+      <span class="text-sm">Select All</span>
+    </label>
+
+    <%= form_with url: bulk_delete_keys_onboarding_path, method: :post, class: "flex-1", data: { controller: "bulk-select" } do |f| %>
+      <%= hidden_field_tag :key_type, key_type %>
+      <div class="flex items-center gap-2">
+        <button
+          type="submit"
+          class="btn btn-error btn-sm"
+          data-bulk-select-target="deleteButton"
+          data-confirm="Delete selected keys? This cannot be undone."
+          disabled
+        >
+          Delete Selected
+        </button>
+        <span class="text-sm text-base-content/60" data-bulk-select-target="counter">
+          0 selected
+        </span>
+      </div>
+
+      <!-- Key List -->
+      <div class="space-y-3 mt-4" data-bulk-select-target="container">
+        <% keys.each do |key| %>
+          <div class="bg-base-300 p-4 rounded-lg flex items-start gap-4">
+            <!-- Checkbox -->
+            <label class="cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                name="minion_ids[]"
+                value="<%= key[:minion_id] %>"
+                class="checkbox checkbox-sm"
+                data-bulk-select-target="checkbox"
+                data-action="change->bulk-select#updateCount"
+              />
+            </label>
+
+            <!-- Key Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-semibold text-base-content"><%= key[:minion_id] %></h4>
+                  <% if key_type == 'pending' %>
+                    <span class="badge badge-success badge-sm">Pending</span>
+                  <% elsif key_type == 'accepted' %>
+                    <span class="badge badge-info badge-sm">Accepted</span>
+                  <% elsif key_type == 'rejected' %>
+                    <span class="badge badge-error badge-sm">Rejected</span>
+                  <% elsif key_type == 'denied' %>
+                    <span class="badge badge-warning badge-sm">Denied</span>
+                  <% end %>
+                </div>
+
+                <!-- Individual Delete Button -->
+                <% if key_type != 'pending' %>
+                  <%= button_to "Delete",
+                      delete_key_onboarding_path,
+                      method: :delete,
+                      params: { minion_id: key[:minion_id], key_type: key_type },
+                      class: "btn btn-ghost btn-xs text-error",
+                      data: {
+                        confirm: key_type == 'accepted' ?
+                          "⚠️ This server is managed. Deleting will disconnect it. Continue?" :
+                          "Delete this key? This cannot be undone."
+                      },
+                      disabled: (key_type == 'accepted' && !is_admin)
+                  %>
+                <% end %>
+              </div>
+
+              <div class="text-sm text-base-content/70 font-mono mb-2">
+                <%= key[:fingerprint] || 'No fingerprint available' %>
+              </div>
+
+              <!-- Server Association (Accepted Keys Only) -->
+              <% if key_type == 'accepted' && key[:server] %>
+                <div class="mt-3 pt-3 border-t border-base-content/10">
+                  <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span class="text-base-content/60">Hostname:</span>
+                      <span class="font-medium"><%= key[:server][:hostname] %></span>
+                    </div>
+                    <div>
+                      <span class="text-base-content/60">Status:</span>
+                      <% if key[:server][:status] == 'online' %>
+                        <span class="badge badge-success badge-xs">Online</span>
+                      <% else %>
+                        <span class="badge badge-error badge-xs">Offline</span>
+                      <% end %>
+                    </div>
+                    <% if key[:server][:last_seen] %>
+                      <div class="col-span-2">
+                        <span class="text-base-content/60">Last Seen:</span>
+                        <span><%= time_ago_in_words(key[:server][:last_seen]) %> ago</span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- Actions for Pending Keys -->
+              <% if key_type == 'pending' %>
+                <div class="mt-3 flex gap-2">
+                  <%= form_with url: accept_key_onboarding_path, method: :post, class: "inline" do |f| %>
+                    <%= f.hidden_field :minion_id, value: key[:minion_id] %>
+                    <%= f.hidden_field :fingerprint, value: key[:fingerprint] %>
+                    <%= f.submit "Accept", class: "btn btn-success btn-sm" %>
+                  <% end %>
+
+                  <%= form_with url: reject_key_onboarding_path, method: :post, class: "inline" do |f| %>
+                    <%= f.hidden_field :minion_id, value: key[:minion_id] %>
+                    <%= f.submit "Reject", class: "btn btn-error btn-sm" %>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,123 @@
+<%= turbo_frame_tag "all-keys-tabs", data: { controller: "auto-refresh", auto_refresh_url_value: refresh_keys_onboarding_path, auto_refresh_interval_value: 30000 } do %>
+<div class="bg-base-200 border border-base-content/10 rounded-lg shadow-lg">
+  <div class="px-6 py-4 border-b border-base-content/10 flex justify-between items-center">
+    <h2 class="text-lg font-semibold text-base-content">Minion Key Management</h2>
+    <%= button_to "Refresh", refresh_onboarding_path, method: :post, class: "btn btn-primary btn-sm" %>
+  </div>
+
+  <!-- Tabs -->
+  <div role="tablist" class="tabs tabs-lifted tabs-lg">
+    <!-- Pending Tab -->
+    <input
+      type="radio"
+      name="key_tabs"
+      role="tab"
+      class="tab"
+      aria-label="Pending"
+      id="tab-pending"
+      <%= 'checked="checked"' unless params[:tab] || location.hash == '#pending' %>
+    />
+    <div role="tabpanel" class="tab-content bg-base-200 border-base-content/10 p-6">
+      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <span>Pending Keys</span>
+        <span class="badge badge-success"><%= all_keys[:pending].size %></span>
+      </h3>
+      <%= render partial: "onboarding/key_list", locals: {
+        keys: all_keys[:pending],
+        key_type: 'pending',
+        current_user: current_user
+      } %>
+    </div>
+
+    <!-- Accepted Tab -->
+    <input
+      type="radio"
+      name="key_tabs"
+      role="tab"
+      class="tab"
+      aria-label="Accepted"
+      id="tab-accepted"
+      <%= 'checked="checked"' if params[:tab] == 'accepted' || location.hash == '#accepted' %>
+    />
+    <div role="tabpanel" class="tab-content bg-base-200 border-base-content/10 p-6">
+      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <span>Accepted Keys</span>
+        <span class="badge badge-info"><%= all_keys[:accepted].size %></span>
+      </h3>
+      <%= render partial: "onboarding/key_list", locals: {
+        keys: all_keys[:accepted],
+        key_type: 'accepted',
+        current_user: current_user
+      } %>
+    </div>
+
+    <!-- Rejected Tab -->
+    <input
+      type="radio"
+      name="key_tabs"
+      role="tab"
+      class="tab"
+      aria-label="Rejected"
+      id="tab-rejected"
+      <%= 'checked="checked"' if params[:tab] == 'rejected' || location.hash == '#rejected' %>
+    />
+    <div role="tabpanel" class="tab-content bg-base-200 border-base-content/10 p-6">
+      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <span>Rejected Keys</span>
+        <span class="badge badge-error"><%= all_keys[:rejected].size %></span>
+      </h3>
+      <%= render partial: "onboarding/key_list", locals: {
+        keys: all_keys[:rejected],
+        key_type: 'rejected',
+        current_user: current_user
+      } %>
+    </div>
+
+    <!-- Denied Tab -->
+    <input
+      type="radio"
+      name="key_tabs"
+      role="tab"
+      class="tab"
+      aria-label="Denied"
+      id="tab-denied"
+      <%= 'checked="checked"' if params[:tab] == 'denied' || location.hash == '#denied' %>
+    />
+    <div role="tabpanel" class="tab-content bg-base-200 border-base-content/10 p-6">
+      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <span>Denied Keys</span>
+        <span class="badge badge-warning"><%= all_keys[:denied].size %></span>
+      </h3>
+      <%= render partial: "onboarding/key_list", locals: {
+        keys: all_keys[:denied],
+        key_type: 'denied',
+        current_user: current_user
+      } %>
+    </div>
+  </div>
+</div>
+
+<script>
+  // URL hash persistence for tabs
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('input[name="key_tabs"]');
+
+    // Set tab from hash on page load
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const tab = document.getElementById(`tab-${hash}`);
+      if (tab) tab.checked = true;
+    }
+
+    // Update hash when tab changes
+    tabs.forEach(tab => {
+      tab.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          const tabName = e.target.id.replace('tab-', '');
+          window.location.hash = tabName;
+        }
+      });
+    });
+  });
+</script>
+<% end %>

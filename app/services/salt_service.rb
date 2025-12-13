@@ -504,6 +504,62 @@ class SaltService
       []
     end
 
+    # Get all minion keys organized by type (pending, accepted, rejected, denied)
+    # Returns structured hash with server associations for accepted keys
+    def list_all_keys
+      Rails.logger.info "Fetching all minion keys (pending, accepted, rejected, denied)"
+
+      keys_response = list_keys
+      return { pending: [], accepted: [], rejected: [], denied: [] } unless keys_response && keys_response['return']
+
+      data = keys_response['return'].first['data']['return']
+
+      # Extract keys by type
+      pending_ids = data['minions_pre'] || []
+      accepted_ids = data['minions'] || []
+      rejected_ids = data['minions_rejected'] || []
+      denied_ids = data['minions_denied'] || []
+
+      Rails.logger.info "Found keys - Pending: #{pending_ids.count}, Accepted: #{accepted_ids.count}, Rejected: #{rejected_ids.count}, Denied: #{denied_ids.count}"
+
+      # Build structured response
+      result = {
+        pending: build_key_list(pending_ids, 'pending'),
+        accepted: build_key_list(accepted_ids, 'accepted'),
+        rejected: build_key_list(rejected_ids, 'rejected'),
+        denied: build_key_list(denied_ids, 'denied')
+      }
+
+      # Enhance accepted keys with server associations
+      result[:accepted].each do |key|
+        server = Server.find_by(minion_id: key[:minion_id])
+        if server
+          key[:server] = {
+            id: server.id,
+            hostname: server.hostname,
+            status: server.status,
+            last_seen: server.last_seen
+          }
+        end
+      end
+
+      result
+    rescue StandardError => e
+      Rails.logger.error "Error listing all keys: #{e.message}"
+      { pending: [], accepted: [], rejected: [], denied: [] }
+    end
+
+    # Build key list with fingerprints for given minion IDs
+    def build_key_list(minion_ids, status)
+      minion_ids.map do |minion_id|
+        {
+          minion_id: minion_id,
+          fingerprint: get_key_fingerprint(minion_id),
+          status: status
+        }
+      end
+    end
+
     # Get key fingerprint for a specific minion
     def get_key_fingerprint(minion_id)
       Rails.logger.debug "Getting fingerprint for minion: #{minion_id}"
