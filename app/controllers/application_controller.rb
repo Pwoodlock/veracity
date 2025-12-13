@@ -6,6 +6,7 @@ class ApplicationController < ActionController::Base
 
   # Devise and authentication
   before_action :authenticate_user!
+  before_action :enforce_two_factor_setup, if: :user_signed_in?
   after_action :set_user_id_cookie
 
   # Helper for checking admin role
@@ -27,5 +28,18 @@ class ApplicationController < ActionController::Base
   # Set user_id in encrypted cookie for Action Cable authentication
   def set_user_id_cookie
     cookies.encrypted[:user_id] = current_user&.id
+  end
+
+  # Enforce two-factor authentication setup for all users
+  def enforce_two_factor_setup
+    # Skip enforcement for specific controllers
+    return if controller_name == 'two_factor' ||
+              controller_path == 'users/sessions' ||
+              controller_name == 'health'
+
+    # Redirect to 2FA setup if user hasn't enabled it yet
+    if current_user.needs_two_factor_setup?
+      redirect_to new_two_factor_path, alert: 'Two-factor authentication is required. Please set it up to continue.'
+    end
   end
 end

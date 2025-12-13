@@ -43,6 +43,11 @@ class User < ApplicationRecord
     admin? || operator?
   end
 
+  # Check if user needs to set up two-factor authentication
+  def needs_two_factor_setup?
+    !otp_required_for_login
+  end
+
   # OAuth authentication handler with session validation
   def self.from_omniauth(auth)
     user = where(provider: auth.provider, uid: auth.uid).first_or_initialize do |new_user|
