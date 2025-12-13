@@ -102,14 +102,13 @@ class HetznerService
         }
       end
 
-      cmd = "python3 #{SCRIPT_PATH} list_servers #{api_key.api_token}"
-
       # Mark API key as used
       api_key.mark_as_used!
 
-      # Execute command
-      output = `#{cmd} 2>&1`
-      exit_code = $?.exitstatus
+      # Execute command with proper argument passing to prevent injection
+      output, stderr, status = Open3.capture3('python3', SCRIPT_PATH, 'list_servers', api_key.api_token)
+      exit_code = status.exitstatus
+      output = "#{output}\n#{stderr}" unless stderr.empty?
 
       if exit_code == 0
         parse_json_response(output)
@@ -135,16 +134,15 @@ class HetznerService
     # Execute Python script command
     def execute_command(command, server)
       api_token = server.hetzner_api_key.api_token
-      server_id = server.hetzner_server_id
-
-      cmd = "python3 #{SCRIPT_PATH} #{command} #{api_token} #{server_id}"
+      server_id = server.hetzner_server_id.to_s
 
       # Mark API key as used
       server.hetzner_api_key.mark_as_used!
 
-      # Execute command
-      output = `#{cmd} 2>&1`
-      exit_code = $?.exitstatus
+      # Execute command with proper argument passing to prevent injection
+      output, stderr, status = Open3.capture3('python3', SCRIPT_PATH, command, api_token, server_id)
+      exit_code = status.exitstatus
+      output = "#{output}\n#{stderr}" unless stderr.empty?
 
       if exit_code == 0
         parse_json_response(output)

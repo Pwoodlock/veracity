@@ -1,3 +1,5 @@
+require 'shellwords'
+
 class Settings::BackupsController < ApplicationController
   before_action :authenticate_user!
   before_action :require_admin!
@@ -74,8 +76,9 @@ class Settings::BackupsController < ApplicationController
     temp_key = "/tmp/borg_key_#{Time.current.to_i}"
 
     begin
-      # Generate key pair
-      stdout, stderr, status = Open3.capture3("ssh-keygen -t ed25519 -C 'borg-backup@#{ENV['DOMAIN'] || request.host}' -f #{temp_key} -N ''")
+      # Generate key pair with proper argument passing to prevent injection
+      comment = "borg-backup@#{ENV['DOMAIN'] || request.host}"
+      stdout, stderr, status = Open3.capture3('ssh-keygen', '-t', 'ed25519', '-C', comment, '-f', temp_key, '-N', '')
 
       if status.success?
         private_key = File.read(temp_key)
@@ -164,7 +167,9 @@ class Settings::BackupsController < ApplicationController
       ssh_key_file.close
       File.chmod(0600, ssh_key_file.path)
 
-      env['BORG_RSH'] = "ssh -i #{ssh_key_file.path} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
+      # Use Shellwords to safely escape the path
+      escaped_path = Shellwords.escape(ssh_key_file.path)
+      env['BORG_RSH'] = "ssh -i #{escaped_path} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
     end
 
     # Try to list the repository

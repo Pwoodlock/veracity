@@ -1,3 +1,5 @@
+require 'shellwords'
+
 class TaskExecutionJob < ApplicationJob
   queue_as :default
 
@@ -71,9 +73,10 @@ class TaskExecutionJob < ApplicationJob
     Rails.logger.info "TaskExecution: Checking for apt locks on #{minion_ids.count} server(s)"
 
     target = minion_ids.join(',')
+    escaped_target = Shellwords.escape(target)
 
     # Check if apt.systemd.daily is running
-    check_cmd = "sudo salt -L '#{target}' cmd.run 'pgrep -a apt.systemd.daily' --timeout=10 --output=json"
+    check_cmd = "sudo salt -L #{escaped_target} cmd.run 'pgrep -a apt.systemd.daily' --timeout=10 --output=json"
     output = `#{check_cmd} 2>&1`
 
     if $?.exitstatus == 0 && !output.empty?
@@ -85,11 +88,11 @@ class TaskExecutionJob < ApplicationJob
           Rails.logger.warn "TaskExecution: apt.systemd.daily running on #{locked_servers.join(', ')} - clearing locks"
 
           # Kill automatic update processes
-          kill_cmd = "sudo salt -L '#{target}' cmd.run 'killall -9 apt.systemd.daily apt-get 2>/dev/null || true' --timeout=10"
+          kill_cmd = "sudo salt -L #{escaped_target} cmd.run 'killall -9 apt.systemd.daily apt-get 2>/dev/null || true' --timeout=10"
           `#{kill_cmd} 2>&1`
 
           # Remove lock files
-          unlock_cmd = "sudo salt -L '#{target}' cmd.run 'rm -f /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock* 2>/dev/null || true' --timeout=10"
+          unlock_cmd = "sudo salt -L #{escaped_target} cmd.run 'rm -f /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock* 2>/dev/null || true' --timeout=10"
           `#{unlock_cmd} 2>&1`
 
           # Wait a moment for locks to clear

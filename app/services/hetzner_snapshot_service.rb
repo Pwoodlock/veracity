@@ -258,16 +258,15 @@ class HetznerSnapshotService
       api_token = server.hetzner_api_key.api_token
       server_id = server.hetzner_server_id
 
-      # Build command with properly escaped arguments
-      cmd_parts = [
+      # Build command arguments array for safe execution
+      cmd_args = [
         'python3',
-        Shellwords.escape(SCRIPT_PATH),
-        Shellwords.escape(command),
-        Shellwords.escape(api_token),
-        Shellwords.escape(server_id.to_s),
-        *args.map { |arg| Shellwords.escape(arg.to_s) }
+        SCRIPT_PATH,
+        command,
+        api_token,
+        server_id.to_s,
+        *args.map(&:to_s)
       ]
-      cmd = cmd_parts.join(' ')
 
       # Mark API key as used
       server.hetzner_api_key.mark_as_used!
@@ -279,9 +278,10 @@ class HetznerSnapshotService
         attempt = retry_count + 1
 
         begin
-          # Execute command
-          output = `#{cmd} 2>&1`
-          exit_code = $?.exitstatus
+          # Execute command with proper argument passing to prevent injection
+          stdout, stderr, status = Open3.capture3(*cmd_args)
+          output = "#{stdout}\n#{stderr}".strip
+          exit_code = status.exitstatus
 
           if exit_code == 0
             return parse_json_response(output)
