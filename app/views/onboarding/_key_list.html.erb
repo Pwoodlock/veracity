@@ -13,8 +13,8 @@
     <p>No <%= key_type %> keys</p>
   </div>
 <% else %>
-  <!-- Bulk Actions -->
-  <div class="mb-4 flex items-center gap-3" data-controller="bulk-select">
+  <!-- Bulk Actions Header -->
+  <div class="mb-4 flex items-center gap-3" data-controller="bulk-select" data-bulk-select-key-type-value="<%= key_type %>">
     <label class="flex items-center gap-2 cursor-pointer">
       <input
         type="checkbox"
@@ -26,7 +26,8 @@
       <span class="text-sm">Select All</span>
     </label>
 
-    <%= form_with url: bulk_delete_keys_onboarding_path, method: :delete, class: "flex-1" do |f| %>
+    <!-- Bulk Delete Form - separate from key list -->
+    <%= form_with url: bulk_delete_keys_onboarding_path, method: :delete, id: "bulk-delete-form-#{key_type}", data: { bulk_select_target: "form" } do %>
       <%= hidden_field_tag :key_type, key_type %>
       <div class="flex items-center gap-2">
         <button
@@ -42,105 +43,106 @@
           0 selected
         </span>
       </div>
+      <!-- Hidden inputs for selected minion IDs will be added by JavaScript -->
+      <div data-bulk-select-target="hiddenInputs"></div>
+    <% end %>
+  </div>
 
-      <!-- Key List -->
-      <div class="space-y-3 mt-4" data-bulk-select-target="container">
-        <% keys.each do |key| %>
-          <div class="bg-base-300 p-4 rounded-lg flex items-start gap-4">
-            <!-- Checkbox -->
-            <label class="cursor-pointer pt-1">
-              <input
-                type="checkbox"
-                name="minion_ids[]"
-                value="<%= key[:minion_id] %>"
-                class="checkbox checkbox-sm"
-                data-bulk-select-target="checkbox"
-                data-action="change->bulk-select#updateCount"
-              />
-            </label>
+  <!-- Key List - separate from bulk form -->
+  <div class="space-y-3" data-bulk-select-target="container">
+    <% keys.each do |key| %>
+      <div class="bg-base-300 p-4 rounded-lg flex items-start gap-4">
+        <!-- Checkbox (not inside any form) -->
+        <label class="cursor-pointer pt-1">
+          <input
+            type="checkbox"
+            data-minion-id="<%= key[:minion_id] %>"
+            class="checkbox checkbox-sm"
+            data-bulk-select-target="checkbox"
+            data-action="change->bulk-select#updateCount"
+          />
+        </label>
 
-            <!-- Key Info -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-2 mb-2">
-                <div class="flex items-center gap-2">
-                  <h4 class="font-semibold text-base-content"><%= key[:minion_id] %></h4>
-                  <% if key_type == 'pending' %>
-                    <span class="badge badge-success badge-sm">Pending</span>
-                  <% elsif key_type == 'accepted' %>
-                    <span class="badge badge-info badge-sm">Accepted</span>
-                  <% elsif key_type == 'rejected' %>
-                    <span class="badge badge-error badge-sm">Rejected</span>
-                  <% elsif key_type == 'denied' %>
-                    <span class="badge badge-warning badge-sm">Denied</span>
-                  <% end %>
-                </div>
-
-                <!-- Individual Delete Button -->
-                <% if key_type != 'pending' %>
-                  <%= button_to "Delete",
-                      delete_key_onboarding_path,
-                      method: :delete,
-                      params: { minion_id: key[:minion_id], key_type: key_type },
-                      class: "btn btn-ghost btn-xs text-error",
-                      data: {
-                        turbo_confirm: key_type == 'accepted' ?
-                          "⚠️ This server is managed. Deleting will disconnect it. Continue?" :
-                          "Delete this key? This cannot be undone."
-                      },
-                      disabled: (key_type == 'accepted' && !is_admin),
-                      title: (key_type == 'accepted' && !is_admin) ? "Admin permission required to delete accepted keys" : nil
-                  %>
-                <% end %>
-              </div>
-
-              <div class="text-sm text-base-content/70 font-mono mb-2">
-                <%= key[:fingerprint] || 'No fingerprint available' %>
-              </div>
-
-              <!-- Server Association (Accepted Keys Only) -->
-              <% if key_type == 'accepted' && key[:server] %>
-                <div class="mt-3 pt-3 border-t border-base-content/10">
-                  <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span class="text-base-content/60">Hostname:</span>
-                      <span class="font-medium"><%= key[:server][:hostname] %></span>
-                    </div>
-                    <div>
-                      <span class="text-base-content/60">Status:</span>
-                      <% if key[:server][:status] == 'online' %>
-                        <span class="badge badge-success badge-xs">Online</span>
-                      <% else %>
-                        <span class="badge badge-error badge-xs">Offline</span>
-                      <% end %>
-                    </div>
-                    <% if key[:server][:last_seen] %>
-                      <div class="col-span-2">
-                        <span class="text-base-content/60">Last Seen:</span>
-                        <span><%= time_ago_in_words(key[:server][:last_seen]) %> ago</span>
-                      </div>
-                    <% end %>
-                  </div>
-                </div>
-              <% end %>
-
-              <!-- Actions for Pending Keys -->
+        <!-- Key Info -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2">
+              <h4 class="font-semibold text-base-content"><%= key[:minion_id] %></h4>
               <% if key_type == 'pending' %>
-                <div class="mt-3 flex gap-2">
-                  <%= form_with url: accept_key_onboarding_path, method: :post, class: "inline" do |f| %>
-                    <%= f.hidden_field :minion_id, value: key[:minion_id] %>
-                    <%= f.hidden_field :fingerprint, value: key[:fingerprint] %>
-                    <%= f.submit "Accept", class: "btn btn-success btn-sm" %>
-                  <% end %>
-
-                  <%= form_with url: reject_key_onboarding_path, method: :post, class: "inline" do |f| %>
-                    <%= f.hidden_field :minion_id, value: key[:minion_id] %>
-                    <%= f.submit "Reject", class: "btn btn-error btn-sm" %>
-                  <% end %>
-                </div>
+                <span class="badge badge-success badge-sm">Pending</span>
+              <% elsif key_type == 'accepted' %>
+                <span class="badge badge-info badge-sm">Accepted</span>
+              <% elsif key_type == 'rejected' %>
+                <span class="badge badge-error badge-sm">Rejected</span>
+              <% elsif key_type == 'denied' %>
+                <span class="badge badge-warning badge-sm">Denied</span>
               <% end %>
             </div>
+
+            <!-- Individual Delete Button -->
+            <% if key_type != 'pending' %>
+              <%= button_to "Delete",
+                  delete_key_onboarding_path,
+                  method: :delete,
+                  params: { minion_id: key[:minion_id], key_type: key_type },
+                  class: "btn btn-ghost btn-xs text-error",
+                  data: {
+                    turbo_confirm: key_type == 'accepted' ?
+                      "⚠️ This server is managed. Deleting will disconnect it. Continue?" :
+                      "Delete this key? This cannot be undone."
+                  },
+                  disabled: (key_type == 'accepted' && !is_admin),
+                  title: (key_type == 'accepted' && !is_admin) ? "Admin permission required to delete accepted keys" : nil
+              %>
+            <% end %>
           </div>
-        <% end %>
+
+          <div class="text-sm text-base-content/70 font-mono mb-2">
+            <%= key[:fingerprint] || 'No fingerprint available' %>
+          </div>
+
+          <!-- Server Association (Accepted Keys Only) -->
+          <% if key_type == 'accepted' && key[:server] %>
+            <div class="mt-3 pt-3 border-t border-base-content/10">
+              <div class="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span class="text-base-content/60">Hostname:</span>
+                  <span class="font-medium"><%= key[:server][:hostname] %></span>
+                </div>
+                <div>
+                  <span class="text-base-content/60">Status:</span>
+                  <% if key[:server][:status] == 'online' %>
+                    <span class="badge badge-success badge-xs">Online</span>
+                  <% else %>
+                    <span class="badge badge-error badge-xs">Offline</span>
+                  <% end %>
+                </div>
+                <% if key[:server][:last_seen] %>
+                  <div class="col-span-2">
+                    <span class="text-base-content/60">Last Seen:</span>
+                    <span><%= time_ago_in_words(key[:server][:last_seen]) %> ago</span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <!-- Actions for Pending Keys - Now properly outside the bulk form -->
+          <% if key_type == 'pending' %>
+            <div class="mt-3 flex gap-2">
+              <%= form_with url: accept_key_onboarding_path, method: :post, class: "inline" do |f| %>
+                <%= f.hidden_field :minion_id, value: key[:minion_id] %>
+                <%= f.hidden_field :fingerprint, value: key[:fingerprint] %>
+                <%= f.submit "Accept", class: "btn btn-success btn-sm" %>
+              <% end %>
+
+              <%= form_with url: reject_key_onboarding_path, method: :post, class: "inline" do |f| %>
+                <%= f.hidden_field :minion_id, value: key[:minion_id] %>
+                <%= f.submit "Reject", class: "btn btn-error btn-sm" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
       </div>
     <% end %>
   </div>
