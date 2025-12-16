@@ -26,7 +26,7 @@
       <span class="text-sm">Select All</span>
     </label>
 
-    <%= form_with url: bulk_delete_keys_onboarding_path, method: :post, class: "flex-1" do |f| %>
+    <%= form_with url: bulk_delete_keys_onboarding_path, method: :delete, class: "flex-1" do |f| %>
       <%= hidden_field_tag :key_type, key_type %>
       <div class="flex items-center gap-2">
         <button

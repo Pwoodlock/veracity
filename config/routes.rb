@@ -28,7 +28,7 @@ Rails.application.routes.draw do
   post "onboarding/bulk_accept_keys" => "onboarding#bulk_accept_keys", as: :bulk_accept_keys_onboarding
   post "onboarding/bulk_reject_keys" => "onboarding#bulk_reject_keys", as: :bulk_reject_keys_onboarding
   delete "onboarding/delete_key" => "onboarding#delete_key", as: :delete_key_onboarding
-  post "onboarding/bulk_delete_keys" => "onboarding#bulk_delete_keys", as: :bulk_delete_keys_onboarding
+  delete "onboarding/bulk_delete_keys" => "onboarding#bulk_delete_keys", as: :bulk_delete_keys_onboarding
   post "onboarding/cleanup_orphaned_keys" => "onboarding#cleanup_orphaned_keys", as: :cleanup_orphaned_keys_onboarding
   post "onboarding/refresh" => "onboarding#refresh", as: :refresh_onboarding
   get "onboarding/refresh_keys" => "onboarding#refresh_keys", as: :refresh_keys_onboarding
