@@ -192,6 +192,26 @@ task_templates = [
     description: "Show recent system reboots",
     category: "maintenance"
   },
+  {
+    name: "Reboot System",
+    command_template: "system.reboot at_time={{delay_minutes}}",
+    description: "Reboot the operating system (with optional delay in minutes)",
+    category: "maintenance",
+    default_parameters: { "delay_minutes" => "1" }
+  },
+  {
+    name: "Reboot System Immediately",
+    command_template: "system.reboot",
+    description: "Immediately reboot the operating system (use with caution)",
+    category: "maintenance"
+  },
+  {
+    name: "Shutdown System",
+    command_template: "system.shutdown at_time={{delay_minutes}}",
+    description: "Shutdown the operating system (with optional delay in minutes)",
+    category: "maintenance",
+    default_parameters: { "delay_minutes" => "1" }
+  },
 
   # Backups
   {

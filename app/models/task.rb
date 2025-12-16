@@ -169,24 +169,12 @@ module CronParser
     end
 
     def next_time(base_time = Time.current)
-      # Simple implementation - would use fugit or similar gem in production
-      # For now, return next minute/hour based on simple patterns
+      # Use fugit gem for proper cron expression parsing
+      # This correctly handles all cron patterns including weekly/monthly schedules
+      cron = Fugit::Cron.parse(@expression)
+      raise ArgumentError, "Invalid cron expression: #{@expression}" unless cron
 
-      if @expression == '* * * * *' # Every minute
-        base_time + 1.minute
-      elsif @expression.match?(/^\d+ \* \* \* \*$/) # Every hour at specific minute
-        minute = @parts[0].to_i
-        next_time = base_time.beginning_of_hour + minute.minutes
-        next_time <= base_time ? next_time + 1.hour : next_time
-      elsif @expression.match?(/^\d+ \d+ \* \* \*$/) # Daily at specific time
-        hour = @parts[1].to_i
-        minute = @parts[0].to_i
-        next_time = base_time.beginning_of_day + hour.hours + minute.minutes
-        next_time <= base_time ? next_time + 1.day : next_time
-      else
-        # Default to next hour for complex expressions
-        base_time + 1.hour
-      end
+      cron.next_time(base_time).to_t
     end
 
     private
