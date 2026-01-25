@@ -198,6 +198,7 @@ Rails.application.routes.draw do
     collection do
       get :fetch_hetzner_servers  # Fetch servers from Hetzner for dropdown
       get :fetch_proxmox_vms      # Fetch VMs/LXCs from Proxmox for dropdown
+      delete :flush_rejected_keys # Flush all rejected minion keys
     end
     member do
       post :sync

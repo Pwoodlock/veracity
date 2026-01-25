@@ -5,8 +5,19 @@
 <%= render layout: 'shared/sidebar' do %>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- Add Server Button -->
-    <div class="flex justify-end mb-6">
+    <!-- Action Buttons -->
+    <div class="flex justify-end gap-3 mb-6">
+      <% if current_user.admin? %>
+        <%= button_to flush_rejected_keys_servers_path,
+            method: :delete,
+            class: "btn btn-warning btn-outline",
+            data: { turbo_confirm: "This will delete ALL rejected minion keys from the Salt Master. Continue?" } do %>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          Flush Rejected Keys
+        <% end %>
+      <% end %>
       <%= link_to onboarding_path, class: "btn btn-primary" do %>
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>

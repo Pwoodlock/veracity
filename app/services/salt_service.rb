@@ -1125,6 +1125,62 @@ class SaltService
       }
     end
 
+    # Flush all rejected minion keys
+    # Deletes all keys in the 'minions_rejected' state
+    # @return [Hash] Result with :success, :deleted_keys, :failed_keys, :message
+    def flush_rejected_keys
+      Rails.logger.info "Flushing all rejected minion keys"
+
+      # Get all keys
+      all_keys = list_all_keys
+      rejected_keys = all_keys[:rejected].map { |k| k[:minion_id] }
+
+      if rejected_keys.empty?
+        return {
+          success: true,
+          deleted_keys: [],
+          failed_keys: [],
+          message: "No rejected keys to flush"
+        }
+      end
+
+      Rails.logger.info "Found #{rejected_keys.count} rejected keys to flush: #{rejected_keys.join(', ')}"
+
+      deleted = []
+      failed = []
+
+      rejected_keys.each do |minion_id|
+        begin
+          result = delete_key(minion_id)
+          if result && result['return']
+            deleted << minion_id
+            Rails.logger.info "Flushed rejected key: #{minion_id}"
+          else
+            failed << minion_id
+            Rails.logger.warn "Failed to flush rejected key: #{minion_id}"
+          end
+        rescue StandardError => e
+          Rails.logger.error "Error flushing rejected key #{minion_id}: #{e.message}"
+          failed << minion_id
+        end
+      end
+
+      {
+        success: failed.empty?,
+        deleted_keys: deleted,
+        failed_keys: failed,
+        message: "Flushed #{deleted.count} rejected key(s)#{failed.any? ? ", #{failed.count} failed" : ""}"
+      }
+    rescue StandardError => e
+      Rails.logger.error "Error flushing rejected keys: #{e.message}"
+      {
+        success: false,
+        deleted_keys: [],
+        failed_keys: [],
+        message: "Error: #{e.message}"
+      }
+    end
+
     # ===== Pillar Top.sls Management =====
     # These methods manage the /srv/pillar/top.sls file to include/exclude
     # minion-specific pillar files dynamically

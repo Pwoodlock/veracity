@@ -7,7 +7,7 @@ class ServersController < ApplicationController
   # Operators: Can view and manage servers (edit, update, sync, Hetzner/Proxmox controls)
   # Admins: Full access including destroy
   before_action :require_operator!, only: [:edit, :update, :sync, :manual_refresh_proxmox, :start_hetzner, :stop_hetzner, :reboot_hetzner, :refresh_hetzner_status, :hetzner_snapshots, :create_hetzner_snapshot, :delete_hetzner_snapshot, :fetch_hetzner_servers, :start_proxmox, :stop_proxmox, :shutdown_proxmox, :reboot_proxmox, :refresh_proxmox_status, :proxmox_snapshots, :create_proxmox_snapshot, :rollback_proxmox_snapshot, :delete_proxmox_snapshot, :fetch_proxmox_vms]
-  before_action :require_admin!, only: [:destroy]
+  before_action :require_admin!, only: [:destroy, :flush_rejected_keys]
 
   # List all servers
   def index
@@ -95,6 +95,24 @@ class ServersController < ApplicationController
     Rails.logger.error "Error during server deletion: #{e.message}"
     @server.destroy if @server.persisted?
     redirect_to servers_path, alert: "Server deleted but cleanup failed: #{e.message}"
+  end
+
+  # Flush all rejected minion keys from Salt Master
+  def flush_rejected_keys
+    result = SaltService.flush_rejected_keys
+
+    if result[:success]
+      if result[:deleted_keys].any?
+        redirect_to servers_path, notice: "#{result[:message]}"
+      else
+        redirect_to servers_path, notice: result[:message]
+      end
+    else
+      redirect_to servers_path, alert: "Failed to flush rejected keys: #{result[:message]}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "Error flushing rejected keys: #{e.message}"
+    redirect_to servers_path, alert: "Error flushing rejected keys: #{e.message}"
   end
 
   # Sync server data from Salt
