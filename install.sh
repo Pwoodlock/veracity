@@ -427,6 +427,12 @@ run_installation() {
   local start_time
   start_time=$(date +%s)
 
+  # Always detect OS first - required for all phases even when resuming
+  # This ensures OS_ID, OS_NAME, OS_VERSION are set even if Prerequisites phase is skipped
+  if ! detect_os; then
+    fatal "Failed to detect operating system"
+  fi
+
   # Prerequisites
   run_phase "Prerequisites" check_prerequisites "required" || return 1
 
