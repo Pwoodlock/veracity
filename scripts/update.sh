@@ -165,17 +165,17 @@ update_python_venv() {
 
   cd "$APP_DIR"
 
-  # Check if venv exists
-  if [ ! -d "$APP_DIR/cve_venv" ]; then
-    warning "Python virtual environment not found - CVE monitoring may not work"
-    info "Reinstall with: python3 -m venv $APP_DIR/cve_venv && $APP_DIR/cve_venv/bin/pip install pyvulnerabilitylookup>=2.0.0 requests>=2.28.0"
+  # Check if venv exists (integrations_venv is the standard path)
+  if [ ! -d "$APP_DIR/integrations_venv" ]; then
+    warning "Python virtual environment not found - CVE monitoring and integrations may not work"
+    info "Reinstall with: python3 -m venv $APP_DIR/integrations_venv && $APP_DIR/integrations_venv/bin/pip install pyvulnerabilitylookup>=2.0.0 requests>=2.28.0 hcloud proxmoxer"
     return 0
   fi
 
   # Update pip and packages
   sudo -u "$DEPLOY_USER" bash -c "
-    $APP_DIR/cve_venv/bin/pip install --upgrade pip > /dev/null 2>&1
-    $APP_DIR/cve_venv/bin/pip install --upgrade pyvulnerabilitylookup>=2.0.0 requests>=2.28.0 > /dev/null 2>&1
+    $APP_DIR/integrations_venv/bin/pip install --upgrade pip > /dev/null 2>&1
+    $APP_DIR/integrations_venv/bin/pip install --upgrade pyvulnerabilitylookup>=2.0.0 requests>=2.28.0 hcloud proxmoxer > /dev/null 2>&1
   "
 
   success "Python packages updated"
@@ -186,7 +186,7 @@ run_migrations() {
   info "Running database migrations..."
 
   cd "$APP_DIR"
-  sudo -u "$DEPLOY_USER" bash -c "export PATH=/home/${DEPLOY_USER}/.rbenv/shims:\$PATH && RAILS_ENV=production bundle exec rails db:migrate"
+  sudo -u "$DEPLOY_USER" bash -c "export PATH=\"\$HOME/.local/bin:\$PATH\" && eval \"\$(mise activate bash)\" && cd ${APP_DIR} && RAILS_ENV=production bundle exec rails db:migrate"
 
   success "Database migrations complete"
 }
@@ -196,7 +196,7 @@ seed_salt_templates() {
   info "Refreshing Salt State templates..."
 
   cd "$APP_DIR"
-  sudo -u "$DEPLOY_USER" bash -c "export PATH=/home/${DEPLOY_USER}/.rbenv/shims:\$PATH && RAILS_ENV=production bundle exec rails db:seed:salt_templates" || warning "Salt template seeding had errors (check logs)"
+  sudo -u "$DEPLOY_USER" bash -c "export PATH=\"\$HOME/.local/bin:\$PATH\" && eval \"\$(mise activate bash)\" && cd ${APP_DIR} && RAILS_ENV=production bundle exec rails db:seed:salt_templates" || warning "Salt template seeding had errors (check logs)"
 
   success "Salt templates refreshed"
 }
@@ -206,7 +206,7 @@ precompile_assets() {
   info "Precompiling assets (this may take a few minutes)..."
 
   cd "$APP_DIR"
-  sudo -u "$DEPLOY_USER" bash -c "export PATH=/home/${DEPLOY_USER}/.rbenv/shims:\$PATH && RAILS_ENV=production bundle exec rails assets:precompile"
+  sudo -u "$DEPLOY_USER" bash -c "export PATH=\"\$HOME/.local/bin:\$PATH\" && eval \"\$(mise activate bash)\" && cd ${APP_DIR} && RAILS_ENV=production bundle exec rails assets:precompile"
 
   success "Assets precompiled"
 }
