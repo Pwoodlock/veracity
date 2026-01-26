@@ -574,6 +574,7 @@ class ServersController < ApplicationController
 
   def server_params
     params.require(:server).permit(
+      :display_name,
       :group_id,
       :environment,
       :location,

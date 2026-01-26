@@ -63,6 +63,12 @@ class Server < ApplicationRecord
 
   # Tags is already JSONB column, no need for serialize
 
+  # Display name with fallback to hostname
+  # Returns display_name if set, otherwise returns hostname
+  def display_name_or_hostname
+    display_name.presence || hostname
+  end
+
   # Get latest metric
   # Note: When using with_latest_metrics scope, this will not trigger additional queries
   def latest_metric

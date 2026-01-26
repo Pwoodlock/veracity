@@ -47,6 +47,15 @@
           </div>
         </div>
 
+        <!-- Display Name -->
+        <div>
+          <%= form.label :display_name, "Display Name (Optional)", class: "block text-sm font-medium text-base-content/80 mb-2" %>
+          <%= form.text_field :display_name,
+                              placeholder: "Custom display name for this server",
+                              class: "input input-bordered w-full" %>
+          <p class="mt-2 text-sm text-base-content/60">Override how this server appears in the UI. Leave blank to use the hostname.</p>
+        </div>
+
         <!-- Group Assignment -->
         <div>
           <%= form.label :group_id, "Group", class: "block text-sm font-medium text-base-content/80 mb-2" %>
