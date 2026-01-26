@@ -5,6 +5,8 @@ require 'shellwords'
 # Service for Hetzner Cloud snapshot operations
 # Handles creating, waiting, listing, and deleting snapshots
 class HetznerSnapshotService
+  # Path to Python interpreter (venv with hcloud/proxmoxer installed)
+  PYTHON_PATH = Rails.root.join('integrations_venv', 'bin', 'python').to_s
   # Path to Python script
   SCRIPT_PATH = Rails.root.join('lib', 'scripts', 'hetzner_cloud.py').to_s
 
@@ -38,7 +40,7 @@ class HetznerSnapshotService
       api_token = server.hetzner_api_key.api_token
 
       cmd_parts = [
-        'python3',
+        PYTHON_PATH,
         Shellwords.escape(SCRIPT_PATH),
         'wait_snapshot',
         Shellwords.escape(api_token),
@@ -115,7 +117,7 @@ class HetznerSnapshotService
       # Pass both hostname and server_id for better filtering
       # Python script will try: 1) server_id match, 2) hostname prefix, 3) show all
       cmd_parts = [
-        'python3',
+        PYTHON_PATH,
         Shellwords.escape(SCRIPT_PATH),
         'list_snapshots',
         Shellwords.escape(api_token),
@@ -153,7 +155,7 @@ class HetznerSnapshotService
       api_token = server.hetzner_api_key.api_token
 
       cmd_parts = [
-        'python3',
+        PYTHON_PATH,
         Shellwords.escape(SCRIPT_PATH),
         'delete_snapshot',
         Shellwords.escape(api_token),
@@ -260,7 +262,7 @@ class HetznerSnapshotService
 
       # Build command arguments array for safe execution
       cmd_args = [
-        'python3',
+        PYTHON_PATH,
         SCRIPT_PATH,
         command,
         api_token,

@@ -3,6 +3,8 @@
 # Service for Hetzner Cloud server control operations
 # Handles starting, stopping, rebooting, and status checks via hcloud Python library
 class HetznerService
+  # Path to Python interpreter (venv with hcloud/proxmoxer installed)
+  PYTHON_PATH = Rails.root.join('integrations_venv', 'bin', 'python').to_s
   # Path to Python script
   SCRIPT_PATH = Rails.root.join('lib', 'scripts', 'hetzner_cloud.py').to_s
 
@@ -106,7 +108,7 @@ class HetznerService
       api_key.mark_as_used!
 
       # Execute command with proper argument passing to prevent injection
-      output, stderr, status = Open3.capture3('python3', SCRIPT_PATH, 'list_servers', api_key.api_token)
+      output, stderr, status = Open3.capture3(PYTHON_PATH, SCRIPT_PATH, 'list_servers', api_key.api_token)
       exit_code = status.exitstatus
       output = "#{output}\n#{stderr}" unless stderr.empty?
 
@@ -140,7 +142,7 @@ class HetznerService
       server.hetzner_api_key.mark_as_used!
 
       # Execute command with proper argument passing to prevent injection
-      output, stderr, status = Open3.capture3('python3', SCRIPT_PATH, command, api_token, server_id)
+      output, stderr, status = Open3.capture3(PYTHON_PATH, SCRIPT_PATH, command, api_token, server_id)
       exit_code = status.exitstatus
       output = "#{output}\n#{stderr}" unless stderr.empty?
 
